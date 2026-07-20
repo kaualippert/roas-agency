@@ -18,7 +18,7 @@
     "react-router-dom": "latest",
     "recharts": "latest",
     "tailwindcss": "latest",
-    "typescript": "latest",
+    "typescript": "^5.9.3",
     "vite": "latest"
   },
   "devDependencies": {
