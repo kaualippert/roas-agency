@@ -1,0 +1,80 @@
+/* Camada final de legibilidade e aproveitamento de espaço */
+:root{--page-gutter:clamp(18px,2vw,36px);--content-gap:clamp(14px,1.25vw,22px)}
+.routeLoading{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--content-gap);align-content:start}.routeLoading span{height:150px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(90deg,var(--card) 25%,#f2f3f7 50%,var(--card) 75%);background-size:200% 100%;animation:routeLoading 1.2s infinite}@keyframes routeLoading{to{background-position:-200% 0}}html[data-theme="dark"] .routeLoading span{background:linear-gradient(90deg,#171f30 25%,#202a3d 50%,#171f30 75%);background-size:200% 100%}
+body{font-size:14px;line-height:1.45}
+.shell>header{padding-inline:var(--page-gutter)}
+.headTitle{min-width:min(390px,32vw)}
+.headTitle h1{font-size:26px;letter-spacing:-.35px}
+.headTitle p{font-size:13px}
+.globalSearch{width:clamp(300px,29vw,480px);height:44px}
+.navGroup a{height:43px;font-size:13px}.navGroup>span{font-size:11px}.sidebar nav{padding-bottom:12px}
+
+main,.connectedDashboard,.crmPage,.financePage,.onboardingPage,.tasksEnhanced,.clientHub{width:100%;max-width:none;padding:clamp(20px,1.8vw,32px) var(--page-gutter) 48px}
+.card{border-radius:12px}.pageActions,.dashGrid,.clientWorkspace,.crmAnalytics,.financeGrid,.financeBottom,.hubOverview,.hubOperation,.hubContent{gap:var(--content-gap)}
+.btn{min-height:42px;padding:11px 17px;font-size:12px}.iconBtn{min-width:36px;min-height:36px}
+
+/* Hierarquia de texto consistente */
+main h2{font-size:23px;line-height:1.25}main h3{font-size:15px;line-height:1.35}main h4{font-size:13px;line-height:1.4}
+main p{line-height:1.55}
+main small{font-size:11px!important;line-height:1.4}
+main em:not([class]){font-size:10.5px}
+main input,main select,main textarea,main button{font-size:12px}
+.badge,.tag,.taskPriority,.taskStatusBadge,.hubStatus,.hubPayment,.financeKind,.financeStatus{font-size:10px!important;padding:5px 8px}
+
+/* Estatísticas mais úteis e menos vazias */
+.stats,.clientStats,.crmKpis,.teamStats,.reportStats,.onboardingStats,.tasksStats,.financeStats,.dashboardKpis{gap:var(--content-gap)}
+.stat{min-height:132px;padding:18px}.stat small,.clientStats small,.crmKpis small,.teamStats small,.reportStats small,.onboardingStats small,.tasksStats small,.financeStats small,.dashboardKpis small{font-size:11px!important}
+.stat strong,.clientStats strong,.crmKpis strong,.teamStats strong,.reportStats strong,.onboardingStats strong,.tasksStats strong,.financeStats strong,.dashboardKpis strong{font-size:clamp(18px,1.25vw,23px)}
+.stat p,.clientStats em,.crmKpis em,.teamStats em,.onboardingStats em,.tasksStats em,.financeStats em,.dashboardKpis em{font-size:10.5px!important}
+
+/* Tabelas e listas */
+.tableWrap{width:100%}table{width:100%}th{font-size:11px!important;font-weight:650;padding:14px 16px}td{font-size:12.5px!important;padding:13px 16px}
+.entity{gap:12px}.avatar{width:40px;height:40px}.filters{min-height:64px;padding:12px 16px}.filter{height:42px;min-width:260px}.filters>button{height:42px;font-size:12px}
+.tabs,.viewTabs{height:55px}.tabs button,.viewTabs button{font-size:12px;padding:16px 14px}
+.genericGrid{grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;padding:18px}.itemCard{min-height:92px;padding:17px}.itemCard h3{font-size:14px}.itemCard p{font-size:12px}.itemCard span{font-size:11px}
+
+/* Dashboard */
+.connectedTitle h2,.dashboardToolbar h2{font-size:23px}.dashboardToolbar p,.chartTitle p{font-size:12px!important}
+.dashboardMainGrid,.dashboardBottom{gap:var(--content-gap)}
+.dashboardKpis>article{padding:17px;min-height:105px}.dashboardKpis p,.pulseRow p,.dashboardActivity p{font-size:12px!important}
+.dashboardActivity time,.dueDate,.pulseRow span,.taskBars span{font-size:10.5px!important}
+.metricRow div{padding:13px}.metricRow small{font-size:10.5px!important}.activityItem{padding:12px 18px}.activityItem small,.activityItem time{font-size:10.5px!important}
+
+/* Clientes e central do cliente */
+.clientStats article{min-height:94px;padding:18px}.clientsFilters{padding:15px}.clientsFilters>div{width:min(380px,100%);min-height:42px}
+.clientWorkspace.hasDetails{grid-template-columns:minmax(0,1fr) minmax(330px,22vw)}
+.clientEnhancedDetails,.details{font-size:12px}.detailBox p{font-size:11.5px}.clientServicesGrid span small{font-size:10.5px!important}
+.clientEnhancedDetails .detailHero{margin-bottom:22px}.clientEnhancedDetails .clientHubButton{width:100%;min-height:46px;margin:0 0 12px;text-decoration:none;border-radius:9px}.clientEnhancedDetails .detailBtns{grid-template-columns:1fr 1fr;gap:10px;margin:0 0 20px}.clientEnhancedDetails .detailBtns .btn{width:100%;min-width:0;min-height:44px;padding-inline:10px}.clientEnhancedDetails .detailBox:first-of-type{margin-top:0}
+.clientFormModal{width:min(860px,calc(100vw - 32px))}.clientResponsiblesField>b,.clientResponsiblesField>small{display:block}.clientResponsiblesField>small{color:var(--muted);margin:4px 0 10px}.clientResponsiblesGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:1px solid var(--border);border-radius:9px;padding:10px;max-height:210px;overflow:auto}.clientResponsiblesGrid label{display:grid!important;grid-template-columns:auto auto 1fr;align-items:center;gap:9px;border:1px solid var(--border);border-radius:8px;padding:10px;font-weight:500!important;cursor:pointer}.clientResponsiblesGrid input{width:auto!important;min-height:auto!important;accent-color:var(--purple)}.clientResponsiblesGrid .avatar{width:34px;height:34px;font-size:10px}.clientResponsiblesGrid span b,.clientResponsiblesGrid span small{display:block}.clientResponsiblesGrid span small{color:var(--muted);margin-top:2px}.clientResponsibleBox p{align-items:flex-start;gap:10px}.clientResponsibleBox p b{text-align:right;font-size:10px;max-width:55%}
+html[data-theme="dark"] .clientResponsiblesGrid,html[data-theme="dark"] .clientResponsiblesGrid label{border-color:#34405a;background:#171f30}
+.hubHero{padding:22px}.hubIdentity small{font-size:10px!important}.hubIdentity p{font-size:12px}.hubStats>article{min-height:90px;padding:16px}.hubStats strong{font-size:17px}
+.hubTabs button{font-size:12px;padding:13px 16px}.hubSection{padding:20px}.hubTitle h3{font-size:15px}.hubTitle p,.hubTitle a{font-size:11px}
+.profileFields>div{padding:13px}.profileFields b,.clientNotes b,.clientNotes p,.hubServices b,.hubTeam b,.hubOnboardingStep b,.hubProjectList b,.hubTaskList b,.hubFiles b,.hubHistory b{font-size:12px}
+.profileFields small,.hubServices small,.hubTeam small,.hubOnboardingStep small,.hubProjectList small,.hubTaskList small,.hubFiles small,.hubHistory small{font-size:10.5px!important}
+.hubServices article,.hubTeam article,.hubProjectList article,.hubTaskList article,.hubFiles article,.hubHistory article{padding-block:13px}.hubTaskList time,.hubFiles time,.hubHistory time{font-size:10.5px}
+
+/* Projetos, tarefas e Kanban */
+.taskWorkspaceHead{height:58px}.taskViewTabs button{font-size:12px}.saveTaskView,.moreTaskFilters,.clearTaskFilters{font-size:11px}.taskSearch{height:42px;min-width:300px}.taskFilterSelect{height:42px;min-width:145px}.taskFilterSelect>span{font-size:10px}.taskFilterSelect select{font-size:11px}.advancedTaskFilters,.taskFilters{padding:13px 16px}.activeFilterSummary,.taskResultBar{font-size:11px}
+.enhancedKanban{grid-template-columns:repeat(5,minmax(250px,1fr));gap:14px;padding:0 16px 20px}.enhancedKanbanColumn{padding:11px;min-height:500px}.enhancedKanbanColumn header b{font-size:12px}.enhancedKanbanColumn header span{font-size:10px}.enhancedTaskCard{padding:13px}.enhancedTaskCard h4{font-size:12px}.enhancedTaskCard>p{font-size:10.5px}.taskCardTags>span:not(.taskPriority),.taskTags i,.enhancedTaskCard footer>span:first-child,.columnAddTask{font-size:10px}.taskAssignee{width:27px;height:27px;font-size:9px}
+.calendarWeek b,.calendarDays>div>span,.calendarDays button,.calendarDays small{font-size:10px}.calendarDays>div{min-height:125px}.calendarDays button{padding:6px}
+.taskResponsiblesField>b,.taskResponsiblesField>small{display:block}.taskResponsiblesField>small{color:var(--muted);margin:4px 0 10px}.taskResponsiblesGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:215px;overflow:auto;border:1px solid var(--border);border-radius:9px;padding:10px}.taskResponsiblesGrid label{display:grid!important;grid-template-columns:auto auto 1fr;align-items:center;gap:9px;border:1px solid var(--border);border-radius:8px;padding:10px;font-weight:500!important;cursor:pointer;transition:.15s}.taskResponsiblesGrid label:hover{border-color:#b8a9f7;background:#faf9ff}.taskResponsiblesGrid label:has(input:checked){border-color:#a997f6;background:#f5f2ff;box-shadow:0 0 0 1px #6d4bf21a}.taskResponsiblesGrid input{width:auto!important;min-height:auto!important;accent-color:var(--purple)}.multiTaskAvatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:9px;font-weight:700}.taskResponsiblesGrid span b,.taskResponsiblesGrid span small{display:block}.taskResponsiblesGrid span small{color:var(--muted);margin-top:2px}.taskAssigneeGroup{display:flex;align-items:center;padding-left:8px}.taskAssigneeGroup i,.taskAssigneeGroup b{width:27px;height:27px;border:2px solid var(--card);border-radius:50%;display:grid;place-items:center;color:#fff;font-size:8px;font-style:normal;font-weight:700;margin-left:-8px}.taskAssigneeGroup b{background:#687386}.tableAssignees{display:flex;align-items:center;gap:8px}.tableAssignees>span{display:flex;padding-left:7px}.tableAssignees i{width:27px;height:27px;border:2px solid var(--card);border-radius:50%;display:grid;place-items:center;color:#fff;font-size:7px;font-style:normal;font-weight:700;margin-left:-7px}.tableAssignees>b{font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis}html[data-theme="dark"] .taskResponsiblesGrid{border-color:#34405a}html[data-theme="dark"] .taskResponsiblesGrid label{background:#171f30;border-color:#34405a}html[data-theme="dark"] .taskResponsiblesGrid label:hover,html[data-theme="dark"] .taskResponsiblesGrid label:has(input:checked){background:#27213e;border-color:#5b4a88}
+
+/* CRM: usa a largura, mantendo as oito etapas acessíveis */
+.crmKpis article{min-height:94px;padding:18px}.crmBoardLabel b{font-size:16px}.crmBoardLabel span,.crmBoardLabel small,.sourceLegend span{font-size:11px}
+.crmPageBoard{padding:17px}.crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(210px,1fr));gap:11px;scrollbar-width:thin}.crmPageBoard .crmColumn{min-height:520px;padding:11px}.crmColumn>header b{font-size:12px}.crmColumn>header span{font-size:10px}.leadCard{padding:12px}.leadCard h3{font-size:12.5px}.leadCard p{font-size:10.5px}.leadCard footer span,.leadCard footer small{font-size:10px}.crmAnalytics{grid-template-columns:minmax(0,1.7fr) minmax(320px,.8fr)}.crmChart{padding:20px}
+
+/* Financeiro, onboarding, equipe e relatórios */
+.financeStats>article{min-height:92px;padding:17px}.financeSectionTitle h3{font-size:16px}.financeSectionTitle p,.chartLegend span,.summaryRows p,.recurringRow small,.variableRow span,.financeEmpty span{font-size:11px!important}.financeFilter button,.variableRow button{font-size:11px}.financeTransactions th,.financeTransactions td{padding:14px 11px}
+.onboardingWorkspace{grid-template-columns:minmax(320px,24vw) minmax(0,1fr)}.onboardingClientsHead span,.onboardingFilters button,.onboardingClientList small,.onboardingProgress span,.stepTitle p,.stepFields label,.stepFields select,.stepFields input{font-size:11px!important}.onboardingClientList>button{padding:13px 11px}.onboardingSteps article{padding:17px 0}.stepTitle h4{font-size:14px}.stepTitle>b{font-size:10px}.stepFields input,.stepFields select{height:39px}
+.memberGrid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;padding:19px}.memberCard{padding:19px}.memberCard>p,.memberEmail,.memberLoad,.managedClients b,.managedClients p,.roleTags span{font-size:11px}.reportsTools,.directoryTools{min-height:64px;padding:14px 18px}.reportTableHead,.reportRow{grid-template-columns:minmax(230px,2fr) minmax(150px,1.1fr) minmax(100px,.8fr) minmax(90px,.7fr) minmax(120px,.9fr) 145px;padding:14px 19px;font-size:12px}.reportTableHead{font-size:11px}.reportName small{font-size:10.5px!important}
+.memberAccess{margin:14px 0 0;padding:11px;border:1px solid var(--border);border-radius:9px;background:#f8f7ff}.memberAccess>b{display:flex;align-items:center;gap:6px;font-size:11px;color:#4f35d7}.memberAccess>b svg{width:14px}.memberAccess>div{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.memberAccess>div span{font-size:10px;padding:4px 7px;border-radius:5px;background:#e9e5ff;color:#5337d8}.memberModal{width:min(840px,calc(100vw - 32px))}.formGroupLabel:has(svg){display:flex;align-items:center;gap:7px}.formGroupLabel svg{width:17px;color:var(--purple)}.accessSelectionGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.accessSelectionGrid label{display:grid!important;grid-template-columns:auto 1fr;align-items:start;gap:9px;border:1px solid var(--border);border-radius:9px;padding:12px;font-weight:500!important;cursor:pointer;transition:.15s}.accessSelectionGrid label:hover{border-color:#b9abf7;background:#faf9ff}.accessSelectionGrid input{width:auto!important;min-height:auto!important;margin-top:3px;accent-color:var(--purple)}.accessSelectionGrid span b,.accessSelectionGrid span small{display:block}.accessSelectionGrid span b{font-size:12px}.accessSelectionGrid span small{color:var(--muted);margin-top:3px;line-height:1.4}.accessSelectionGrid label:has(input:checked){border-color:#a997f6;background:#f5f2ff;box-shadow:0 0 0 1px #6d4bf21a}
+html[data-theme="dark"] .memberAccess{background:#211d33;border-color:#41376f}html[data-theme="dark"] .memberAccess>div span{background:#30264d;color:#c7baff}html[data-theme="dark"] .accessSelectionGrid label{border-color:#34405a;background:#171f30}html[data-theme="dark"] .accessSelectionGrid label:hover,html[data-theme="dark"] .accessSelectionGrid label:has(input:checked){background:#27213e;border-color:#5b4a88}
+
+/* Configurações e formulários */
+.settings{grid-template-columns:minmax(220px,16vw) 1fr}.settingsNav{padding:18px}.settingsNav button{padding:13px;font-size:12px}.settingsBody{padding:clamp(24px,2.2vw,40px);max-width:none}.settingsBody>p{font-size:13px}
+.form{gap:18px;padding:24px}.form label{font-size:12px}.form input,.form select,.form textarea{min-height:42px;padding:11px 12px}.form textarea{min-height:100px}.modal{width:min(760px,calc(100vw - 32px))}.modalHead{padding:22px 25px}
+
+@media(min-width:1700px){.dashboardKpis{grid-template-columns:repeat(6,1fr)}.financeStats{grid-template-columns:repeat(5,1fr)}.memberGrid{grid-template-columns:repeat(4,1fr)}.genericGrid{grid-template-columns:repeat(3,1fr)}.calendarDays>div{min-height:145px}}
+@media(max-width:1200px){.globalSearch{width:270px}.headTitle{min-width:300px}.crmAnalytics{grid-template-columns:1fr}.crmAnalytics .crmChart:last-child{grid-column:auto}.hubStats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){main,.connectedDashboard,.crmPage,.financePage,.onboardingPage,.tasksEnhanced,.clientHub{padding:18px 14px 38px}.headTitle{min-width:0}.globalSearch{width:auto}.clientWorkspace.hasDetails,.onboardingWorkspace{grid-template-columns:1fr}.hubStats{grid-template-columns:1fr 1fr}.settings{grid-template-columns:1fr}.reportRow,.reportTableHead{font-size:11px}}
+@media(max-width:520px){body{font-size:13px}.hubStats{grid-template-columns:1fr}.tasksStats,.clientStats,.crmKpis,.onboardingStats,.financeStats{grid-template-columns:1fr}.modal{width:calc(100vw - 16px)}.form{padding:18px}.clientResponsiblesGrid,.accessSelectionGrid,.taskResponsiblesGrid{grid-template-columns:1fr}.clientEnhancedDetails .clientHubButton{margin-bottom:10px}.clientEnhancedDetails .detailBtns{gap:8px;margin-bottom:16px}.calendarDays>div{min-height:82px;padding:3px}.calendarDays button{font-size:8px;padding:3px}}
