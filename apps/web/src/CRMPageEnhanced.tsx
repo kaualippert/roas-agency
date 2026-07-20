@@ -27,14 +27,14 @@ export default function CRMPage(){
  const estimate=serviceEstimate(selectedServiceIds,services),estimatedValue=estimate.fixedValue+(estimate.hasVariable||!selectedServiceIds.length?variableEstimate:0);
  const openModal=()=>{setSelectedServiceIds([]);setVariableEstimate(0);setModal(true)};
  const closeModal=()=>{setModal(false);setSelectedServiceIds([]);setVariableEstimate(0)};
- const add=(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const form=new FormData(e.currentTarget);save([{id:crypto.randomUUID(),name:String(form.get('name')).trim(),contact:String(form.get('contact')).trim(),phone:String(form.get('phone')).trim(),responsibleId:String(form.get('responsibleId')),value:estimatedValue,stage:'Leads captados',source:String(form.get('source')),nextAction:'Fazer primeiro contato',color:palette[leads.length%palette.length],serviceIds:selectedServiceIds},...leads]);closeModal()};
+ const add=(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const form=new FormData(e.currentTarget),now=new Date().toISOString();save([{id:crypto.randomUUID(),name:String(form.get('name')).trim(),contact:String(form.get('contact')).trim(),phone:String(form.get('phone')).trim(),responsibleId:String(form.get('responsibleId')),value:estimatedValue,stage:'Leads captados',source:String(form.get('source')),nextAction:'Fazer primeiro contato',color:palette[leads.length%palette.length],serviceIds:selectedServiceIds,createdAt:now,updatedAt:now},...leads]);closeModal()};
 
  const funnel=useMemo<FunnelItem[]>(()=>stages.map((stage,index)=>{const count=leads.filter(l=>l.stage===stage).length;return{stage:stage.length>15?stage.split(' ')[0]:stage,fullStage:stage,leads:count,percentage:leads.length?Math.round(count/leads.length*100):0,color:palette[index]}}),[leads]);
  const sources=useMemo(()=>Array.from(new Set(leads.map(l=>l.source))).map(source=>({name:source,value:leads.filter(l=>l.source===source).length})),[leads]);
  const active=leads.filter(l=>!['Negócio fechado','Negócio perdido'].includes(l.stage));
  const won=leads.filter(l=>l.stage==='Negócio fechado');
  const conversion=leads.length?Math.round(won.length/leads.length*100):0;
- const trend=[3,5,4,7,6,9,8,11,10,14,13,leads.length].map((value,index)=>({week:`S${index+1}`,leads:value}));
+ const trend=useMemo(()=>Array.from({length:12},(_,index)=>{const end=new Date();end.setHours(23,59,59,999);end.setDate(end.getDate()-(11-index)*7);const start=new Date(end);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);return{week:`S${index+1}`,leads:leads.filter(lead=>{if(!lead.createdAt)return false;const createdAt=new Date(lead.createdAt);return createdAt>=start&&createdAt<=end}).length}}),[leads]);
 
  return <main className="crmPage">
   <div className="crmPageTitle"><div><h2>CRM de Prospecção</h2><p>Acompanhe oportunidades, serviços solicitados e a saúde do funil.</p></div><button className="btn" onClick={openModal}><Plus/> Novo lead</button></div>

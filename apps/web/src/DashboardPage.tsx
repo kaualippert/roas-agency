@@ -13,8 +13,6 @@ const stageColors=['#6d4bf2','#3b82f6','#16a269','#e99a18','#e8547c','#7c8aa2','
 const money=(value=0)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const parseDate=(value?:string)=>value?new Date(value.length===10?`${value}T12:00:00`:value):null;
 const isAfter=(value:string|undefined,from:Date)=>{const date=parseDate(value);return Boolean(date&&date>=from)};
-function seedFinancialEntries(clients:Client[]){const now=new Date(),result:FinancialEntry[]=[];for(let offset=5;offset>=0;offset--){const date=new Date(now.getFullYear(),now.getMonth()-offset,1),month=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;clients.filter(client=>client.status==='active').forEach((client,index)=>{const current=offset===0,received=!current||index%3!==1,dueDate=`${month}-${String(Math.min(25,5+index*3)).padStart(2,'0')}`;result.push({id:`recurring-${client.id}-${month}`,clientId:client.id,kind:'recurring',value:client.monthlyRevenue,dueDate,status:received?'received':'pending',receivedAt:received?dueDate:undefined})})}return result}
-
 export default function DashboardPage(){
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[]));
  const [projects,setProjects]=useState<Project[]>(()=>store.get('projects',[]));
@@ -22,7 +20,7 @@ export default function DashboardPage(){
  const [leads,setLeads]=useState<Lead[]>(()=>store.get('prospects',[]));
  const [entries,setEntries]=useState<FinancialEntry[]>(()=>store.get('financial_entries',[]));
  const [period,setPeriod]=useState<Period>('6m');
- useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTasks(store.get('tasks',[]));setLeads(store.get('prospects',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);if(!localStorage.getItem('roas_financial_entries'))store.set('financial_entries',seedFinancialEntries(store.get('clients',[])));else update();return()=>window.removeEventListener('roas-change',update)},[]);
+ useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTasks(store.get('tasks',[]));setLeads(store.get('prospects',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
  const from=useMemo(()=>{const date=new Date();date.setDate(date.getDate()-periods[period].days);date.setHours(0,0,0,0);return date},[period]);
  const activeClients=clients.filter(client=>client.status==='active');
  const activeProjects=projects.filter(project=>project.status==='active');
@@ -40,7 +38,7 @@ export default function DashboardPage(){
  const conversion=leads.length?Math.round(leads.filter(lead=>lead.stage==='Negócio fechado').length/leads.length*100):0;
  const projectAverage=Math.round(activeProjects.reduce((sum,project)=>sum+project.progress,0)/Math.max(1,activeProjects.length));
  const revenueData=useMemo(()=>buildRevenueData(period,entries,mrr),[period,entries,mrr]);
- const funnelData=stages.map((stage,index)=>({stage:stage.length>13?stage.split(' ')[0]:stage,total:leads.filter(lead=>lead.stage===stage&&(isAfter(lead.createdAt,from)||!lead.createdAt)).length,color:stageColors[index]}));
+ const funnelData=stages.map((stage,index)=>({stage:stage==='Negócio fechado'?'Fechado':stage==='Negócio perdido'?'Perdido':stage.length>13?stage.split(' ')[0]:stage,total:leads.filter(lead=>lead.stage===stage&&(isAfter(lead.createdAt,from)||!lead.createdAt)).length,color:stageColors[index]}));
  const taskData=[
   {name:'A fazer',value:periodTasks.filter(task=>task.status==='todo').length,color:'#6d4bf2'},
   {name:'Pendentes',value:periodTasks.filter(task=>task.status==='pending').length,color:'#e99a18'},

@@ -1,11 +1,6 @@
 import type {AgencyService,ServiceCapability} from './ServicesManager';
 
 export type ServiceLinkedRecord={serviceIds?:string[];services?:string[]};
-export const defaultServices:AgencyService[]=[
- {id:'traffic',name:'Tráfego Pago',description:'Gestão e otimização de campanhas de mídia paga.',price:3500,pricingType:'monthly',active:true,createdAt:new Date().toISOString()},
- {id:'social',name:'Social Media',description:'Planejamento, criação e publicação de conteúdo.',price:1000,pricingType:'monthly',capabilities:['editorial'],active:true,createdAt:new Date().toISOString()},
- {id:'reports',name:'Relatórios',description:'Relatórios de performance e reuniões mensais.',price:350,pricingType:'monthly',active:true,createdAt:new Date().toISOString()},
-];
 const normalize=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
 const slug=(value:string)=>normalize(value).replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'servico';
 

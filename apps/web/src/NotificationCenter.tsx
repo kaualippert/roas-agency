@@ -8,10 +8,8 @@ import type {GenericItem,Task} from './types';
 type Notification={id:string;title:string;description:string;type:string;read:boolean;createdAt:string};
 type ConvertedLead={id:string;name:string;convertedClientId?:string};
 type FinancialEntry={id:string;description:string;dueDate:string;status:'pending'|'received';receivedAt?:string;updatedAt?:string};
-const legacySeedIds=new Set(['n1','n2','n3']),emittedKey='roas_notification_emitted';
-const initialNotifications=()=>store.get<Notification[]>('notifications',[]).filter(item=>!legacySeedIds.has(item.id));
+const initialNotifications=()=>store.get<Notification[]>('notifications',[]);
 const relative=(date:string)=>{const minutes=Math.max(1,Math.round((Date.now()-new Date(date).getTime())/60000));return minutes<60?`${minutes} min atrás`:minutes<1440?`${Math.floor(minutes/60)} h atrás`:`${Math.floor(minutes/1440)} d atrás`};
-const readEmitted=()=>{try{return new Set<string>(JSON.parse(localStorage.getItem(emittedKey)||'[]'))}catch{return new Set<string>()}};
 const startOfDay=(value=new Date())=>new Date(value.getFullYear(),value.getMonth(),value.getDate());
 
 export default function NotificationCenter(){
@@ -21,7 +19,7 @@ export default function NotificationCenter(){
  const receivedEntryIds=useRef(new Set(store.get<FinancialEntry[]>('financial_entries',[]).filter(entry=>entry.status==='received').map(entry=>entry.id)));
 
  useEffect(()=>{
-  const appendAlerts=(alerts:Notification[])=>{if(!alerts.length)return;const emitted=readEmitted(),current=store.get<Notification[]>('notifications',[]).filter(item=>!legacySeedIds.has(item.id)),fresh=alerts.filter(alert=>!emitted.has(alert.id)&&!current.some(item=>item.id===alert.id));if(!fresh.length)return;fresh.forEach(alert=>emitted.add(alert.id));localStorage.setItem(emittedKey,JSON.stringify([...emitted]));store.set('notifications',[...fresh,...current])};
+  const appendAlerts=(alerts:Notification[])=>{if(!alerts.length)return;const current=store.get<Notification[]>('notifications',[]),fresh=alerts.filter(alert=>!current.some(item=>item.id===alert.id));if(fresh.length)store.set('notifications',[...fresh,...current])};
   const scanSystemAlerts=()=>{
    const preferences=getNotificationPreferences(),today=startOfDay(),todayKey=today.toISOString().slice(0,10),tomorrow=new Date(today);tomorrow.setDate(tomorrow.getDate()+1);const tomorrowKey=tomorrow.toISOString().slice(0,10),now=new Date().toISOString(),alerts:Notification[]=[];
    store.get<Task[]>('tasks',[]).filter(task=>task.status!=='completed').forEach(task=>{const overdue=task.status==='overdue'||Boolean(task.dueDate&&task.dueDate<todayKey);if(preferences.taskOverdue&&overdue)alerts.push({id:`task-overdue-${task.id}-${task.dueDate}`,title:'Tarefa atrasada',description:`${task.title} ultrapassou o prazo previsto.`,type:'task',read:false,createdAt:now});else if(preferences.taskDueSoon&&(task.dueDate===todayKey||task.dueDate===tomorrowKey))alerts.push({id:`task-due-${task.id}-${task.dueDate}`,title:'Tarefa próxima do prazo',description:`${task.title} vence ${task.dueDate===todayKey?'hoje':'amanhã'}.`,type:'task',read:false,createdAt:now})});
@@ -47,7 +45,7 @@ export default function NotificationCenter(){
   const visibilityUpdate=()=>{if(document.visibilityState==='visible')scanSystemAlerts()};
   const automaticCheck=window.setInterval(scanSystemAlerts,60000);
   document.addEventListener('click',click);document.addEventListener('visibilitychange',visibilityUpdate);window.addEventListener('focus',scanSystemAlerts);window.addEventListener('roas-change',update);window.addEventListener('roas-notification-preferences',preferenceUpdate);
-  const stored=store.get<Notification[]>('notifications',[]),cleaned=stored.filter(item=>!legacySeedIds.has(item.id));if(!localStorage.getItem('roas_notifications')||cleaned.length!==stored.length)store.set('notifications',cleaned);scanSystemAlerts();
+  scanSystemAlerts();
   return()=>{window.clearInterval(automaticCheck);document.removeEventListener('click',click);document.removeEventListener('visibilitychange',visibilityUpdate);window.removeEventListener('focus',scanSystemAlerts);window.removeEventListener('roas-change',update);window.removeEventListener('roas-notification-preferences',preferenceUpdate)};
  },[]);
 

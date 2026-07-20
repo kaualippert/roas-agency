@@ -1,6 +1,6 @@
-export const notificationSoundKey='roas_notification_sound_enabled';
+import {store} from './storage';
 
-export const notificationSoundEnabled=()=>localStorage.getItem(notificationSoundKey)!=='false';
+export const notificationSoundEnabled=()=>store.get('notification_sound_enabled',true);
 
 export function playNotificationSound(kind:'notification'|'conversion'='notification'){
  if(!notificationSoundEnabled())return;
