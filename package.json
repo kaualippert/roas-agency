@@ -8,7 +8,7 @@
     "dev:api": "npm run dev -w @roas/api",
     "dev:web": "npm run dev -w @roas/web",
     "build": "npm run build -w @roas/api && npm run build -w @roas/web",
-    "build:vercel": "npm run typecheck:vercel && npm run build -w @roas/web",
+    "build:vercel": "npm run build:vercel -w @roas/web",
     "typecheck:vercel": "tsc -p tsconfig.vercel.json",
     "test": "npm run test -w @roas/api && node --import tsx --test tests/**/*.test.ts"
   },
