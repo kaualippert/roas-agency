@@ -5,7 +5,7 @@ import type {AgencyService} from '../ServicesManager';
 import type {Client,Project,Task,TeamMember} from '../types';
 import {useStoreData} from '../app/useStoreData';
 import {Avatar,Badge,Progress,money} from '../components/ui';
-import {resolveServiceIds} from '../service-links';
+import {hasEditorialCapability,resolveServiceIds} from '../service-links';
 import {store} from '../storage';
 import {removeProjectFinancialEntry,syncProjectFinancialEntry,syncProjectsFinancialEntries,type FinancialEntry} from '../financial-entries';
 import '../projects-responsibles.css';
@@ -23,7 +23,7 @@ const formatDate=(value?:string)=>value?new Date(`${value}T12:00:00`).toLocaleDa
 const responsibleIds=(project:Project)=>project.responsibleIds?.length?project.responsibleIds:project.responsibleId?[project.responsibleId]:[];
 const projectPricingType=(project:Project)=>project.pricingType||'monthly';
 const projectBillingLabel=(project:Project)=>projectPricingType(project)==='variable'?`${money(project.variableValue??project.monthlyValue)} · variável`:`${money(project.monthlyValue)}/mês`;
-const isSocialMediaProject=(project:Project,services:AgencyService[])=>services.some(service=>project.serviceIds?.includes(service.id)&&service.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes('social media'));
+const isSocialMediaProject=(project:Project,services:AgencyService[])=>services.some(service=>project.serviceIds?.includes(service.id)&&hasEditorialCapability(service));
 
 export default function ProjectsPage(){
  const navigate=useNavigate();
