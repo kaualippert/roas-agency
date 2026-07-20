@@ -1,8 +1,0 @@
-import {clients,projects,tasks,team,genericSeeds} from './data';
-import {defaultServices,ensureLegacyServices,migrateServiceCapabilities,migrateServiceRecords} from './service-links';
-const prefix='roas_'; export const store={
- get<T>(key:string,fallback:T):T{try{const raw=localStorage.getItem(prefix+key); return raw?JSON.parse(raw):fallback}catch{return fallback}},
- set<T>(key:string,data:T){let value:any=data;if((key==='clients'||key==='projects')&&Array.isArray(data)){const currentCatalog=this.get('services',defaultServices),catalog=migrateServiceCapabilities(ensureLegacyServices(currentCatalog,data as any[]));if(JSON.stringify(catalog)!==JSON.stringify(currentCatalog))localStorage.setItem(prefix+'services',JSON.stringify(catalog));value=migrateServiceRecords(data as any[],catalog)}localStorage.setItem(prefix+key,JSON.stringify(value));window.dispatchEvent(new CustomEvent('roas-change',{detail:key}))},
- init(){const seeds:any={clients,projects,tasks,team,services:defaultServices,...genericSeeds};Object.entries(seeds).forEach(([k,v])=>{if(!localStorage.getItem(prefix+k))this.set(k,v)});const linkedKeys=['clients','projects'],records=linkedKeys.flatMap(key=>this.get<any[]>(key,[])),currentCatalog=this.get('services',defaultServices),catalog=migrateServiceCapabilities(ensureLegacyServices(currentCatalog,records));if(JSON.stringify(catalog)!==JSON.stringify(currentCatalog))this.set('services',catalog);linkedKeys.forEach(key=>{const items=this.get<any[]>(key,[]);if(items.some(item=>item.services||!item.serviceIds))this.set(key,migrateServiceRecords(items,catalog))});this.set('app_version','1.1.0')},
- reset(){Object.keys(localStorage).filter(k=>k.startsWith(prefix)).forEach(k=>localStorage.removeItem(k));this.init()}
-};

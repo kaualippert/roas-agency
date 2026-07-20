@@ -1,0 +1,27 @@
+import fs from 'node:fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
+if(process.env.ATLAS_CREDENTIALS_FILE){
+  const credentialsPath=process.env.ATLAS_CREDENTIALS_FILE;
+  if(!fs.existsSync(credentialsPath))throw new Error(`Atlas credentials file not found: ${credentialsPath}`);
+  dotenv.config({path:credentialsPath,override:false});
+}
+
+function mongoUri(){
+  const uri=process.env.MONGODB_URI;
+  if(!uri)throw new Error('MONGODB_URI is required');
+  const username=process.env.MONGODB_USERNAME;
+  const password=process.env.MONGODB_PASSWORD;
+  return uri
+    .replace('<username>',encodeURIComponent(username||''))
+    .replace('<password>',encodeURIComponent(password||''))
+    .replace('${MONGODB_USERNAME}',encodeURIComponent(username||''))
+    .replace('${MONGODB_PASSWORD}',encodeURIComponent(password||''));
+}
+
+export const config={
+  port:Number(process.env.PORT||3333),
+  mongoUri:mongoUri(),
+  corsOrigins:(process.env.CORS_ORIGIN||'http://127.0.0.1:5173,http://localhost:5173').split(',').map(value=>value.trim()),
+};

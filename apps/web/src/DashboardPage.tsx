@@ -40,7 +40,7 @@ export default function DashboardPage(){
  const conversion=leads.length?Math.round(leads.filter(lead=>lead.stage==='Negócio fechado').length/leads.length*100):0;
  const projectAverage=Math.round(activeProjects.reduce((sum,project)=>sum+project.progress,0)/Math.max(1,activeProjects.length));
  const revenueData=useMemo(()=>buildRevenueData(period,entries,mrr),[period,entries,mrr]);
- const funnelData=stages.map((stage,index)=>({stage:stage.length>13?stage.split(' ')[0]:stage,total:leads.filter(lead=>lead.stage===stage&&(isAfter(lead.createdAt,from)||!lead.createdAt)).length,color:stageColors[index]}));
+ const funnelData=stages.map((stage,index)=>({stage:stage==='Negócio fechado'?'Fechado':stage==='Negócio perdido'?'Perdido':stage.length>13?stage.split(' ')[0]:stage,total:leads.filter(lead=>lead.stage===stage&&(isAfter(lead.createdAt,from)||!lead.createdAt)).length,color:stageColors[index]}));
  const taskData=[
   {name:'A fazer',value:periodTasks.filter(task=>task.status==='todo').length,color:'#6d4bf2'},
   {name:'Pendentes',value:periodTasks.filter(task=>task.status==='pending').length,color:'#e99a18'},
