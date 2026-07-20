@@ -8,7 +8,10 @@ let flushTimer:number|undefined;
 function emit(key:string){window.dispatchEvent(new CustomEvent('roas-change',{detail:key}))}
 
 async function request(path:string,options?:RequestInit){
- const response=await fetch(`${apiUrl}${path}`,options);
+ const token=await getIdToken();
+ if(!token)throw new Error('Sessão não autenticada.');
+ const headers=new Headers(options?.headers);headers.set('authorization',`Bearer ${token}`);
+ const response=await fetch(`${apiUrl}${path}`,{...options,headers});
  if(!response.ok){const body=await response.json().catch(()=>({}));throw new Error(body.error||`API request failed (${response.status})`)}
  return response.json();
 }
@@ -31,3 +34,4 @@ export const store={
  async replaceAll(next:Record<string,unknown>){const result=await request('/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:next})});state=result.state||{};emit('hydrate')},
  async reset(){await request('/state',{method:'DELETE'});state={};emit('hydrate')}
 };
+import {getIdToken} from './firebase';

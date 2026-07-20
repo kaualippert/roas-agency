@@ -4,6 +4,8 @@ import {useLocation} from 'react-router-dom';
 import {navGroups,pageMeta} from './navigation';
 import {store} from '../storage';
 import type {TeamMember} from '../types';
+import {signOut} from 'firebase/auth';
+import {auth} from '../firebase';
 
 type Notification={read:boolean};
 
@@ -20,8 +22,8 @@ function Header({onMenu}:{onMenu:()=>void}){
  const location=useLocation(),key=location.pathname.split('/')[1]||'dashboard',meta=pageMeta[key]||pageMeta.dashboard;
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[])),[notifications,setNotifications]=useState<Notification[]>(()=>store.get('notifications',[]));
  useEffect(()=>{const update=()=>{setTeam(store.get('team',[]));setNotifications(store.get('notifications',[]))};window.addEventListener('roas-change',update);return()=>window.removeEventListener('roas-change',update)},[]);
- const user=team.find(member=>member.status==='active')||team[0],unread=notifications.filter(item=>!item.read).length,initials=user?.name.split(' ').slice(0,2).map(part=>part[0]).join('').toUpperCase()||'—';
- return <header><button className="mobileMenu iconBtn" onClick={onMenu}><Menu/></button><div className="headTitle"><h1>{meta.title}</h1><p>{meta.sub}</p></div><div className="headerSpacer"/><button className="iconBtn notification"><Bell/>{unread>0&&<i>{unread}</i>}</button><div className="profile"><div className="userAvatar">{initials}</div><div><b>{user?.name||'Usuário não cadastrado'}</b><small>{user?.role||'Cadastre a equipe'}</small></div><ChevronDown/></div></header>
+ const member=team.find(item=>item.email===auth.currentUser?.email)||team.find(item=>item.status==='active')||team[0],name=auth.currentUser?.displayName||member?.name||auth.currentUser?.email||'Usuário',role=member?.role||'Usuário autenticado',unread=notifications.filter(item=>!item.read).length,initials=name.split(' ').slice(0,2).map(part=>part[0]).join('').toUpperCase();
+ return <header><button className="mobileMenu iconBtn" onClick={onMenu}><Menu/></button><div className="headTitle"><h1>{meta.title}</h1><p>{meta.sub}</p></div><div className="headerSpacer"/><button className="iconBtn notification"><Bell/>{unread>0&&<i>{unread}</i>}</button><button className="profile" title="Sair da conta" onClick={()=>void signOut(auth)}><div className="userAvatar">{initials}</div><div><b>{name}</b><small>{role}</small></div><ChevronDown/></button></header>
 }
 
 export default function AppLayout({children}:{children:React.ReactNode}){

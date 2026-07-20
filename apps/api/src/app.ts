@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import {z} from 'zod';
 import {config} from './config.js';
 import {allState,isAllowedKey,replaceAllState,replaceState,State} from './state.js';
+import {requireFirebaseAuth} from './auth.js';
 
 const valueSchema=z.object({value:z.unknown()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
@@ -29,6 +30,8 @@ export function createApp(){
     database:mongoose.connection.readyState===1?'connected':'disconnected',
     timestamp:new Date().toISOString(),
   }));
+
+  app.use('/api/state',requireFirebaseAuth);
 
   app.use('/api/state',(_request,response,next)=>{
     if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});

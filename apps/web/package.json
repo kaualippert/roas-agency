@@ -12,6 +12,7 @@
     "@tailwindcss/vite": "latest",
     "@vitejs/plugin-react": "latest",
     "date-fns": "latest",
+    "firebase": "^12.16.0",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
