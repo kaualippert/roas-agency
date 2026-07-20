@@ -13,7 +13,7 @@ const stateSchema=new Schema({
 },{timestamps:true,versionKey:false});
 
 export const State=mongoose.model('State',stateSchema);
-export function isAllowedKey(key:string){return allowedKeys.has(key)}
+export function isAllowedKey(key:string){return allowedKeys.has(key)||/^editorial_[A-Za-z0-9-]+$/.test(key)}
 
 export async function allState(){
   const documents=await State.find().lean();
@@ -23,6 +23,10 @@ export async function allState(){
 export async function replaceState(key:string,value:unknown){
   const document=await State.findOneAndUpdate({key},{key,value},{upsert:true,new:true,setDefaultsOnInsert:true}).lean();
   return document?.value;
+}
+
+export async function deleteState(key:string){
+  await State.deleteOne({key});
 }
 
 export async function replaceAllState(state:Record<string,unknown>){

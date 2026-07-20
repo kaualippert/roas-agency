@@ -5,7 +5,7 @@ import {pinoHttp} from 'pino-http';
 import mongoose from 'mongoose';
 import {z} from 'zod';
 import {config} from './config.js';
-import {allState,isAllowedKey,replaceAllState,replaceState,State} from './state.js';
+import {allState,deleteState,isAllowedKey,replaceAllState,replaceState,State} from './state.js';
 import {requireFirebaseAuth} from './auth.js';
 
 const valueSchema=z.object({value:z.unknown()});
@@ -67,6 +67,14 @@ export function createApp(){
       if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
       const {value}=valueSchema.parse(request.body);
       response.json({value:await replaceState(request.params.key,value)});
+    }catch(error){next(error)}
+  });
+
+  app.delete('/api/state/:key',async(request,response,next)=>{
+    try{
+      if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
+      await deleteState(request.params.key);
+      response.status(204).end();
     }catch(error){next(error)}
   });
 
