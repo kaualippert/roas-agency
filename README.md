@@ -34,9 +34,32 @@ npm run dev
 
 Na primeira execução, os dados demonstrativos do frontend são enviados ao MongoDB. Nas próximas execuções, o MongoDB se torna a fonte de verdade e o navegador mantém um cache local para tolerar indisponibilidade temporária da API.
 
+## Deploy único na Vercel
+
+O repositório está configurado para um único projeto Vercel servir frontend e backend no mesmo domínio:
+
+- o projeto Vercel deve usar a raiz do repositório como **Root Directory**;
+- `vercel.json` executa `npm run build:vercel` e publica `apps/web/dist`;
+- `api/index.ts` recebe todas as rotas `/api/*` como uma Vercel Function;
+- as demais rotas são reescritas para `index.html`, preservando o React Router;
+- em produção o frontend usa `/api`, sem URL fixa ou CORS entre domínios.
+
+Cadastre estas variáveis em **Settings → Environment Variables** para Production, Preview e Development:
+
+```text
+MONGODB_URI
+MONGODB_USERNAME
+MONGODB_PASSWORD
+```
+
+Se `MONGODB_URI` já contiver usuário e senha, as duas variáveis separadas são opcionais. O arquivo local `atlas-credentials.env` não deve ser enviado para a Vercel nem versionado.
+
+No MongoDB Atlas, a Network Access list precisa aceitar conexões da Vercel. Para cargas serverless, use uma regra de acesso compatível com os endereços de saída do projeto ou uma integração privada disponível no plano utilizado.
+
 ## Validação
 
 ```bash
 npm run build
+npm run build:vercel
 npm test
 ```

@@ -13,10 +13,13 @@ const bulkSchema=z.object({state:z.record(z.unknown())});
 export function createApp(){
   const app=express();
   app.use(helmet());
-  app.use(cors({origin(origin,callback){
-    if(!origin||config.corsOrigins.includes(origin))return callback(null,true);
-    callback(new Error('Origin not allowed by CORS'));
-  }}));
+  app.use((request,response,next)=>{
+    const origin=request.get('origin');
+    let sameHost=false;
+    try{sameHost=Boolean(origin&&new URL(origin).host===request.get('host'))}catch{sameHost=false}
+    const allowed=!origin||sameHost||config.corsOrigins.includes(origin);
+    cors({origin:allowed?origin||false:false})(request,response,next);
+  });
   app.use(express.json({limit:'5mb'}));
   app.use(pinoHttp());
 

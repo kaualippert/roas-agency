@@ -22,6 +22,6 @@ function mongoUri(){
 
 export const config={
   port:Number(process.env.PORT||3333),
-  mongoUri:mongoUri(),
+  mongoUri,
   corsOrigins:(process.env.CORS_ORIGIN||'http://127.0.0.1:5173,http://localhost:5173').split(',').map(value=>value.trim()),
 };
