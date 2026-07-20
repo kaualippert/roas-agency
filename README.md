@@ -32,7 +32,7 @@ npm run dev
 - API: http://127.0.0.1:3333
 - Health check: http://127.0.0.1:3333/api/health
 
-Na primeira execução, os dados demonstrativos do frontend são enviados ao MongoDB. Nas próximas execuções, o MongoDB se torna a fonte de verdade e o navegador mantém um cache local para tolerar indisponibilidade temporária da API.
+O MongoDB é a única fonte de verdade dos dados operacionais. O frontend carrega o estado exclusivamente pela API e não inicializa dados demonstrativos nem usa `localStorage` como contingência. Se a API ou o banco estiver indisponível, a aplicação exibe o erro de conexão em vez de apresentar dados obsoletos.
 
 ## Deploy único na Vercel
 

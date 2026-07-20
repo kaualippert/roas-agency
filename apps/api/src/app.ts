@@ -5,7 +5,7 @@ import {pinoHttp} from 'pino-http';
 import mongoose from 'mongoose';
 import {z} from 'zod';
 import {config} from './config.js';
-import {allState,isAllowedKey,replaceState,State} from './state.js';
+import {allState,isAllowedKey,replaceAllState,replaceState,State} from './state.js';
 
 const valueSchema=z.object({value:z.unknown()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
@@ -39,15 +39,15 @@ export function createApp(){
     try{response.json({state:await allState()})}catch(error){next(error)}
   });
 
-  app.post('/api/state/bootstrap',async(request,response,next)=>{
+  app.put('/api/state',async(request,response,next)=>{
     try{
       const {state}=bulkSchema.parse(request.body);
-      const entries=Object.entries(state).filter(([key])=>isAllowedKey(key));
-      if(await State.estimatedDocumentCount()===0&&entries.length){
-        await State.insertMany(entries.map(([key,value])=>({key,value})));
-      }
-      response.json({state:await allState()});
+      response.json({state:await replaceAllState(state)});
     }catch(error){next(error)}
+  });
+
+  app.delete('/api/state',async(_request,response,next)=>{
+    try{response.json({state:await replaceAllState({})})}catch(error){next(error)}
   });
 
   app.get('/api/state/:key',async(request,response,next)=>{

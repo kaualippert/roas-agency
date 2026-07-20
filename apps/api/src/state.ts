@@ -2,7 +2,7 @@ import mongoose,{Schema} from 'mongoose';
 
 const allowedKeys=new Set([
   'activities','agency_profile','clients','documents','financial_entries','general_settings',
-  'notifications','onboarding','projects','prospects','reports','services','tasks','team',
+  'notifications','notification_preferences','notification_sound_enabled','onboarding','projects','prospects','reports','services','tasks','team',
   'campaigns','ads','creatives','invoices','payments','timeline','permissions','integrations','settings',
   'app_version'
 ]);
@@ -23,4 +23,13 @@ export async function allState(){
 export async function replaceState(key:string,value:unknown){
   const document=await State.findOneAndUpdate({key},{key,value},{upsert:true,new:true,setDefaultsOnInsert:true}).lean();
   return document?.value;
+}
+
+export async function replaceAllState(state:Record<string,unknown>){
+  const entries=Object.entries(state).filter(([key])=>isAllowedKey(key));
+  if(entries.length){
+    await State.bulkWrite(entries.map(([key,value])=>({updateOne:{filter:{key},update:{$set:{value}},upsert:true}})));
+    await State.deleteMany({key:{$nin:entries.map(([key])=>key)}});
+  }else await State.deleteMany({});
+  return allState();
 }

@@ -14,12 +14,10 @@ const toDate=(month:string,day:number)=>`${month}-${String(day).padStart(2,'0')}
 const effectiveStatus=(entry:FinancialEntry)=>entry.status==='received'?'received':entry.dueDate<new Date().toISOString().slice(0,10)?'overdue':'pending';
 const statusLabel={received:'Recebido',pending:'Pendente',overdue:'Atrasado'};
 
-function seedEntries(clients:Client[]){const active=clients.filter(client=>client.status==='active'),now=new Date(),entries:FinancialEntry[]=[];for(let offset=5;offset>=0;offset--){const date=new Date(now.getFullYear(),now.getMonth()-offset,1),month=monthKey(date);active.forEach((client,index)=>{const isCurrent=offset===0,received=!isCurrent||index%3!==1,dueDate=toDate(month,Math.min(25,5+index*3)),stamp=new Date().toISOString();entries.push({id:`recurring-${client.id}-${month}`,clientId:client.id,serviceId:client.serviceIds?.[0],source:'client',description:`Mensalidade ${date.toLocaleDateString('pt-BR',{month:'long'})}`,kind:'recurring',value:client.monthlyRevenue,dueDate,status:received?'received':'pending',receivedAt:received?dueDate:undefined,notes:'Cobrança recorrente gerada pelo sistema.',createdAt:stamp,updatedAt:stamp})})}return entries}
-
 export default function FinancePage(){
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[])),[services,setServices]=useState<AgencyService[]>(()=>store.get('services',[])),[entries,setEntries]=useState<FinancialEntry[]>(()=>store.get('financial_entries',[]));
  const [query,setQuery]=useState(''),[filter,setFilter]=useState<'all'|'pending'|'received'|'overdue'>('all'),[modal,setModal]=useState(false),[selectedClientId,setSelectedClientId]=useState(''),[presetServiceId,setPresetServiceId]=useState('');
- useEffect(()=>{if(!localStorage.getItem('roas_financial_entries'))store.set('financial_entries',seedEntries(store.get('clients',[])));const update=()=>{setClients(store.get('clients',[]));setServices(store.get('services',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
+ useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setServices(store.get('services',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
  const save=(next:FinancialEntry[])=>{setEntries(next);store.set('financial_entries',next)};
  const month=currentMonth(),activeClients=clients.filter(client=>client.status==='active');
  const mrr=activeClients.reduce((sum,client)=>sum+client.monthlyRevenue,0);

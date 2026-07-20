@@ -17,6 +17,8 @@ export type CRMLead={
   serviceIds?:string[];
   services?:string[];
   convertedClientId?:string;
+  createdAt?:string;
+  updatedAt?:string;
 };
 
 export const crmStages:CRMStage[]=['Leads captados','Primeiro contato','Em andamento','Reunião','Ciclo de acompanhamento','Em espera','Negócio fechado','Negócio perdido'];

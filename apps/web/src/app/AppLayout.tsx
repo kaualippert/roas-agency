@@ -2,6 +2,10 @@ import {useEffect,useState} from 'react';
 import {Bell,ChevronDown,ChevronsLeft,ChevronsRight,Menu} from 'lucide-react';
 import {useLocation} from 'react-router-dom';
 import {navGroups,pageMeta} from './navigation';
+import {store} from '../storage';
+import type {TeamMember} from '../types';
+
+type Notification={read:boolean};
 
 function Logo(){return <div className="logo"><div className="rmark">R</div><div><b>ROAS</b><small>AGÊNCIA DE PERFORMANCE</small></div></div>}
 
@@ -14,7 +18,10 @@ function Sidebar({open,setOpen}:{open:boolean;setOpen:(value:boolean)=>void}){
 
 function Header({onMenu}:{onMenu:()=>void}){
  const location=useLocation(),key=location.pathname.split('/')[1]||'dashboard',meta=pageMeta[key]||pageMeta.dashboard;
- return <header><button className="mobileMenu iconBtn" onClick={onMenu}><Menu/></button><div className="headTitle"><h1>{meta.title}</h1><p>{meta.sub}</p></div><div className="headerSpacer"/><button className="iconBtn notification"><Bell/><i>3</i></button><div className="profile"><div className="userAvatar">GR</div><div><b>Gabriel Rocha</b><small>Administrador</small></div><ChevronDown/></div></header>
+ const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[])),[notifications,setNotifications]=useState<Notification[]>(()=>store.get('notifications',[]));
+ useEffect(()=>{const update=()=>{setTeam(store.get('team',[]));setNotifications(store.get('notifications',[]))};window.addEventListener('roas-change',update);return()=>window.removeEventListener('roas-change',update)},[]);
+ const user=team.find(member=>member.status==='active')||team[0],unread=notifications.filter(item=>!item.read).length,initials=user?.name.split(' ').slice(0,2).map(part=>part[0]).join('').toUpperCase()||'—';
+ return <header><button className="mobileMenu iconBtn" onClick={onMenu}><Menu/></button><div className="headTitle"><h1>{meta.title}</h1><p>{meta.sub}</p></div><div className="headerSpacer"/><button className="iconBtn notification"><Bell/>{unread>0&&<i>{unread}</i>}</button><div className="profile"><div className="userAvatar">{initials}</div><div><b>{user?.name||'Usuário não cadastrado'}</b><small>{user?.role||'Cadastre a equipe'}</small></div><ChevronDown/></div></header>
 }
 
 export default function AppLayout({children}:{children:React.ReactNode}){
