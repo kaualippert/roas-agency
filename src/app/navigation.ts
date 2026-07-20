@@ -33,5 +33,5 @@ export const navGroups:NavGroup[]=[
  {label:'CONFIGURAÇÕES',items:[{path:'team',label:'Equipe',icon:UsersRound},{path:'integrations',label:'Integrações',icon:SlidersHorizontal},{path:'settings',label:'Configurações',icon:Settings}]},
 ];
 
-export const genericPageKeys=['campaigns','ads','creatives','invoices','payments','integrations'] as const;
+export const genericPageKeys=['campaigns','ads','creatives','integrations'] as const;
 export const genericPageIcon:Record<string,LucideIcon>={campaigns:Megaphone,ads:Badge,creatives:Image,invoices:ReceiptText,payments:CreditCard,integrations:SlidersHorizontal,default:Layers,folder:FolderKanban};
