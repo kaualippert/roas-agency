@@ -2,6 +2,7 @@ import type {Client,Project} from './types';
 
 export type EntryKind='recurring'|'variable'|'one_off';
 export type EntryStatus='pending'|'received';
+export type PaymentMethod='pix'|'boleto'|'transfer'|'card'|'other';
 export type FinancialEntry={
   id:string;
   clientId:string;
@@ -14,6 +15,7 @@ export type FinancialEntry={
   dueDate:string;
   status:EntryStatus;
   receivedAt?:string;
+  paymentMethod?:PaymentMethod;
   notes:string;
   createdAt:string;
   updatedAt:string;
