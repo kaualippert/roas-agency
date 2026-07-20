@@ -1,0 +1,13 @@
+# Dependências e builds locais
+node_modules/
+dist/
+
+# Cache e arquivos temporários locais
+work/npm-cache/
+work/*.log
+*.log
+
+# Arquivos do sistema e editor
+.DS_Store
+Thumbs.db
+.vscode/
