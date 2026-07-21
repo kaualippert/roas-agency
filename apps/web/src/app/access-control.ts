@@ -5,9 +5,9 @@ export const allAccessAreas:AccessArea[]=['general','marketing','finance','setti
 
 const routeAreas:Record<string,AccessArea>={
   dashboard:'general',clients:'general',onboarding:'general',projects:'general',tasks:'general',crm:'general',
-  campaigns:'marketing',ads:'marketing',reports:'marketing',creatives:'marketing',
+  campaigns:'marketing',integrations:'marketing',ads:'marketing',reports:'marketing',creatives:'marketing',
   finance:'finance',invoices:'finance',payments:'finance',
-  team:'settings',integrations:'settings',settings:'settings',
+  team:'settings',settings:'settings',
 };
 
 export const memberRoles=(member?:TeamMember)=>member?.roles?.length?member.roles:member?.role?[member.role]:[];
@@ -16,4 +16,4 @@ export const memberAccessAreas=(member?:TeamMember):AccessArea[]=>!member||isAdm
 export const pathArea=(pathname:string)=>routeAreas[pathname.split('/').filter(Boolean)[0]||'dashboard'];
 export const canAccessPath=(member:TeamMember|undefined,pathname:string)=>{const area=pathArea(pathname);return !area||memberAccessAreas(member).includes(area)};
 export const resolveCurrentMember=(team:TeamMember[])=>{const saved=localStorage.getItem(currentMemberStorageKey);return team.find(member=>member.id===saved&&member.status==='active')||team.find(member=>isAdministrator(member)&&member.status==='active')||team.find(member=>member.status==='active')||team[0]};
-export const firstAllowedPath=(member?:TeamMember)=>{const areas=memberAccessAreas(member);return areas.includes('general')?'/dashboard':areas.includes('marketing')?'/campaigns':areas.includes('finance')?'/finance':'/settings'};
+export const firstAllowedPath=(member?:TeamMember)=>{const areas=memberAccessAreas(member);return areas.includes('general')?'/dashboard':areas.includes('marketing')?'/integrations':areas.includes('finance')?'/finance':'/settings'};

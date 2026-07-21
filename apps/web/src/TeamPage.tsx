@@ -8,7 +8,7 @@ const roles=['Administrador','Gestor de tráfego','Social Media','Designer','Cop
 const colors=['#5b36f2','#2563eb','#e87914','#0e9f6e','#e04f79','#111827'];
 const accessOptions:{id:AccessArea;label:string;description:string}[]=[
  {id:'general',label:'Geral',description:'Clientes, onboarding, projetos, tarefas e CRM'},
- {id:'marketing',label:'Marketing',description:'Campanhas, anúncios, relatórios e criativos'},
+ {id:'marketing',label:'Marketing',description:'Integrações, anúncios, relatórios e criativos'},
  {id:'finance',label:'Financeiro',description:'Visão financeira, faturamento e pagamentos'},
  {id:'settings',label:'Configurações',description:'Equipe, integrações e configurações da agência'},
 ];
