@@ -11,7 +11,7 @@ export default function AuthGate({children}:{children:React.ReactNode}){
  const [user,setUser]=useState<User|null>(null),[status,setStatus]=useState<Status>('auth'),[message,setMessage]=useState('');
  useEffect(()=>onAuthStateChanged(auth,async current=>{
   setUser(current);setMessage('');
-  if(!current){setStatus('ready');return}
+  if(!current){store.clearSession();setStatus('ready');return}
   setStatus('data');
   try{await store.init();setStatus('ready')}catch(error){setMessage(error instanceof Error?error.message:'Não foi possível acessar a API.');setStatus('error')}
  }),[]);
