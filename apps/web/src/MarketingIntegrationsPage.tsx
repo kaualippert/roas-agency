@@ -27,7 +27,7 @@ const emptyIntegration=(provider:Provider):MarketingIntegration=>({id:provider,p
 const dateTime=(value?:string)=>value?new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Ainda não sincronizado';
 
 export default function MarketingIntegrationsPage(){
- const [stored,setStored]=useStoreData<MarketingIntegration[]>('marketing-integrations',[]);
+ const [stored,setStored]=useStoreData<MarketingIntegration[]>('marketing_integrations',[]);
  const [editing,setEditing]=useState<Provider|null>(null),[toast,setToast]=useState('');
  const integrations=useMemo(()=>providers.map(provider=>stored.find(item=>item.provider===provider.id)||emptyIntegration(provider.id)),[stored]);
  const connected=integrations.filter(item=>item.status==='connected');

@@ -5,7 +5,7 @@ import {pinoHttp} from 'pino-http';
 import mongoose from 'mongoose';
 import {z} from 'zod';
 import {config} from './config.js';
-import {allState,deleteState,isAllowedKey,replaceAllState,replaceState,State} from './state.js';
+import {allState,deleteState,getState,isAllowedKey,replaceAllState,replaceState} from './state.js';
 import {requireFirebaseAuth} from './auth.js';
 
 const valueSchema=z.object({value:z.unknown()});
@@ -56,9 +56,9 @@ export function createApp(){
   app.get('/api/state/:key',async(request,response,next)=>{
     try{
       if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
-      const document=await State.findOne({key:request.params.key}).lean();
-      if(!document)return response.status(404).json({error:'State not found'});
-      response.json({value:document.value});
+      const value=await getState(request.params.key);
+      if(value===undefined)return response.status(404).json({error:'State not found'});
+      response.json({value});
     }catch(error){next(error)}
   });
 
