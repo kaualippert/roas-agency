@@ -37,8 +37,7 @@ export default async function handler(request:Request,response:Response){
   }catch(error){
     runtimePromise=null;
     console.error('API initialization failed',error);
-    const runtimeError=error as Error&{code?:string};
-    if(!response.headersSent)return response.status(500).json({error:'API initialization failed',detail:runtimeError.message,code:runtimeError.code});
+    if(!response.headersSent)return response.status(500).json({error:'API initialization failed'});
     return response.end();
   }
 }
