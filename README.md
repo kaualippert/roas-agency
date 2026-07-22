@@ -1,6 +1,6 @@
 # ROAS Agency
 
-Monorepo da plataforma de gestão da agência, com frontend React e API Node.js persistida no MongoDB Atlas.
+Plataforma de gestão da agência, com frontend React e API Node.js persistida no MongoDB Atlas.
 
 ## Estrutura
 
