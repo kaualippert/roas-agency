@@ -7,11 +7,12 @@ import {auth} from '../firebase';
 import {store} from '../storage';
 import {canAccessPath,firstAllowedPath,memberRoles} from './access-control';
 import {navGroups,pageMeta} from './navigation';
+import {useStoreData} from './useStoreData';
 import './access-control.css';
 
 type Notification={read:boolean};
 
-function Logo(){return <div className="logo"><div className="rmark">R</div><div><b>ROAS</b><small>AGÊNCIA DE PERFORMANCE</small></div></div>}
+function Logo(){const [settings]=useStoreData('general_settings',{agencyName:'ROAS',logoDataUrl:''}),name=settings.agencyName?.trim()||'ROAS';useEffect(()=>{document.title=`${name} · Gestão de agência`},[name]);return <div className="logo">{settings.logoDataUrl?<img className="agencyLogo" src={settings.logoDataUrl} alt={`Logo ${name}`}/>:<div className="rmark">{name.charAt(0).toUpperCase()}</div>}<div><b title={name}>{name}</b><small>GESTÃO DE AGÊNCIA</small></div></div>}
 const initials=(name:string)=>name.split(' ').slice(0,2).map(part=>part[0]).join('').toUpperCase();
 
 function Sidebar({open,setOpen,member,onNavigate}:{open:boolean;setOpen:(value:boolean)=>void;member?:TeamMember;onNavigate:()=>void}){
