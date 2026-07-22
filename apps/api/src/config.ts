@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 if(process.env.ATLAS_CREDENTIALS_FILE){
   const credentialsPath=process.env.ATLAS_CREDENTIALS_FILE;
-  if(!fs.existsSync(credentialsPath))throw new Error(`Atlas credentials file not found: ${credentialsPath}`);
-  dotenv.config({path:credentialsPath,override:false});
+  if(fs.existsSync(credentialsPath))dotenv.config({path:credentialsPath,override:false});
+  else console.warn(`Atlas credentials file not found: ${credentialsPath}. Falling back to environment variables.`);
 }
 
 function mongoUri(){

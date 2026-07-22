@@ -17,6 +17,8 @@ export function resolveApiUrl(params:Request['query']){
 
 export default async function handler(request:Request,response:Response){
   request.url=resolveApiUrl(request.query);
-  await connectDatabase().catch(error=>console.error('MongoDB connection failed',error instanceof Error?error.message:error));
+  if(request.url!=='/api/health'){
+    await connectDatabase().catch(error=>console.error('MongoDB connection failed',error instanceof Error?error.message:error));
+  }
   return app(request,response);
 }
