@@ -5,4 +5,4 @@ export interface Project extends Base {clientId:string;name:string;description:s
 export interface Task extends Base {title:string;description:string;clientId:string;projectId:string;responsibleId:string;responsibleIds?:string[];status:'todo'|'pending'|'in_progress'|'completed'|'overdue';priority:'low'|'medium'|'high'|'urgent';dueDate:string;tags:string[];position:number;commentsCount:number;attachmentsCount:number}
 export type AccessArea='general'|'marketing'|'finance'|'settings';
 export interface TeamMember extends Base {name:string;email:string;role:string;roles?:string[];clientIds?:string[];accessAreas?:AccessArea[];department:string;status:string;color:string}
-export interface GenericItem extends Base {name:string;clientId?:string;status:string;value?:number;date?:string;description?:string;category?:string}
+export interface GenericItem extends Base {name:string;clientId?:string;status:string;value?:number;date?:string;description?:string;category?:string;fileId?:string;mimeType?:string;size?:number}
