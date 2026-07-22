@@ -3,13 +3,16 @@ import {getApps,initializeApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
 import {config} from './config.js';
 
-const firebaseApp=getApps()[0]||initializeApp({projectId:config.firebaseProjectId});
+function firebaseAuth(){
+ const firebaseApp=getApps()[0]||initializeApp({projectId:config.firebaseProjectId});
+ return getAuth(firebaseApp);
+}
 
 export async function requireFirebaseAuth(request:Request,response:Response,next:NextFunction){
  const token=getBearerToken(request.get('authorization'));
  if(!token)return response.status(401).json({error:'Authentication required'});
  try{
-  response.locals.user=await getAuth(firebaseApp).verifyIdToken(token);
+  response.locals.user=await firebaseAuth().verifyIdToken(token);
   next();
  }catch{
   response.status(401).json({error:'Invalid or expired authentication token'});
