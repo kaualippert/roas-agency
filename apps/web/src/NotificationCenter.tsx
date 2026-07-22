@@ -30,7 +30,7 @@ export default function NotificationCenter(){
    if(preferences.reportPending)store.get<GenericItem[]>('reports',[]).filter(report=>report.status.toLowerCase().includes('pend')).forEach(report=>alerts.push({id:`report-pending-${report.id}`,title:'Relatório pendente',description:`${report.name} ainda precisa ser enviado.`,type:'report',read:false,createdAt:now}));
    appendAlerts(alerts);
   };
-  const click=(event:MouseEvent)=>{if((event.target as HTMLElement).closest('button.notification'))setOpen(value=>!value)};
+  const toggle=()=>setOpen(value=>!value);
   const update=(event:Event)=>{
    const changedKey=(event as CustomEvent<string>).detail;
    if(changedKey==='prospects'){
@@ -44,9 +44,9 @@ export default function NotificationCenter(){
   const preferenceUpdate=()=>scanSystemAlerts();
   const visibilityUpdate=()=>{if(document.visibilityState==='visible')scanSystemAlerts()};
   const automaticCheck=window.setInterval(scanSystemAlerts,60000);
-  document.addEventListener('click',click);document.addEventListener('visibilitychange',visibilityUpdate);window.addEventListener('focus',scanSystemAlerts);window.addEventListener('roas-change',update);window.addEventListener('roas-notification-preferences',preferenceUpdate);
+  window.addEventListener('roas-notifications-toggle',toggle);document.addEventListener('visibilitychange',visibilityUpdate);window.addEventListener('focus',scanSystemAlerts);window.addEventListener('roas-change',update);window.addEventListener('roas-notification-preferences',preferenceUpdate);
   scanSystemAlerts();
-  return()=>{window.clearInterval(automaticCheck);document.removeEventListener('click',click);document.removeEventListener('visibilitychange',visibilityUpdate);window.removeEventListener('focus',scanSystemAlerts);window.removeEventListener('roas-change',update);window.removeEventListener('roas-notification-preferences',preferenceUpdate)};
+  return()=>{window.clearInterval(automaticCheck);window.removeEventListener('roas-notifications-toggle',toggle);document.removeEventListener('visibilitychange',visibilityUpdate);window.removeEventListener('focus',scanSystemAlerts);window.removeEventListener('roas-change',update);window.removeEventListener('roas-notification-preferences',preferenceUpdate)};
  },[]);
 
  const unread=items.filter(item=>!item.read).length;
