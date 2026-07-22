@@ -1,8 +1,14 @@
 import type {Request,Response} from 'express';
-import {createApp} from '../apps/api/src/app.js';
-import {connectDatabase} from '../apps/api/src/database.js';
 
-const app=createApp();
+async function loadRuntime(){
+  const [{createApp},{connectDatabase}]=await Promise.all([
+    import('../apps/api/src/app.js'),
+    import('../apps/api/src/database.js'),
+  ]);
+  return {app:createApp(),connectDatabase};
+}
+
+let runtimePromise:ReturnType<typeof loadRuntime>|null=null;
 
 export function resolveApiUrl(params:Request['query']){
   const path=Array.isArray(params.path)?params.path.join('/'):String(params.path||'');
@@ -17,8 +23,21 @@ export function resolveApiUrl(params:Request['query']){
 
 export default async function handler(request:Request,response:Response){
   request.url=resolveApiUrl(request.query);
-  if(request.url!=='/api/health'){
+  if(request.url==='/api/health')return response.json({
+    ok:true,
+    service:'roas-agency-api',
+    timestamp:new Date().toISOString(),
+  });
+
+  try{
+    runtimePromise??=loadRuntime();
+    const {app,connectDatabase}=await runtimePromise;
     await connectDatabase().catch(error=>console.error('MongoDB connection failed',error instanceof Error?error.message:error));
+    return app(request,response);
+  }catch(error){
+    runtimePromise=null;
+    console.error('API initialization failed',error);
+    if(!response.headersSent)return response.status(500).json({error:'API initialization failed'});
+    return response.end();
   }
-  return app(request,response);
 }
