@@ -2,6 +2,7 @@
   "name": "roas-agency",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "workspaces": ["apps/*"],
   "scripts": {
     "dev": "concurrently -n API,WEB -c magenta,cyan \"npm run dev -w @roas/api\" \"npm run dev -w @roas/web\"",
