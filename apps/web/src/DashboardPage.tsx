@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {AlertTriangle,ArrowRight,BriefcaseBusiness,CheckCircle2,CircleDollarSign,Clock3,Funnel,Target,TrendingUp,Users,WalletCards} from 'lucide-react';
 import {Area,AreaChart,Bar,BarChart,CartesianGrid,Cell,Line,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
+import {effectiveTaskStatus,isTaskOverdue} from './task-rules';
 import type {Client,Project,Task} from './types';
 
 type Period='30d'|'90d'|'6m'|'12m';
@@ -24,7 +25,7 @@ export default function DashboardPage(){
  const from=useMemo(()=>{const date=new Date();date.setDate(date.getDate()-periods[period].days);date.setHours(0,0,0,0);return date},[period]);
  const activeClients=clients.filter(client=>client.status==='active');
  const activeProjects=projects.filter(project=>project.status==='active');
- const openTasks=tasks.filter(task=>task.status!=='completed');
+ const openTasks=tasks.filter(task=>effectiveTaskStatus(task)!=='completed');
  const mrr=activeClients.reduce((sum,client)=>sum+client.monthlyRevenue,0);
  const activeLeads=leads.filter(lead=>!['Negócio fechado','Negócio perdido'].includes(lead.stage));
  const pipeline=activeLeads.reduce((sum,lead)=>sum+lead.value,0);
@@ -32,19 +33,19 @@ export default function DashboardPage(){
  const received=periodEntries.filter(entry=>entry.status==='received').reduce((sum,entry)=>sum+entry.value,0);
  const variable=periodEntries.filter(entry=>entry.kind==='variable').reduce((sum,entry)=>sum+entry.value,0);
  const periodTasks=tasks.filter(task=>isAfter(task.createdAt,from)||isAfter(task.dueDate,from));
- const completedTasks=periodTasks.filter(task=>task.status==='completed');
+ const completedTasks=periodTasks.filter(task=>effectiveTaskStatus(task)==='completed');
  const taskRate=periodTasks.length?Math.round(completedTasks.length/periodTasks.length*100):0;
- const overdueTasks=openTasks.filter(task=>task.status==='overdue'||new Date(task.dueDate)<new Date());
+ const overdueTasks=openTasks.filter(task=>isTaskOverdue(task));
  const conversion=leads.length?Math.round(leads.filter(lead=>lead.stage==='Negócio fechado').length/leads.length*100):0;
  const projectAverage=Math.round(activeProjects.reduce((sum,project)=>sum+project.progress,0)/Math.max(1,activeProjects.length));
  const revenueData=useMemo(()=>buildRevenueData(period,entries,mrr),[period,entries,mrr]);
  const funnelData=stages.map((stage,index)=>({stage:stage==='Negócio fechado'?'Fechado':stage==='Negócio perdido'?'Perdido':stage.length>13?stage.split(' ')[0]:stage,total:leads.filter(lead=>lead.stage===stage&&(isAfter(lead.createdAt,from)||!lead.createdAt)).length,color:stageColors[index]}));
  const taskData=[
-  {name:'A fazer',value:periodTasks.filter(task=>task.status==='todo').length,color:'#6d4bf2'},
-  {name:'Pendentes',value:periodTasks.filter(task=>task.status==='pending').length,color:'#e99a18'},
-  {name:'Em andamento',value:periodTasks.filter(task=>task.status==='in_progress').length,color:'#3b82f6'},
+  {name:'A fazer',value:periodTasks.filter(task=>effectiveTaskStatus(task)==='todo').length,color:'#6d4bf2'},
+  {name:'Pendentes',value:periodTasks.filter(task=>effectiveTaskStatus(task)==='pending').length,color:'#e99a18'},
+  {name:'Em andamento',value:periodTasks.filter(task=>effectiveTaskStatus(task)==='in_progress').length,color:'#3b82f6'},
   {name:'Concluídas',value:completedTasks.length,color:'#16a269'},
-  {name:'Atrasadas',value:periodTasks.filter(task=>task.status==='overdue').length,color:'#e04a52'},
+  {name:'Atrasadas',value:periodTasks.filter(task=>effectiveTaskStatus(task)==='overdue').length,color:'#e04a52'},
  ];
  const projectData=activeProjects.slice(0,7).map(project=>({name:project.name.length>16?`${project.name.slice(0,15)}…`:project.name,progresso:project.progress}));
  const priorities=[...openTasks].sort((a,b)=>priorityValue(b.priority)-priorityValue(a.priority)||a.dueDate.localeCompare(b.dueDate)).slice(0,5);
@@ -78,7 +79,7 @@ export default function DashboardPage(){
  </main>
 }
 
-function PriorityTask({task,client}:{task:Task;client?:Client}){return <article><span className={`priorityDot ${task.priority}`}/><div><b>{task.title}</b><small>{client?.companyName||'Todos os clientes'}</small></div><span className={`dueDate ${new Date(task.dueDate)<new Date()?'late':''}`}>{new Date(task.dueDate).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></article>}
+function PriorityTask({task,client}:{task:Task;client?:Client}){return <article><span className={`priorityDot ${task.priority}`}/><div><b>{task.title}</b><small>{client?.companyName||'Todos os clientes'}</small></div><span className={`dueDate ${isTaskOverdue(task)?'late':''}`}>{new Date(`${task.dueDate}T12:00:00`).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></article>}
 function Activity({item}:{item:{type:string;title:string;detail:string;date?:string}}){return <article><span className={`activityIcon ${item.type}`}>{item.type==='finance'?<WalletCards/>:item.type==='task'?<CheckCircle2/>:<Users/>}</span><div><b>{item.title}</b><small>{item.detail}</small></div><time>{relativeDate(item.date)}</time></article>}
 function buildRevenueData(period:Period,entries:FinancialEntry[],mrr:number){const total=period==='30d'?5:period==='90d'?3:period==='6m'?6:12,isWeeks=period==='30d';return Array.from({length:total},(_,index)=>{const end=new Date(),start=new Date();if(isWeeks){end.setDate(end.getDate()-(total-1-index)*7);start.setTime(end.getTime());start.setDate(start.getDate()-6)}else{end.setMonth(end.getMonth()-(total-1-index),1);end.setMonth(end.getMonth()+1,0);start.setFullYear(end.getFullYear(),end.getMonth(),1)}const items=entries.filter(entry=>{const date=parseDate(entry.dueDate);return date&&date>=start&&date<=end}),extra=items.filter(entry=>entry.kind!=='recurring').reduce((sum,entry)=>sum+entry.value,0);return {label:isWeeks?`${start.getDate()}/${start.getMonth()+1}`:start.toLocaleDateString('pt-BR',{month:'short'}).replace('.',''),previsto:(isWeeks?mrr/4:mrr)+extra,recebido:items.filter(entry=>entry.status==='received').reduce((sum,entry)=>sum+entry.value,0)}})}
 function priorityValue(priority:Task['priority']){return {low:1,medium:2,high:3,urgent:4}[priority]}
