@@ -3,6 +3,7 @@ import mongoose,{Schema} from 'mongoose';
 const allowedKeys=new Set([
   'activities','agency_profile','clients','documents','financial_entries','general_settings',
   'notifications','notification_preferences','notification_sound_enabled','onboarding','projects','prospects','reports','services','tasks','team',
+  'team_invitations',
   'campaigns','ads','creatives','invoices','payments','timeline','permissions','integrations','marketing_integrations','settings',
   'app_version'
 ]);

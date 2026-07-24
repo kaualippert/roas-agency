@@ -25,4 +25,5 @@ export const config={
   mongoUri,
   corsOrigins:(process.env.CORS_ORIGIN||'http://127.0.0.1:5173,http://localhost:5173').split(',').map(value=>value.trim()),
   firebaseProjectId:process.env.FIREBASE_PROJECT_ID||'agencia-roas',
+  appOrigin:process.env.APP_ORIGIN||process.env.CORS_ORIGIN?.split(',')[0]?.trim()||'http://127.0.0.1:5173',
 };
