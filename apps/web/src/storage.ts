@@ -13,7 +13,7 @@ let retryDelay=1000;
 function emit(key:string){window.dispatchEvent(new CustomEvent('roas-change',{detail:key}))}
 
 export async function apiRequest(path:string,options?:RequestInit){
- const token=await getIdToken();
+ const token=import.meta.env.VITE_E2E==='true'?'e2e-token':await getIdToken();
  if(!token)throw new Error('Sessão não autenticada.');
  const headers=new Headers(options?.headers);headers.set('authorization',`Bearer ${token}`);
  const response=await fetch(`${apiUrl}${path}`,{...options,headers});

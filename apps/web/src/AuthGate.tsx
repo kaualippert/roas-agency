@@ -9,13 +9,22 @@ type Status='auth'|'data'|'ready'|'error';
 
 export default function AuthGate({children}:{children:React.ReactNode}){
  const [user,setUser]=useState<User|null>(null),[status,setStatus]=useState<Status>('auth'),[message,setMessage]=useState('');
- useEffect(()=>onAuthStateChanged(auth,async current=>{
-  setUser(current);setMessage('');
-  if(!current){store.clearSession();setStatus('ready');return}
-  if(location.pathname==='/accept-invite'){setStatus('ready');return}
-  setStatus('data');
-  try{await store.init();setStatus('ready')}catch(error){setMessage(error instanceof Error?error.message:'Não foi possível acessar a API.');setStatus('error')}
- }),[]);
+ useEffect(()=>{
+  if(import.meta.env.VITE_E2E==='true'){
+   if(localStorage.getItem('roas_e2e_logged_out')==='true'){store.clearSession();setStatus('ready');return}
+   const current={email:'admin@roas-e2e.test',displayName:'Admin E2E'} as User;
+   setUser(current);setStatus('data');
+   void store.init().then(()=>setStatus('ready')).catch(error=>{setMessage(error instanceof Error?error.message:'Não foi possível acessar a API.');setStatus('error')});
+   return;
+  }
+  return onAuthStateChanged(auth,async current=>{
+   setUser(current);setMessage('');
+   if(!current){store.clearSession();setStatus('ready');return}
+   if(location.pathname==='/accept-invite'){setStatus('ready');return}
+   setStatus('data');
+   try{await store.init();setStatus('ready')}catch(error){setMessage(error instanceof Error?error.message:'Não foi possível acessar a API.');setStatus('error')}
+  });
+ },[]);
  if(status==='auth'||status==='data')return <AuthLoading label={status==='auth'?'Validando sua sessão…':'Carregando dados da agência…'}/>;
  if(!user)return <LoginPage/>;
  if(status==='error')return <main className="authScreen"><section className="authError"><span><LockKeyhole/></span><h1>Não foi possível acessar os dados</h1><p>{message}</p><button className="btn" onClick={()=>location.reload()}>Tentar novamente</button></section></main>;
