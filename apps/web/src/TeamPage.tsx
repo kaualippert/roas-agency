@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
-import {BriefcaseBusiness,CheckCircle2,Clipboard,Clock3,Eye,Mail,Pencil,Plus,RotateCw,Search,ShieldCheck,UserMinus,UsersRound,X} from 'lucide-react';
+import {BriefcaseBusiness,CheckCircle2,Clipboard,Clock3,Eye,Mail,Pencil,Plus,RotateCw,Search,ShieldCheck,Trash2,UserMinus,UsersRound,X} from 'lucide-react';
 import {createInvitation,listInvitations,resendInvitation,revokeInvitation,type InvitationInput} from './access-api';
+import {auth} from './firebase';
 import {store} from './storage';
 import type {AccessArea,Client,TeamInvitation,TeamMember} from './types';
 
@@ -35,8 +36,9 @@ export default function TeamPage(){
  useEffect(()=>{const update=()=>{setMembers(store.get('team',[]));setClients(store.get('clients',[]))};window.addEventListener('roas-change',update);void refreshInvitations();return()=>window.removeEventListener('roas-change',update)},[]);
  const save=(next:TeamMember[])=>{setMembers(next);store.set('team',next)};
  const flash=(message:string)=>{setNotice(message);setTimeout(()=>setNotice(''),2800)};
- const filtered=useMemo(()=>members.filter(member=>(department==='Todos'||member.department===department)&&`${member.name} ${memberRoles(member).join(' ')} ${member.email}`.toLowerCase().includes(query.toLowerCase())),[members,query,department]);
- const activeAdmins=members.filter(member=>member.status==='active'&&isAdministrator(member)).length;
+ const visibleMembers=useMemo(()=>members.filter(member=>member.status!=='deleted'),[members]);
+ const filtered=useMemo(()=>visibleMembers.filter(member=>(department==='Todos'||member.department===department)&&`${member.name} ${memberRoles(member).join(' ')} ${member.email}`.toLowerCase().includes(query.toLowerCase())),[visibleMembers,query,department]);
+ const activeAdmins=visibleMembers.filter(member=>member.status==='active'&&isAdministrator(member)).length;
 
  const editMember=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();if(!editing)return;
@@ -59,17 +61,25 @@ export default function TeamPage(){
   const nextStatus=member.status==='active'?'inactive':'active';
   if(confirm(`${nextStatus==='inactive'?'Suspender':'Reativar'} o acesso de ${member.name}?`)){save(members.map(current=>current.id===member.id?{...current,status:nextStatus,updatedAt:new Date().toISOString()}:current));flash(nextStatus==='inactive'?'Acesso suspenso':'Acesso reativado')}
  };
+ const deleteMember=(member:TeamMember)=>{
+  const currentEmail=auth.currentUser?.email?.trim().toLowerCase();
+  if(member.email.trim().toLowerCase()===currentEmail){setError('Você não pode excluir o próprio acesso. Peça a outro administrador.');return}
+  if(member.status==='active'&&isAdministrator(member)&&activeAdmins<=1){setError('A agência precisa manter pelo menos um administrador ativo.');return}
+  if(!confirm(`Excluir ${member.name} da equipe? O acesso será revogado, mas os vínculos históricos serão preservados.`))return;
+  save(members.map(current=>current.id===member.id?{...current,status:'deleted',updatedAt:new Date().toISOString()}:current));
+  flash('Membro excluído e acesso revogado');
+ };
  const copyLink=async()=>{await navigator.clipboard.writeText(shareUrl);flash('Link copiado para a área de transferência')};
 
  return <main>
   <div className="teamPageHeader"><div><h2>Equipe e acessos</h2><p>Convide pessoas com prazo, áreas permitidas e clientes específicos.</p></div><button className="btn" onClick={()=>{setError('');setInviting(true)}}><Plus/> Convidar membro</button></div>
-  <div className="teamStats"><article><span className="teamStatIcon purple"><UsersRound/></span><div><small>Membros cadastrados</small><strong>{members.length}</strong><em>{members.filter(member=>member.status==='active').length} ativos</em></div></article><article><span className="teamStatIcon green"><Clock3/></span><div><small>Convites pendentes</small><strong>{invitations.filter(item=>item.status==='pending').length}</strong><em>Expiram em 7 dias</em></div></article><article><span className="teamStatIcon blue"><BriefcaseBusiness/></span><div><small>Clientes atribuídos</small><strong>{new Set(members.flatMap(memberClients)).size}</strong><em>Acesso limitado por conta</em></div></article></div>
+  <div className="teamStats"><article><span className="teamStatIcon purple"><UsersRound/></span><div><small>Membros cadastrados</small><strong>{visibleMembers.length}</strong><em>{visibleMembers.filter(member=>member.status==='active').length} ativos</em></div></article><article><span className="teamStatIcon green"><Clock3/></span><div><small>Convites pendentes</small><strong>{invitations.filter(item=>item.status==='pending').length}</strong><em>Expiram em 7 dias</em></div></article><article><span className="teamStatIcon blue"><BriefcaseBusiness/></span><div><small>Clientes atribuídos</small><strong>{new Set(visibleMembers.flatMap(memberClients)).size}</strong><em>Acesso limitado por conta</em></div></article></div>
   <section className="card teamDirectory">
    <div className="teamAccessTabs"><button className={tab==='members'?'active':''} onClick={()=>setTab('members')}>Membros</button><button className={tab==='invitations'?'active':''} onClick={()=>setTab('invitations')}>Convites <span>{invitations.filter(item=>item.status==='pending').length}</span></button></div>
    {error&&<div className="teamAccessError">{error}<button onClick={()=>setError('')}><X/></button></div>}
    {tab==='members'?<>
     <div className="directoryTools"><div className="memberSearch"><Search/><input placeholder="Buscar membro..." value={query} onChange={event=>setQuery(event.target.value)}/></div><div className="departmentTabs">{departments.map(item=><button key={item} className={department===item?'active':''} onClick={()=>setDepartment(item)}>{item}</button>)}</div></div>
-    <div className="memberGrid">{filtered.map(member=>{const linked=clients.filter(client=>memberClients(member).includes(client.id)),areas=memberAreas(member);return <article className="memberCard" key={member.id}><div className="memberTop"><Avatar name={member.name} color={member.color}/><span className={`badge ${member.status==='active'?'green':'red'}`}>{member.status==='active'?'Ativo':'Suspenso'}</span></div><h3>{member.name}</h3><div className="roleTags">{memberRoles(member).map(role=><span key={role}>{role}</span>)}</div><span className="memberDepartment">{member.department}</span><div className="memberEmail"><Mail/>{member.email}</div><div className="memberAccess"><b><Eye/> Pode visualizar</b><div>{areas.map(area=><span key={area}>{accessOptions.find(option=>option.id===area)?.label}</span>)}</div></div><div className="managedClients"><b>Clientes gerenciados ({linked.length})</b><p>{linked.length?linked.slice(0,3).map(client=>client.companyName).join(' · '):member.clientIds===undefined?'Todos os clientes':'Nenhum cliente vinculado'}</p></div><footer><button className="btn secondary" onClick={()=>setEditing(member)}><Pencil/> Editar</button><button className="iconBtn memberDelete" title={member.status==='active'?'Suspender acesso':'Reativar acesso'} onClick={()=>toggleMember(member)}><UserMinus/></button></footer></article>})}</div>
+    <div className="memberGrid">{filtered.map(member=>{const linked=clients.filter(client=>memberClients(member).includes(client.id)),areas=memberAreas(member);return <article className="memberCard" key={member.id}><div className="memberTop"><Avatar name={member.name} color={member.color}/><span className={`badge ${member.status==='active'?'green':'red'}`}>{member.status==='active'?'Ativo':'Suspenso'}</span></div><h3>{member.name}</h3><div className="roleTags">{memberRoles(member).map(role=><span key={role}>{role}</span>)}</div><span className="memberDepartment">{member.department}</span><div className="memberEmail"><Mail/>{member.email}</div><div className="memberAccess"><b><Eye/> Pode visualizar</b><div>{areas.map(area=><span key={area}>{accessOptions.find(option=>option.id===area)?.label}</span>)}</div></div><div className="managedClients"><b>Clientes gerenciados ({linked.length})</b><p>{linked.length?linked.slice(0,3).map(client=>client.companyName).join(' · '):member.clientIds===undefined?'Todos os clientes':'Nenhum cliente vinculado'}</p></div><footer><button className="btn secondary" onClick={()=>setEditing(member)}><Pencil/> Editar</button><button className="iconBtn memberSuspend" title={member.status==='active'?'Suspender acesso':'Reativar acesso'} onClick={()=>toggleMember(member)}><UserMinus/></button><button className="iconBtn memberDelete" title="Excluir membro" onClick={()=>deleteMember(member)}><Trash2/></button></footer></article>})}</div>
     {!filtered.length&&<div className="emptyTeam">Nenhum membro encontrado.</div>}
    </>:<InvitationList invitations={invitations} clients={clients} busyId={busyId} onResend={resend} onRevoke={revoke}/>}
   </section>
