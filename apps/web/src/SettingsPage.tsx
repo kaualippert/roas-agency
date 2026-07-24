@@ -4,8 +4,6 @@ import {notificationSoundEnabled,playNotificationSound} from './notification-sou
 import {getNotificationPreferences,notificationPreferenceOptions,setNotificationPreferences} from './notification-preferences';
 import {store} from './storage';
 import ServicesManager from './ServicesManager';
-import './agency-branding.css';
-import './agency-logo-adjust.css';
 
 type GeneralSettings={agencyName:string;logoDataUrl:string;logoScale:number;email:string;phone:string;website:string;currency:string;timezone:string};
 type AgencyProfile={legalName:string;taxId:string;address:string};
