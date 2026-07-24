@@ -6,4 +6,5 @@ export interface Task extends Base {title:string;description:string;clientId:str
 export type AccessArea='general'|'marketing'|'finance'|'settings';
 export interface TeamMember extends Base {name:string;email:string;firebaseUid?:string;role:string;roles?:string[];clientIds?:string[];accessAreas?:AccessArea[];department:string;status:string;color:string}
 export interface TeamInvitation extends Base {email:string;name:string;roles:string[];accessAreas:AccessArea[];clientIds:string[];department:string;status:'pending'|'accepted'|'expired'|'revoked';expiresAt:string;acceptedAt?:string}
+export interface CurrentAccess {uid:string;email:string;member:TeamMember|null;isAdministrator:boolean;accessAreas:AccessArea[];clientIds:string[]|null}
 export interface GenericItem extends Base {name:string;clientId?:string;status:string;value?:number;date?:string;description?:string;category?:string;fileId?:string;mimeType?:string;size?:number}

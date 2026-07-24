@@ -2,14 +2,17 @@
 
 @media(max-width:800px){
  html,body,#root{max-width:100%;overflow-x:hidden}
+ html{scroll-padding-top:calc(72px + env(safe-area-inset-top))}
+ body{-webkit-tap-highlight-color:transparent}
  body.mobileNavOpen{overflow:hidden;touch-action:none}
  .shell,.shell.narrow,.shell.wide{width:100%;min-width:0;margin-left:0}
- .sidebar{z-index:81;width:min(286px,calc(100vw - 52px))!important;padding-bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-105%)}
+ .sidebar{z-index:81;width:min(286px,calc(100vw - 52px))!important;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-105%)}
  .sidebar.open{transform:translateX(0)}
  .sidebar .sideTop{align-items:center}
  .sidebar.closed .logo>div:last-child{display:block}
+ .sidebar .navGroup a{min-height:46px;margin-block:3px}
  .sidebarBackdrop{display:block;position:fixed;z-index:80;inset:0;width:100%;height:100%;border:0;background:#07101d8c;backdrop-filter:blur(3px)}
- header{z-index:40;width:100%;height:64px;padding:0 10px;gap:2px}
+ header{z-index:40;width:100%;height:calc(64px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 10px 0;gap:2px}
  .mobileMenu{display:inline-flex!important;flex:0 0 42px;width:42px;height:42px;margin:0 4px 0 0!important}
  .headTitle{min-width:0;overflow:hidden}
  .headTitle h1{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -20,9 +23,13 @@
  .profile{display:flex!important;width:42px;height:42px;padding:3px;margin-left:0;justify-content:center}
  .profile>div:not(.userAvatar),.profile>svg{display:none!important}
  .profile .userAvatar{display:grid;width:34px;height:34px}
- .profileMenu{position:fixed!important;z-index:90!important;top:62px!important;left:8px!important;right:8px!important;width:auto!important;max-height:calc(100dvh - 74px);overflow:auto}
+ .profileMenu{position:fixed!important;z-index:90!important;top:calc(62px + env(safe-area-inset-top))!important;left:8px!important;right:8px!important;width:auto!important;max-height:calc(100dvh - 74px - env(safe-area-inset-top));overflow:auto}
+ button,.btn,a[role="button"],input,select,textarea{touch-action:manipulation}
+ input,select,textarea{font-size:16px!important}
+ .btn{min-height:44px}
+ .iconBtn{min-width:42px;min-height:42px}
  main,.connectedDashboard,.financePage,.projectsEnhanced,.tasksEnhanced,.clientHub,.onboardingPage,.editorialPage{width:100%;min-width:0;padding:16px 12px 34px}
- .card,.dataPanel,.taskWorkspace,.projectPanel,.clientTablePanel,.reportsPanel,.financeTransactions,.editorialSection{max-width:100%;min-width:0}
+ .card,.dataPanel,.taskWorkspace,.projectPanel,.clientTablePanel,.reportsPanel,.financeTransactions,.editorialSection{max-width:100%;min-width:0;border-radius:14px}
 
  .pageActions,.clientsTop,.tasksPageTop,.projectsTop,.financeIntro,.dashboardToolbar,.onboardingIntro,.teamPageHeader,.reportsHeader,.crmPageTitle,.editorialHero,.hubHero{gap:12px;align-items:flex-start;flex-wrap:wrap}
  .pageActions>.btn,.clientsTop>.btn,.tasksPageTop>.btn,.projectsTop>.btn,.financeIntro>.btn,.crmPageTitle>.btn,.editorialHero>.btn{min-height:42px}
@@ -37,6 +44,7 @@
  .activeFilterSummary{min-width:max-content}
 
  .tableWrap,.reportTable,.enhancedTaskTable,.editorialTableWrap,.financeTransactions{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
+ .tableWrap,.reportTable,.enhancedTaskTable,.editorialTableWrap{scrollbar-width:thin;scrollbar-color:#b9a9ff transparent}
  .tableWrap table,.enhancedTaskTable table,.financeTransactions table{min-width:720px}
  .reportTableHead,.reportRow{min-width:820px}
  .editorialTable{min-width:1060px}
@@ -53,11 +61,12 @@
  .calendarHead,.enhancedCalendar>header{position:sticky;left:0;width:calc(100vw - 48px)}
 
  .listLayout.withDrawer,.projectWorkspace.hasDrawer{display:block}
- .details,.clientEnhancedDetails,.projectDrawer{position:fixed;z-index:70;inset:72px 7px 7px;width:auto;max-height:none;overflow:auto;border-radius:14px;box-shadow:0 20px 60px #07101d55}
- .projectDrawer{top:72px;bottom:7px}
+ .details,.clientEnhancedDetails,.projectDrawer{position:fixed;z-index:70;inset:calc(72px + env(safe-area-inset-top)) 7px max(7px,env(safe-area-inset-bottom));width:auto;max-height:none;overflow:auto;border-radius:14px;box-shadow:0 20px 60px #07101d55}
+ .projectDrawer{top:calc(72px + env(safe-area-inset-top));bottom:max(7px,env(safe-area-inset-bottom))}
 
  .overlay,.serviceDialog{padding:0;align-items:end}
  .modal,.clientFormModal,.enhancedTaskModal,.projectModal,.projectTaskModal,.financeModal,.editorialModal,.crmModal,.serviceDialog form,.reportPreview{width:100%;max-width:none;max-height:94dvh;border-radius:18px 18px 0 0;padding-bottom:max(14px,env(safe-area-inset-bottom));overflow:auto}
+ .modal,.serviceDialog form{overscroll-behavior:contain}
  .modalHead{position:sticky;top:0;z-index:2;padding:16px;background:var(--card);border-radius:18px 18px 0 0}
  .form,.serviceDialog form{padding:16px;grid-template-columns:1fr}
  .form .full,.serviceDialogHead,.serviceFull,.serviceCheck,.serviceActions{grid-column:1}
@@ -78,7 +87,7 @@
  .stepFields{grid-template-columns:1fr}
  .stepNotes{grid-column:auto}
  .settings{display:block;min-height:0}
- .settingsNav{display:flex;border-right:0;border-bottom:1px solid var(--border);padding:10px;position:sticky;top:64px;z-index:5;background:var(--card)}
+ .settingsNav{display:flex;border-right:0;border-bottom:1px solid var(--border);padding:10px;position:sticky;top:calc(64px + env(safe-area-inset-top));z-index:5;background:var(--card)}
  .settingsNav button{white-space:nowrap;min-height:40px}
  .settingsBody{padding:18px 14px}
  .toggleList label{gap:14px}
@@ -86,8 +95,14 @@
  .serviceRow strong{grid-column:2;white-space:normal}
  .serviceInfo{min-width:0}
  .serviceInfo span{overflow-wrap:anywhere}
- .notificationPanel{top:66px;right:6px;left:6px;width:auto;max-height:calc(100dvh - 72px)}
+ .notificationPanel{top:calc(66px + env(safe-area-inset-top));right:6px;left:6px;width:auto;max-height:calc(100dvh - 72px - env(safe-area-inset-top))}
  .notificationTools{align-items:flex-start;flex-wrap:wrap}
+ .memberCard footer{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;gap:8px}
+ .memberCard footer .btn{width:100%}
+ .teamAccessTabs{overflow-x:auto;scrollbar-width:none}
+ .teamAccessTabs::-webkit-scrollbar{display:none}
+ .selectionGrid,.accessSelectionGrid{grid-template-columns:1fr!important}
+ .empty,.emptyTeam{padding:34px 16px}
 }
 
 @media(max-width:560px){
@@ -111,6 +126,8 @@
  .reportPreview footer{flex-direction:column}
  .reportPreview footer .btn{width:100%}
  .toast{left:10px;right:10px;top:74px;width:auto}
+ .teamStats article,.clientStats article,.projectStats article,.tasksStats article,.crmKpis article{min-height:104px}
+ .servicesHeading>.btn,.teamPageHeader>.btn,.reportsHeader>.btn,.crmPageTitle>.btn{width:100%}
 }
 
 @media(max-width:380px){
@@ -122,4 +139,10 @@
  .metricRow{grid-template-columns:1fr}
  .hubHeroActions,.clientTopActions,.actionStack{display:grid;grid-template-columns:1fr;width:100%}
  .hubHeroActions .btn,.clientTopActions .btn{width:100%}
+ .headTitle{max-width:calc(100vw - 132px)}
+}
+
+@media(max-width:800px) and (orientation:landscape){
+ .modal,.clientFormModal,.enhancedTaskModal,.projectModal,.projectTaskModal,.financeModal,.editorialModal,.crmModal,.serviceDialog form{max-height:100dvh;border-radius:0}
+ .sidebar{width:min(300px,45vw)!important}
 }

@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {Bell,ChevronDown,LogOut,Menu,Settings} from 'lucide-react';
 import {Link,useLocation} from 'react-router-dom';
 import {signOut} from 'firebase/auth';
-import type {TeamMember} from '../types';
+import type {AccessArea,TeamMember} from '../types';
 import {auth} from '../firebase';
 import {canAccessPath,memberRoles} from './access-control';
 import {pageMeta} from './navigation';
@@ -11,7 +11,7 @@ export type LayoutNotification={read:boolean};
 
 const initials=(name:string)=>name.split(' ').slice(0,2).map(part=>part[0]).join('').toUpperCase();
 
-export default function AppHeader({onMenu,member,notifications}:{onMenu:()=>void;member?:TeamMember;notifications:LayoutNotification[]}){
+export default function AppHeader({onMenu,member,accessAreas,notifications}:{onMenu:()=>void;member?:TeamMember;accessAreas?:AccessArea[];notifications:LayoutNotification[]}){
  const location=useLocation();
  const profileRef=useRef<HTMLDivElement>(null);
  const [profileOpen,setProfileOpen]=useState(false);
@@ -40,7 +40,7 @@ export default function AppHeader({onMenu,member,notifications}:{onMenu:()=>void
    <button type="button" className="profile" title="Abrir menu do perfil" aria-haspopup="menu" aria-expanded={profileOpen} onClick={()=>setProfileOpen(value=>!value)}><div className="userAvatar">{initials(name)}</div><div><b>{name}</b><small>{role}</small></div><ChevronDown/></button>
    {profileOpen&&<div className="profileMenu" role="menu">
     <div className="profileMenuIdentity"><b>{name}</b>{email&&<small>{email}</small>}</div>
-    {canAccessPath(member,'/settings')&&<Link role="menuitem" className="profileMenuLink" to="/settings"><Settings/><span><b>Configurações</b><small>Conta e preferências</small></span></Link>}
+    {canAccessPath(member,'/settings',accessAreas)&&<Link role="menuitem" className="profileMenuLink" to="/settings"><Settings/><span><b>Configurações</b><small>Conta e preferências</small></span></Link>}
     <button type="button" role="menuitem" className="profileLogout" onClick={()=>void signOut(auth)}><LogOut/><span><b>Sair da conta</b><small>Encerrar esta sessão</small></span></button>
    </div>}
   </div>
