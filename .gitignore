@@ -8,6 +8,7 @@ dist/
 
 # Cache e arquivos temporários locais
 work/npm-cache/
+work/playwright-browsers/
 work/*.log
 *.log
 
@@ -16,3 +17,8 @@ work/*.log
 Thumbs.db
 .vscode/
 .vercel/
+
+# Relatórios e sessões locais dos testes de interface
+playwright-report/
+test-results/
+playwright/.auth/

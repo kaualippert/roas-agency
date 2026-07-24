@@ -3,7 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "dev": "concurrently -n API,WEB -c magenta,cyan \"npm run dev -w @roas/api\" \"npm run dev -w @roas/web\"",
     "dev:api": "npm run dev -w @roas/api",
@@ -11,9 +13,12 @@
     "build": "npm run build -w @roas/api && npm run build -w @roas/web",
     "build:vercel": "npm run build:vercel -w @roas/web",
     "typecheck:vercel": "tsc -p tsconfig.vercel.json",
-    "test": "npm run test -w @roas/api && node --import tsx --test tests/**/*.test.ts"
+    "test": "npm run test -w @roas/api && node --import tsx --test tests/**/*.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "concurrently": "^9.2.0"
   }
 }
