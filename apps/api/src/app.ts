@@ -33,6 +33,24 @@ export function createApp(){
     timestamp:new Date().toISOString(),
   }));
 
+  app.use('/api/access',requireFirebaseAuth);
+  app.use('/api/access',(_request,response,next)=>{
+    if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
+    next();
+  });
+  app.use('/api/access',requireAgencyAccess);
+  app.get('/api/access/me',(_request,response)=>{
+    const access=response.locals.access as AccessContext;
+    response.json({access:{
+      uid:access.uid,
+      email:access.email,
+      member:access.member,
+      isAdministrator:access.isAdministrator,
+      accessAreas:access.accessAreas,
+      clientIds:access.clientIds===null?null:[...access.clientIds],
+    }});
+  });
+
   app.use('/api/files',requireFirebaseAuth);
   app.use('/api/files',(_request,response,next)=>{
     if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});

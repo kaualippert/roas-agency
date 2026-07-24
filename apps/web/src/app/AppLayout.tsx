@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {useLocation} from 'react-router-dom';
-import type {TeamMember} from '../types';
+import type {CurrentAccess,TeamMember} from '../types';
 import {auth} from '../firebase';
 import {store} from '../storage';
 import AccessDenied from './AccessDenied';
@@ -13,9 +13,10 @@ export default function AppLayout({children}:{children:React.ReactNode}){
  const location=useLocation();
  const [sidebarOpen,setSidebarOpen]=useState(()=>window.matchMedia('(min-width: 801px)').matches?(localStorage.getItem('roas_sidebar_open')!=='false'):false);
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
+ const [access,setAccess]=useState<CurrentAccess|null>(()=>store.access());
  const [notifications,setNotifications]=useState<LayoutNotification[]>(()=>store.get('notifications',[]));
  useEffect(()=>{
-  const update=()=>{setTeam(store.get('team',[]));setNotifications(store.get('notifications',[]))};
+  const update=()=>{setTeam(store.get('team',[]));setAccess(store.access());setNotifications(store.get('notifications',[]))};
   window.addEventListener('roas-change',update);
   update();
   return()=>window.removeEventListener('roas-change',update);
@@ -43,15 +44,16 @@ export default function AppLayout({children}:{children:React.ReactNode}){
   return()=>{document.body.classList.remove('mobileNavOpen');window.removeEventListener('keydown',close)};
  },[sidebarOpen]);
  const email=auth.currentUser?.email?.toLowerCase();
- const member=team.find(item=>item.status==='active'&&item.email.toLowerCase()===email);
- const allowed=canAccessPath(member,location.pathname);
+ const member=access?.member||team.find(item=>item.status==='active'&&item.email.toLowerCase()===email);
+ const verifiedAreas=access?.accessAreas;
+ const allowed=canAccessPath(member||undefined,location.pathname,verifiedAreas);
  const closeMobileMenu=()=>{if(window.matchMedia('(max-width: 800px)').matches)setSidebarOpen(false)};
  return <>
-  <Sidebar open={sidebarOpen} member={member} onNavigate={closeMobileMenu}/>
+  <Sidebar open={sidebarOpen} member={member||undefined} accessAreas={verifiedAreas} onNavigate={closeMobileMenu}/>
   {sidebarOpen&&<button className="sidebarBackdrop" type="button" aria-label="Fechar menu" onClick={()=>setSidebarOpen(false)}/>}
   <div className={`shell ${sidebarOpen?'wide':'narrow'}`}>
-   <AppHeader onMenu={()=>setSidebarOpen(value=>!value)} member={member} notifications={notifications}/>
-   {allowed?children:<AccessDenied member={member}/>}
+   <AppHeader onMenu={()=>setSidebarOpen(value=>!value)} member={member||undefined} accessAreas={verifiedAreas} notifications={notifications}/>
+   {allowed?children:<AccessDenied member={member||undefined} accessAreas={verifiedAreas}/>}
   </div>
  </>
 }

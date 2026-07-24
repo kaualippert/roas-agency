@@ -5,6 +5,8 @@ import App from './App';
 import AuthGate from './AuthGate';
 import './styles.css';
 import './settings.css';
+import './agency-branding.css';
+import './agency-logo-adjust.css';
 import './team-reports.css';
 import './team-roles.css';
 import './client-task.css';
