@@ -12,6 +12,7 @@ export default function AuthGate({children}:{children:React.ReactNode}){
  useEffect(()=>onAuthStateChanged(auth,async current=>{
   setUser(current);setMessage('');
   if(!current){store.clearSession();setStatus('ready');return}
+  if(location.pathname==='/accept-invite'){setStatus('ready');return}
   setStatus('data');
   try{await store.init();setStatus('ready')}catch(error){setMessage(error instanceof Error?error.message:'Não foi possível acessar a API.');setStatus('error')}
  }),[]);

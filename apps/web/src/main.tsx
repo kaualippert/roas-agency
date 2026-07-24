@@ -32,6 +32,7 @@ import './auth.css';
 import './billing-payments.css';
 import './marketing-integrations.css';
 import './mobile.css';
+import './team-invitations.css';
 
 const savedTheme=localStorage.getItem('roas_theme')||'light';
 document.documentElement.dataset.theme=savedTheme==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):savedTheme;

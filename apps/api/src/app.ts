@@ -8,6 +8,8 @@ import {z} from 'zod';
 import {config} from './config.js';
 import {allState,deleteState,getState,isAllowedKey,replaceAllState,replaceState} from './state.js';
 import {requireFirebaseAuth} from './auth.js';
+import {canAccessClient,canAccessStateKey,filterState,filterStateValue,requireAgencyAccess,scopeStateWrite,type AccessContext} from './access.js';
+import {invitationRouter} from './invitations.js';
 
 const valueSchema=z.object({value:z.unknown()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
@@ -36,8 +38,10 @@ export function createApp(){
     if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
     next();
   });
+  app.use('/api/files',requireAgencyAccess);
   app.post('/api/files/:clientId',express.raw({type:['application/pdf','image/jpeg','image/png','image/webp'],limit:'4mb'}),async(request,response,next)=>{
     try{
+      if(!canAccessClient(response.locals.access as AccessContext,request.params.clientId))return response.status(403).json({error:'Você não possui acesso a este cliente.'});
       const mimeType=String(request.query.type||request.get('content-type')||'');
       const allowed=new Set(['application/pdf','image/jpeg','image/png','image/webp']);
       if(!allowed.has(mimeType))return response.status(415).json({error:'Envie um arquivo PDF, JPG, PNG ou WebP.'});
@@ -56,6 +60,7 @@ export function createApp(){
       const bucket=new GridFSBucket(mongoose.connection.db!,{bucketName:'client_files'}),id=new ObjectId(request.params.fileId);
       const file=await mongoose.connection.db!.collection('client_files.files').findOne({_id:id});
       if(!file)return response.status(404).json({error:'Arquivo não encontrado.'});
+      if(!canAccessClient(response.locals.access as AccessContext,String(file.metadata?.clientId||'')))return response.status(403).json({error:'Você não possui acesso a este cliente.'});
       response.setHeader('content-type',file.contentType||'application/octet-stream');
       response.setHeader('content-length',String(file.length));
       response.setHeader('content-disposition',`inline; filename*=UTF-8''${encodeURIComponent(file.filename)}`);
@@ -66,12 +71,21 @@ export function createApp(){
   app.delete('/api/files/:fileId',async(request,response,next)=>{
     try{
       if(!ObjectId.isValid(request.params.fileId))return response.status(404).json({error:'Arquivo não encontrado.'});
-      await new GridFSBucket(mongoose.connection.db!,{bucketName:'client_files'}).delete(new ObjectId(request.params.fileId));
+      const id=new ObjectId(request.params.fileId);
+      const file=await mongoose.connection.db!.collection('client_files.files').findOne({_id:id});
+      if(!file)return response.status(404).json({error:'Arquivo não encontrado.'});
+      if(!canAccessClient(response.locals.access as AccessContext,String(file.metadata?.clientId||'')))return response.status(403).json({error:'Você não possui acesso a este cliente.'});
+      await new GridFSBucket(mongoose.connection.db!,{bucketName:'client_files'}).delete(id);
       response.status(204).end();
     }catch(error){next(error)}
   });
 
   app.use(express.json({limit:'5mb'}));
+
+  app.use('/api/invitations',(_request,response,next)=>{
+    if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
+    next();
+  },invitationRouter());
 
   app.use('/api/state',requireFirebaseAuth);
 
@@ -79,42 +93,54 @@ export function createApp(){
     if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
     next();
   });
+  app.use('/api/state',requireAgencyAccess);
 
   app.get('/api/state',async(_request,response,next)=>{
-    try{response.json({state:await allState()})}catch(error){next(error)}
+    try{response.json({state:filterState(response.locals.access as AccessContext,await allState())})}catch(error){next(error)}
   });
 
   app.put('/api/state',async(request,response,next)=>{
     try{
+      if(!(response.locals.access as AccessContext).isAdministrator)return response.status(403).json({error:'Somente administradores podem substituir todos os dados.'});
       const {state}=bulkSchema.parse(request.body);
       response.json({state:await replaceAllState(state)});
     }catch(error){next(error)}
   });
 
   app.delete('/api/state',async(_request,response,next)=>{
-    try{response.json({state:await replaceAllState({})})}catch(error){next(error)}
+    try{
+      if(!(response.locals.access as AccessContext).isAdministrator)return response.status(403).json({error:'Somente administradores podem redefinir os dados.'});
+      response.json({state:await replaceAllState({})});
+    }catch(error){next(error)}
   });
 
   app.get('/api/state/:key',async(request,response,next)=>{
     try{
       if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
+      const access=response.locals.access as AccessContext;
+      if(!canAccessStateKey(access,request.params.key))return response.status(403).json({error:'Você não possui acesso a esta área.'});
       const value=await getState(request.params.key);
       if(value===undefined)return response.status(404).json({error:'State not found'});
-      response.json({value});
+      response.json({value:filterStateValue(access,request.params.key,value)});
     }catch(error){next(error)}
   });
 
   app.put('/api/state/:key',async(request,response,next)=>{
     try{
       if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
+      const access=response.locals.access as AccessContext;
+      if(!canAccessStateKey(access,request.params.key,true))return response.status(403).json({error:'Você não possui permissão para alterar esta área.'});
       const {value}=valueSchema.parse(request.body);
-      response.json({value:await replaceState(request.params.key,value)});
+      const current=await getState(request.params.key);
+      const saved=await replaceState(request.params.key,scopeStateWrite(access,request.params.key,value,current));
+      response.json({value:filterStateValue(access,request.params.key,saved)});
     }catch(error){next(error)}
   });
 
   app.delete('/api/state/:key',async(request,response,next)=>{
     try{
       if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
+      if(!(response.locals.access as AccessContext).isAdministrator)return response.status(403).json({error:'Somente administradores podem excluir uma coleção inteira.'});
       await deleteState(request.params.key);
       response.status(204).end();
     }catch(error){next(error)}
