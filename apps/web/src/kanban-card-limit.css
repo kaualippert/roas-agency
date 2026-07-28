@@ -1,0 +1,5 @@
+.kanbanMoreButton{width:100%;min-height:36px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--purple);display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px}
+.kanbanMoreButton:hover{background:#f5f2ff;border-color:#c9bcff}
+.kanbanMoreButton svg{width:15px;height:15px}
+html[data-theme="dark"] .kanbanMoreButton{background:#141c2b;border-color:#34405a;color:#b8a8ff}
+html[data-theme="dark"] .kanbanMoreButton:hover{background:#202a3d;border-color:#6751d9}
