@@ -9,6 +9,9 @@ dist/
 # Cache e arquivos temporários locais
 work/npm-cache/
 work/playwright-browsers/
+work/vercel-session/
+work/vercel-local/
+work/vercel-roaming/
 work/*.log
 *.log
 

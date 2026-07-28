@@ -22,7 +22,7 @@ ATLAS_CREDENTIALS_FILE=/caminho/absoluto/atlas-credentials.env npm run dev
 
 O arquivo de credenciais pode fornecer `MONGODB_URI`, `MONGODB_USERNAME` e `MONGODB_PASSWORD`. Placeholders de usuário e senha na URI são resolvidos automaticamente.
 
-O acesso à aplicação é obrigatório pelo Firebase Authentication. Estão disponíveis os provedores Google e e-mail/senha habilitados no projeto `agencia-roas`. A API exige o ID token Firebase em todas as rotas `/api/state`; o health check permanece público.
+O acesso à aplicação é obrigatório pelo Firebase Authentication. Estão disponíveis os provedores Google e e-mail/senha habilitados no projeto `flowroas-space`. A API exige o ID token Firebase em todas as rotas `/api/state`; o health check permanece público.
 
 ## Desenvolvimento
 
@@ -55,7 +55,7 @@ MONGODB_PASSWORD
 FIREBASE_PROJECT_ID
 ```
 
-Use `FIREBASE_PROJECT_ID=agencia-roas`. As variáveis públicas `VITE_FIREBASE_*` estão documentadas em `apps/web/.env.example` e possuem os valores do projeto como padrão no cliente.
+Use `FIREBASE_PROJECT_ID=flowroas-space`. As variáveis públicas `VITE_FIREBASE_*` estão documentadas em `apps/web/.env.example` e possuem os valores do projeto como padrão no cliente.
 
 Se `MONGODB_URI` já contiver usuário e senha, as duas variáveis separadas são opcionais. O arquivo local `atlas-credentials.env` não deve ser enviado para a Vercel nem versionado.
 
