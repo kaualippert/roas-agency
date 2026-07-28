@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {BarChart3,CalendarDays,Funnel,GripVertical,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Cell,Line,LineChart,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
+import {KanbanMoreButton,useKanbanColumnLimit,visibleKanbanCards} from './KanbanColumnLimit';
 import type {AgencyService} from './ServicesManager';
 import type {TeamMember} from './types';
 import {crmStages as stages,serviceEstimate,type CRMLead as Lead,type CRMStage as Stage} from './crm-leads';
@@ -20,6 +21,7 @@ export default function CRMPage(){
  const [dragged,setDragged]=useState<string|null>(null);
  const [selectedServiceIds,setSelectedServiceIds]=useState<string[]>([]);
  const [variableEstimate,setVariableEstimate]=useState(0);
+ const {isExpanded,toggleColumn}=useKanbanColumnLimit();
 
  useEffect(()=>{const update=()=>{setLeads(store.get('prospects',[]));setServices(store.get('services',[]));setTeam(store.get('team',[]))};window.addEventListener('roas-change',update);return()=>window.removeEventListener('roas-change',update)},[]);
  const save=(next:Lead[])=>{setLeads(next);store.set('prospects',next)};
@@ -41,7 +43,7 @@ export default function CRMPage(){
   <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((s,l)=>s+l.value,0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((s,l)=>s+l.value,0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão" value={`${conversion}%`} note="Do total de leads" tone="orange"/></div>
   <section className="card crmPageBoard">
    <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste os cartões para atualizar a etapa</span></div><small>{leads.length} oportunidades</small></div>
-   <div className="crmColumns">{stages.map((stage,index)=><div className="crmColumn" key={stage} onDragOver={e=>e.preventDefault()} onDrop={()=>move(stage)}><header style={{borderBottom:`2px solid ${palette[index]}`}}><b>{stage}</b><span>{leads.filter(l=>l.stage===stage).length}</span></header><div className="crmCards">{leads.filter(l=>l.stage===stage).map(lead=>{const linked=services.filter(service=>lead.serviceIds?.includes(service.id)||lead.services?.includes(service.name));return <article className="leadCard" data-lead-id={lead.id} key={lead.id} draggable onDragStart={()=>setDragged(lead.id)}><div className="leadTop"><i style={{background:lead.color}}>{lead.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</i><GripVertical/></div><h3>{lead.name}</h3><p><UserRound/>{lead.contact}</p>{linked.length?<div className="leadServices">{linked.slice(0,2).map(service=><span key={service.id}>{service.name}</span>)}{linked.length>2&&<span>+{linked.length-2}</span>}</div>:null}<strong>{money(lead.value)}</strong><footer><span>{lead.source}</span><small><CalendarDays/>{lead.nextAction}</small></footer></article>})}</div><button className="addLead" onClick={openModal}>＋ Adicionar lead</button></div>)}</div>
+   <div className="crmColumns">{stages.map((stage,index)=>{const items=leads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);return <div className="crmColumn" key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>move(stage)}><header style={{borderBottom:`2px solid ${palette[index]}`}}><b>{stage}</b><span>{items.length}</span></header><div className="crmCards">{visibleKanbanCards(items,expanded).map(lead=>{const linked=services.filter(service=>lead.serviceIds?.includes(service.id)||lead.services?.includes(service.name));return <article className="leadCard" data-lead-id={lead.id} key={lead.id} draggable onDragStart={()=>setDragged(lead.id)}><div className="leadTop"><i style={{background:lead.color}}>{lead.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</i><GripVertical/></div><h3>{lead.name}</h3><p><UserRound/>{lead.contact}</p>{linked.length?<div className="leadServices">{linked.slice(0,2).map(service=><span key={service.id}>{service.name}</span>)}{linked.length>2&&<span>+{linked.length-2}</span>}</div>:null}<strong>{money(lead.value)}</strong><footer><span>{lead.source}</span><small><CalendarDays/>{lead.nextAction}</small></footer></article>})}</div><KanbanMoreButton total={items.length} expanded={expanded} onToggle={()=>toggleColumn(stage)}/><button className="addLead" onClick={openModal}>＋ Adicionar lead</button></div>})}</div>
   </section>
   <FunnelOverview data={funnel} total={leads.length} conversion={conversion}/>
   <div className="crmAnalytics">
