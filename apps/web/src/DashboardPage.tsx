@@ -4,11 +4,10 @@ import {Area,AreaChart,Bar,BarChart,CartesianGrid,Cell,Line,ResponsiveContainer,
 import {store} from './storage';
 import {effectiveTaskStatus,isTaskOverdue} from './task-rules';
 import type {Client,Project,Task} from './types';
+import {dashboardPeriods as periods,dashboardPeriodStart,type DashboardPeriod as Period} from './dashboard-period';
 
-type Period='30d'|'90d'|'6m'|'12m';
 type Lead={id:string;name:string;value:number;stage:string;createdAt?:string};
 type FinancialEntry={id:string;clientId:string;kind:'recurring'|'variable'|'one_off';value:number;dueDate:string;status:'pending'|'received';receivedAt?:string};
-const periods:Record<Period,{label:string;days:number}>={'30d':{label:'Últimos 30 dias',days:30},'90d':{label:'Últimos 90 dias',days:90},'6m':{label:'Últimos 6 meses',days:183},'12m':{label:'Últimos 12 meses',days:365}};
 const stages=['Leads captados','Primeiro contato','Em andamento','Reunião','Ciclo de acompanhamento','Em espera','Negócio fechado','Negócio perdido'];
 const stageColors=['#6d4bf2','#3b82f6','#16a269','#e99a18','#e8547c','#7c8aa2','#17a66a','#e04a52'];
 const money=(value=0)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -22,7 +21,7 @@ export default function DashboardPage(){
  const [entries,setEntries]=useState<FinancialEntry[]>(()=>store.get('financial_entries',[]));
  const [period,setPeriod]=useState<Period>('6m');
  useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTasks(store.get('tasks',[]));setLeads(store.get('prospects',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
- const from=useMemo(()=>{const date=new Date();date.setDate(date.getDate()-periods[period].days);date.setHours(0,0,0,0);return date},[period]);
+ const from=useMemo(()=>dashboardPeriodStart(period),[period]);
  const activeClients=clients.filter(client=>client.status==='active');
  const activeProjects=projects.filter(project=>project.status==='active');
  const openTasks=tasks.filter(task=>effectiveTaskStatus(task)!=='completed');
@@ -81,7 +80,7 @@ export default function DashboardPage(){
 
 function PriorityTask({task,client}:{task:Task;client?:Client}){return <article><span className={`priorityDot ${task.priority}`}/><div><b>{task.title}</b><small>{client?.companyName||'Todos os clientes'}</small></div><span className={`dueDate ${isTaskOverdue(task)?'late':''}`}>{new Date(`${task.dueDate}T12:00:00`).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></article>}
 function Activity({item}:{item:{type:string;title:string;detail:string;date?:string}}){return <article><span className={`activityIcon ${item.type}`}>{item.type==='finance'?<WalletCards/>:item.type==='task'?<CheckCircle2/>:<Users/>}</span><div><b>{item.title}</b><small>{item.detail}</small></div><time>{relativeDate(item.date)}</time></article>}
-function buildRevenueData(period:Period,entries:FinancialEntry[],mrr:number){const total=period==='30d'?5:period==='90d'?3:period==='6m'?6:12,isWeeks=period==='30d';return Array.from({length:total},(_,index)=>{const end=new Date(),start=new Date();if(isWeeks){end.setDate(end.getDate()-(total-1-index)*7);start.setTime(end.getTime());start.setDate(start.getDate()-6)}else{end.setMonth(end.getMonth()-(total-1-index),1);end.setMonth(end.getMonth()+1,0);start.setFullYear(end.getFullYear(),end.getMonth(),1)}const items=entries.filter(entry=>{const date=parseDate(entry.dueDate);return date&&date>=start&&date<=end}),extra=items.filter(entry=>entry.kind!=='recurring').reduce((sum,entry)=>sum+entry.value,0);return {label:isWeeks?`${start.getDate()}/${start.getMonth()+1}`:start.toLocaleDateString('pt-BR',{month:'short'}).replace('.',''),previsto:(isWeeks?mrr/4:mrr)+extra,recebido:items.filter(entry=>entry.status==='received').reduce((sum,entry)=>sum+entry.value,0)}})}
+function buildRevenueData(period:Period,entries:FinancialEntry[],mrr:number){const now=new Date(),total=period==='month'?Math.max(1,Math.ceil(now.getDate()/7)):period==='30d'?5:period==='90d'?3:period==='6m'?6:12,isWeeks=period==='30d'||period==='month';return Array.from({length:total},(_,index)=>{const end=new Date(),start=new Date();if(period==='month'){start.setFullYear(now.getFullYear(),now.getMonth(),1+index*7);start.setHours(0,0,0,0);end.setTime(start.getTime());end.setDate(Math.min(start.getDate()+6,new Date(now.getFullYear(),now.getMonth()+1,0).getDate()));end.setHours(23,59,59,999)}else if(isWeeks){end.setDate(end.getDate()-(total-1-index)*7);start.setTime(end.getTime());start.setDate(start.getDate()-6)}else{end.setMonth(end.getMonth()-(total-1-index),1);end.setMonth(end.getMonth()+1,0);start.setFullYear(end.getFullYear(),end.getMonth(),1)}const items=entries.filter(entry=>{const date=parseDate(entry.dueDate);return date&&date>=start&&date<=end}),extra=items.filter(entry=>entry.kind!=='recurring').reduce((sum,entry)=>sum+entry.value,0);return {label:isWeeks?`${start.getDate()}/${start.getMonth()+1}`:start.toLocaleDateString('pt-BR',{month:'short'}).replace('.',''),previsto:(period==='month'?mrr/total:isWeeks?mrr/4:mrr)+extra,recebido:items.filter(entry=>entry.status==='received').reduce((sum,entry)=>sum+entry.value,0)}})}
 function priorityValue(priority:Task['priority']){return {low:1,medium:2,high:3,urgent:4}[priority]}
 function relativeDate(value?:string){const date=parseDate(value);if(!date)return 'Agora';const days=Math.max(0,Math.floor((Date.now()-date.getTime())/86400000));return days===0?'Hoje':days===1?'Ontem':`${days} dias`}
 function DashboardKpi({icon,label,value,note,tone='',trend}:{icon:React.ReactNode;label:string;value:string;note:string;tone?:string;trend:string}){return <article><span className={`dashboardKpiIcon ${tone}`}>{icon}</span><div><small>{label}</small><strong>{value}</strong><em>{note}</em></div><i className={`dataSource ${trend}`}>Ao vivo</i></article>}
