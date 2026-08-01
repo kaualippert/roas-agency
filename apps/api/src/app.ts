@@ -57,12 +57,12 @@ export function createApp(){
     next();
   });
   app.use('/api/files',requireAgencyAccess);
-  app.post('/api/files/:clientId',express.raw({type:['application/pdf','image/jpeg','image/png','image/webp'],limit:'4mb'}),async(request,response,next)=>{
+  app.post('/api/files/:clientId',express.raw({type:['application/pdf','image/jpeg','image/png','image/webp','video/mp4','audio/mpeg','audio/mp4','text/plain','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation'],limit:'4mb'}),async(request,response,next)=>{
     try{
       if(!canAccessClient(response.locals.access as AccessContext,request.params.clientId))return response.status(403).json({error:'Você não possui acesso a este cliente.'});
       const mimeType=String(request.query.type||request.get('content-type')||'');
-      const allowed=new Set(['application/pdf','image/jpeg','image/png','image/webp']);
-      if(!allowed.has(mimeType))return response.status(415).json({error:'Envie um arquivo PDF, JPG, PNG ou WebP.'});
+      const allowed=new Set(['application/pdf','image/jpeg','image/png','image/webp','video/mp4','audio/mpeg','audio/mp4','text/plain','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation']);
+      if(!allowed.has(mimeType))return response.status(415).json({error:'Formato de arquivo não permitido.'});
       if(!Buffer.isBuffer(request.body)||!request.body.length)return response.status(400).json({error:'O arquivo está vazio.'});
       const originalName=String(request.query.name||'arquivo').slice(0,180).replace(/[\r\n]/g,'');
       const bucket=new GridFSBucket(mongoose.connection.db!,{bucketName:'client_files'});
