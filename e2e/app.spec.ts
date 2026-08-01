@@ -19,6 +19,22 @@ test('carrega o dashboard, a identidade da agência e os arquivos principais',as
  expect(errors).toEqual([]);
 });
 
+test('aplica menu claro, tema all black e logo preenchendo o quadro',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('roas_theme','light'));
+ await page.goto('/dashboard');
+ await expect(page.locator('html')).toHaveAttribute('data-theme','light');
+ expect(await page.locator('#app-sidebar').evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(255, 255, 255)');
+ const logo=page.locator('.agencyLogo');
+ expect(await logo.evaluate(element=>getComputedStyle(element).objectFit)).toBe('cover');
+ expect(await logo.evaluate(element=>getComputedStyle(element).padding)).toBe('0px');
+ await page.goto('/settings');
+ await page.getByRole('button',{name:/Aparência/}).click();
+ await page.getByRole('button',{name:/All Black/}).click();
+ await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ await expect(page.locator('html')).toHaveAttribute('data-theme-variant','all-black');
+ expect(await page.locator('body').evaluate(element=>getComputedStyle(element).backgroundColor)).toBe('rgb(0, 0, 0)');
+});
+
 test('abre o perfil e navega para configurações sem perder a sessão',async({page})=>{
  await page.goto('/dashboard');
  await page.getByTitle('Abrir menu do perfil').click();

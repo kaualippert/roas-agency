@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import {BrowserRouter} from 'react-router-dom';
 import App from './App';
 import AuthGate from './AuthGate';
+import {applyThemePreference,normalizeThemePreference} from './appearance-theme';
 import './styles.css';
 import './settings.css';
 import './agency-branding.css';
@@ -38,9 +39,9 @@ import './team-invitations.css';
 import './reports-filters.css';
 import './kanban-card-limit.css';
 import './task-description.css';
+import './appearance-themes.css';
 
-const savedTheme=localStorage.getItem('roas_theme')||'light';
-document.documentElement.dataset.theme=savedTheme==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):savedTheme;
+applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')));
 
 createRoot(document.getElementById('root')!).render(
  <React.StrictMode>

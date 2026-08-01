@@ -1,0 +1,70 @@
+html[data-theme="light"] .sidebar{background:#fff;color:#182033;border-right:1px solid #e4e8ef;box-shadow:4px 0 20px #17203308}
+html[data-theme="light"] .navGroup>span{color:#8a94a6}
+html[data-theme="light"] .navGroup a{color:#4b5568}
+html[data-theme="light"] .navGroup a:hover{background:#f1efff;color:#5334dc}
+html[data-theme="light"] .navGroup a.active{color:#fff}
+html[data-theme="light"] .logo small{color:#778196}
+html[data-theme="light"] .agencyLogoFrame{background:#f5f6f9;border:1px solid #e5e8ef}
+
+html[data-theme-variant="all-black"]{color-scheme:dark;--card:#080808;--text:#f7f7f8;--border:#242424;--muted:#96969f;background:#000}
+html[data-theme-variant="all-black"] body{background:#000;color:#f7f7f8}
+html[data-theme-variant="all-black"] .app{background:#000}
+html[data-theme-variant="all-black"] .sidebar{background:#030303;border-right:1px solid #1c1c1c;box-shadow:none}
+html[data-theme-variant="all-black"] header{background:#050505f2;border-color:#202020}
+html[data-theme-variant="all-black"] .card,
+html[data-theme-variant="all-black"] .modal,
+html[data-theme-variant="all-black"] .reportPreview,
+html[data-theme-variant="all-black"] .teamStats article,
+html[data-theme-variant="all-black"] .reportStats article,
+html[data-theme-variant="all-black"] .tasksStats>article,
+html[data-theme-variant="all-black"] .projectStats>article,
+html[data-theme-variant="all-black"] .clientStats>article,
+html[data-theme-variant="all-black"] .dashboardKpis>article,
+html[data-theme-variant="all-black"] .financeStats>article,
+html[data-theme-variant="all-black"] .crmKpis>article{background:#080808;border-color:#242424;box-shadow:none}
+html[data-theme-variant="all-black"] .globalSearch,
+html[data-theme-variant="all-black"] .filter,
+html[data-theme-variant="all-black"] .filters>button,
+html[data-theme-variant="all-black"] .tabs button,
+html[data-theme-variant="all-black"] .viewTabs button,
+html[data-theme-variant="all-black"] .btn.secondary,
+html[data-theme-variant="all-black"] .themeChoices button,
+html[data-theme-variant="all-black"] .settingsNav button,
+html[data-theme-variant="all-black"] .taskFilterSelect,
+html[data-theme-variant="all-black"] .taskSearch,
+html[data-theme-variant="all-black"] .moreTaskFilters,
+html[data-theme-variant="all-black"] .clearTaskFilters,
+html[data-theme-variant="all-black"] .saveTaskView{background:#0c0c0c;color:#e8e8eb;border-color:#292929}
+html[data-theme-variant="all-black"] .form input,
+html[data-theme-variant="all-black"] .form select,
+html[data-theme-variant="all-black"] .form textarea,
+html[data-theme-variant="all-black"] .serviceDialog input,
+html[data-theme-variant="all-black"] .serviceDialog textarea,
+html[data-theme-variant="all-black"] .memberSearch,
+html[data-theme-variant="all-black"] .taskDescriptionBox,
+html[data-theme-variant="all-black"] .taskDescriptionBox textarea{background:#030303;color:#f4f4f5;border-color:#292929}
+html[data-theme-variant="all-black"] .kanbanCol,
+html[data-theme-variant="all-black"] .enhancedKanbanColumn,
+html[data-theme-variant="all-black"] .editorialColumn,
+html[data-theme-variant="all-black"] .crmColumn,
+html[data-theme-variant="all-black"] .taskCard,
+html[data-theme-variant="all-black"] .enhancedTaskCard,
+html[data-theme-variant="all-black"] .itemCard,
+html[data-theme-variant="all-black"] .detailBox,
+html[data-theme-variant="all-black"] .managedClients,
+html[data-theme-variant="all-black"] .clientTaskInfo,
+html[data-theme-variant="all-black"] .agencyBrandingEditor,
+html[data-theme-variant="all-black"] .agencyLogoPreview,
+html[data-theme-variant="all-black"] .sidebarPreview{background:#050505;border-color:#242424;box-shadow:none}
+html[data-theme-variant="all-black"] tbody tr:hover{background:#101010}
+html[data-theme-variant="all-black"] .navGroup a:hover{background:#121212}
+html[data-theme-variant="all-black"] .agencyLogoFrame{background:#000;border:1px solid #222}
+html[data-theme-variant="all-black"] .themeChoices button.active{background:#121212;border-color:#7657ff}
+
+.themeChoices{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}
+.themeChoices button{display:grid;gap:5px;text-align:left;padding:14px 16px}
+.themeChoices button b,.themeChoices button small{display:block}
+.themeChoices button small{font-size:9px;color:var(--muted);font-weight:400}
+.agencyLogoPreview img,.logo .agencyLogo{object-fit:cover!important;object-position:center!important;padding:0!important}
+@media(max-width:760px){.themeChoices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.themeChoices{grid-template-columns:1fr}}
