@@ -22,6 +22,7 @@ import './crm-lead-manager.css';
 import './service-dark-fix.css';
 import './service-pricing.css';
 import './crm-header.css';
+import './crm-improvements.css';
 import './notification-center.css';
 import './clients-enhanced.css';
 import './onboarding.css';

@@ -56,6 +56,34 @@ test('aplica o filtro de tarefas atrasadas usando a regra real de prazo',async({
  await expect(page.locator('.taskResultBar')).toContainText('1');
 });
 
+test('filtra, movimenta e protege oportunidades no CRM',async({page})=>{
+ await page.goto('/crm');
+ await expect(page.locator('.headTitle h1')).toHaveText('CRM');
+ await expect(page.getByText('Academia Horizonte')).toBeVisible();
+ await page.getByRole('button',{name:'Em aberto'}).click();
+ await expect(page.getByText('Academia Horizonte')).toBeVisible();
+ await expect(page.getByText('Cliente Convertido')).toHaveCount(0);
+ const activeCard=page.locator('[data-lead-id="lead-active"]');
+ await activeCard.getByLabel(/Mover Academia Horizonte/).selectOption('Reunião');
+ await expect(page.locator('[data-crm-stage="Reunião"]')).toContainText('Academia Horizonte');
+ await page.getByRole('button',{name:'Todos'}).click();
+ await page.getByRole('button',{name:'Editar Cliente Convertido'}).click();
+ await expect(page.getByText('Lead convertido em cliente')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Excluir lead'})).toBeDisabled();
+ await expect(page.locator('.leadEditModal select[name="stage"]')).toBeDisabled();
+});
+
+test('cria lead com serviço mensal e valor automático',async({page})=>{
+ await page.goto('/crm');
+ await page.getByRole('button',{name:'Novo lead'}).click();
+ await page.getByLabel('Empresa').fill('Clínica Aurora');
+ await page.getByLabel('Contato',{exact:true}).fill('Marina');
+ await page.getByRole('dialog',{name:'Adicionar oportunidade'}).getByRole('checkbox',{name:/Social Media/}).check();
+ await expect(page.locator('.leadEstimateTotal')).toContainText('R$ 2.500,00');
+ await page.getByRole('button',{name:'Adicionar ao CRM'}).click();
+ await expect(page.getByText('Clínica Aurora')).toBeVisible();
+});
+
 test('bloqueia configurações quando a área não foi concedida',async({page})=>{
  await page.unroute('**/api/**');
  await mockRoasApi(page,['general']);
