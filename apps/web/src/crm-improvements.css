@@ -1,0 +1,69 @@
+.crmFilterBar{display:grid;grid-template-columns:auto repeat(3,minmax(140px,1fr)) auto;align-items:end;gap:10px;padding:12px 14px;margin-bottom:16px}
+.crmStatusFilters{display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--border);border-radius:10px;background:#f5f6f9}
+.crmStatusFilters button{min-height:34px;padding:0 11px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer}
+.crmStatusFilters button:hover{color:var(--purple);background:#fff}
+.crmStatusFilters button.active{background:#fff;color:var(--purple);box-shadow:0 2px 8px #1118270d}
+.crmFilterBar>label{display:grid;gap:5px;min-width:0}
+.crmFilterBar>label>span{font-size:9px;font-weight:700;color:var(--muted)}
+.crmFilterBar select,.crmQuickMove select{width:100%;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);padding:0 28px 0 10px;font-size:10px}
+.crmClearFilters{height:38px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--purple);font-size:10px;font-weight:700;cursor:pointer}
+.crmClearFilters svg{width:14px}
+.crmClearFilters:disabled{opacity:.4;cursor:not-allowed}
+.crmFilterResult{grid-column:1/-1;color:var(--muted);font-size:9px}
+.crmFilterResult b{color:var(--text)}
+.crmStageNav{display:flex;gap:6px;overflow-x:auto;padding:0 2px 12px;scrollbar-width:thin;scrollbar-color:#b5a8ef transparent}
+.crmStageNav button{display:flex;align-items:center;gap:7px;min-height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--muted);font-size:9px;white-space:nowrap;cursor:pointer}
+.crmStageNav button:hover,.crmStageNav button.active{border-color:#9e8af7;color:var(--purple);background:#f7f5ff}
+.crmStageNav button b{display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#eeeaff;color:var(--purple);font-size:8px}
+.crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(190px,1fr));overflow-x:auto;scroll-snap-type:x proximity}
+.crmPageBoard .crmColumn{scroll-snap-align:start}
+.shell.narrow .crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(145px,1fr));overflow-x:auto}
+.crmPageBoard .leadCard{cursor:pointer}
+.crmPageBoard .leadCard:focus-within{border-color:#7358ef;box-shadow:0 0 0 3px #6541ee24}
+.crmPageBoard .leadCard.converted{border-color:#9bd9bd;background:linear-gradient(180deg,#f8fffb,#fff)}
+.crmPageBoard .leadTop>div{display:flex;align-items:center;gap:4px}
+.leadEditButton{width:26px;height:26px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer}
+.leadEditButton:hover,.leadEditButton:focus-visible{border-color:#c7bbfb;background:#f5f2ff;color:var(--purple);outline:0}
+.leadEditButton svg{width:13px!important;height:13px}
+.convertedLeadBadge{padding:3px 5px;border-radius:5px;background:#e5f7ee;color:#087d4c;font-size:7px;font-weight:800;text-transform:uppercase}
+.leadResponsible,.leadNoService{display:block;margin-top:6px;color:var(--muted);font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leadNoService{font-style:italic}
+.crmQuickMove{display:grid!important;gap:4px;margin-top:9px;padding-top:8px;border-top:1px solid var(--border)}
+.crmQuickMove>span{font-size:8px;color:var(--muted);font-weight:700}
+.crmQuickMove select{height:31px;padding-left:7px;font-size:9px;cursor:pointer}
+.crmQuickMove select:disabled{opacity:.65;cursor:not-allowed}
+.crmColumnEmpty{min-height:130px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px dashed var(--border);border-radius:9px;color:var(--muted)}
+.crmColumnEmpty span{font-size:10px;font-weight:700;color:var(--text)}
+.crmColumnEmpty small{margin-top:5px;font-size:8px;line-height:1.4}
+.crmChartEmpty{height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:10px;text-align:center}
+.crmChartEmpty svg{width:28px;opacity:.45}
+.crmPage>.crmServicesAnalytics{max-width:none;margin:20px 0 40px}
+.crmServicesEmpty{grid-column:1/-1;padding:12px;border:1px dashed var(--border);border-radius:8px;color:var(--muted);font-size:10px}
+.deleteLead:disabled{opacity:.5;cursor:not-allowed!important}
+.leadEditModal label>small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+html[data-theme="dark"] .crmStatusFilters{background:#111827}
+html[data-theme="dark"] .crmStatusFilters button:hover,html[data-theme="dark"] .crmStatusFilters button.active{background:#202a3d}
+html[data-theme="dark"] .crmStageNav button:hover,html[data-theme="dark"] .crmStageNav button.active{background:#211d33}
+html[data-theme="dark"] .crmPageBoard .leadCard.converted{background:linear-gradient(180deg,#132a22,#1c2639);border-color:#295b43}
+html[data-theme="dark"] .convertedLeadBadge{background:#153829;color:#76dbad}
+html[data-theme-variant="all-black"] .crmStatusFilters,html[data-theme-variant="all-black"] .crmStatusFilters button.active,html[data-theme-variant="all-black"] .crmStageNav button,html[data-theme-variant="all-black"] .crmFilterBar select,html[data-theme-variant="all-black"] .crmClearFilters,html[data-theme-variant="all-black"] .crmQuickMove select{background:#080808;border-color:#292929;color:#e8e8eb}
+@media(max-width:1180px){.crmFilterBar{grid-template-columns:repeat(3,minmax(0,1fr))}.crmStatusFilters{grid-column:1/-1;width:max-content;max-width:100%;overflow-x:auto}.crmClearFilters{align-self:end}.crmFilterResult{grid-column:1/-1}}
+@media(max-width:700px){
+ .crmPageTitle .btn{width:100%;justify-content:center}
+ .crmFilterBar{grid-template-columns:1fr 1fr;padding:11px}
+ .crmStatusFilters{width:100%;display:grid;grid-template-columns:repeat(4,minmax(max-content,1fr));overflow-x:auto}
+ .crmStatusFilters button{padding:0 8px}
+ .crmFilterBar>label{grid-column:auto}
+ .crmClearFilters{width:100%}
+ .crmPageBoard{padding:12px 8px 15px}
+ .crmBoardLabel{align-items:flex-start;gap:8px}
+ .crmBoardLabel>small{white-space:nowrap}
+ .crmPageBoard .crmColumns,.shell.narrow .crmPageBoard .crmColumns,.shell.wide .crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(calc(100vw - 70px),1fr));gap:8px;overflow-x:auto;scroll-snap-type:x mandatory}
+ .crmPageBoard .crmColumn{min-height:410px;scroll-snap-align:center}
+ .crmStageNav{position:sticky;left:0;z-index:2}
+ .crmQuickMove select{height:38px;font-size:10px}
+ .crmPage>.crmServicesAnalytics{margin:14px 0 26px}
+ .conversionModal,.leadEditModal,.crmModal{width:100%;max-height:calc(100dvh - 16px);border-radius:14px}
+}
+@media(max-width:480px){.crmKpis{grid-template-columns:repeat(2,minmax(0,1fr))}.crmKpis article{padding:12px;align-items:flex-start}.crmKpiIcon{width:34px;height:34px}.crmKpis strong{font-size:14px}.crmFilterBar{grid-template-columns:1fr}.crmFilterBar>label,.crmClearFilters{grid-column:1}.crmStatusFilters{grid-template-columns:repeat(4,minmax(88px,1fr))}.crmBoardLabel{flex-direction:column}.crmBoardLabel>small{margin-top:0}}
+@media(max-width:370px){.crmKpis{grid-template-columns:1fr}}

@@ -31,3 +31,21 @@ test('formulário de nova tarefa permanece utilizável no telefone',async({page}
  const box=await modal.boundingBox();
  expect(box?.width).toBeLessThanOrEqual(412);
 });
+
+test('pipeline do CRM usa navegação horizontal e ações acessíveis no telefone',async({page})=>{
+ const errors=captureBrowserErrors(page);
+ await page.goto('/crm');
+ await expect(page.getByText('Pipeline comercial')).toBeVisible();
+ const pipeline=page.locator('.crmColumns');
+ await expect(pipeline).toBeVisible();
+ await expect(page.locator('[data-lead-id="lead-active"] select')).toBeVisible();
+ await page.getByRole('button',{name:/Reunião/}).click();
+ const bodyOverflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(bodyOverflow).toBeLessThanOrEqual(1);
+ await page.getByRole('button',{name:'Novo lead'}).click();
+ const modal=page.getByRole('dialog',{name:'Adicionar oportunidade'});
+ await expect(modal).toBeVisible();
+ const box=await modal.boundingBox();
+ expect(box?.width).toBeLessThanOrEqual(412);
+ expect(errors).toEqual([]);
+});

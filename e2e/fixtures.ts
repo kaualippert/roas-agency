@@ -33,8 +33,14 @@ export const testState={
   {id:'task-overdue',title:'Relatório atrasado',description:'Deve aparecer na coluna de atrasadas',clientId:'client-1',projectId:'project-1',responsibleId:'member-admin',responsibleIds:['member-admin'],status:'todo',priority:'urgent',dueDate:'2020-01-01',tags:['relatório'],position:0,commentsCount:0,attachmentsCount:0,createdAt:now,updatedAt:now},
   {id:'task-future',title:'Planejamento futuro',description:'Tarefa dentro do prazo',clientId:'client-1',projectId:'project-1',responsibleId:'member-admin',responsibleIds:['member-admin'],status:'todo',priority:'medium',dueDate:'2099-12-31',tags:['planejamento'],position:1,commentsCount:0,attachmentsCount:0,createdAt:now,updatedAt:now},
  ],
- prospects:[],
- services:[],
+ prospects:[
+  {id:'lead-active',name:'Academia Horizonte',contact:'Carla Lima',phone:'11988887777',responsibleId:'member-admin',value:2500,stage:'Em andamento',source:'Instagram',nextAction:'Enviar proposta',color:'#6541ee',serviceIds:['service-social'],createdAt:now,updatedAt:now},
+  {id:'lead-converted',name:'Cliente Convertido',contact:'Paulo Teste',phone:'11977776666',responsibleId:'member-admin',value:2500,stage:'Negócio fechado',source:'Indicação',nextAction:'Cliente convertido',color:'#10a56b',serviceIds:['service-social'],convertedClientId:'client-1',createdAt:now,updatedAt:now},
+ ],
+ services:[
+  {id:'service-social',name:'Social Media',description:'Gestão mensal de conteúdo',price:2500,pricingType:'monthly',active:true,createdAt:now},
+  {id:'service-site',name:'Landing Page',description:'Projeto sob orçamento',price:0,pricingType:'variable',active:true,createdAt:now},
+ ],
  financial_entries:[],
  notifications:[{id:'notification-1',title:'Teste de notificação',read:false,createdAt:now,updatedAt:now}],
  reports:[],
