@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {AlarmClock,CalendarDays,CheckCircle2,ChevronLeft,ChevronRight,ClipboardCheck,Filter,LayoutList,Paperclip,Plus,RotateCcw,Save,Search,SlidersHorizontal,SquareKanban,Trash2,UserRound,X} from 'lucide-react';
+import {useSearchParams} from 'react-router-dom';
 import TaskDescriptionEditor,{FormattedTaskDescription} from './TaskDescriptionEditor';
 import {deleteClientFile} from './client-files';
 import {store} from './storage';
@@ -20,10 +21,12 @@ const initials=(name='')=>name.split(' ').slice(0,2).map(part=>part[0]).join('')
 const taskResponsibleIds=(task:Task)=>task.responsibleIds?.length?task.responsibleIds:task.responsibleId?[task.responsibleId]:[];
 
 export default function TasksPageEnhanced(){
+ const [searchParams,setSearchParams]=useSearchParams();
  const [tasks,setTasks]=useState<Task[]>(()=>normalizeTaskStatuses(store.get('tasks',[]))),[clients,setClients]=useState<Client[]>(()=>store.get('clients',[])),[projects,setProjects]=useState<Project[]>(()=>store.get('projects',[])),[team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
  const [view,setViewState]=useState<View>(()=>(localStorage.getItem('roas_task_view') as View)||'kanban'),[query,setQuery]=useState(''),[filters,setFilters]=useState<FilterState>(()=>{try{return {...emptyFilters,...JSON.parse(localStorage.getItem('roas_task_filters')||'{}')}}catch{return emptyFilters}}),[advanced,setAdvanced]=useState(false),[modal,setModal]=useState(false),[editing,setEditing]=useState<Task|null>(null),[saved,setSaved]=useState(false),[calendarDate,setCalendarDate]=useState(new Date());
  useEffect(()=>{const update=()=>{setTasks(normalizeTaskStatuses(store.get('tasks',[])));setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTeam(store.get('team',[]))};window.addEventListener('roas-change',update);return()=>window.removeEventListener('roas-change',update)},[]);
  useEffect(()=>{const sync=()=>{const current=store.get<Task[]>('tasks',[]),next=normalizeTaskStatuses(current);if(next!==current)store.set('tasks',next)};sync();const timer=window.setInterval(sync,60000);return()=>window.clearInterval(timer)},[]);
+ useEffect(()=>{const taskId=searchParams.get('task');if(!taskId)return;const task=tasks.find(item=>item.id===taskId);if(task){setEditing(task);setModal(true)}const next=new URLSearchParams(searchParams);next.delete('task');setSearchParams(next,{replace:true})},[searchParams,tasks,setSearchParams]);
  const saveTasks=(next:Task[])=>{const normalized=normalizeTaskStatuses(next);setTasks(normalized);store.set('tasks',normalized)};
  const setView=(next:View)=>{setViewState(next);localStorage.setItem('roas_task_view',next)};
  const setFilter=(key:keyof FilterState,value:string)=>setFilters(current=>({...current,[key]:value}));
