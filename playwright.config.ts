@@ -22,6 +22,6 @@ export default defineConfig({
   url:'http://127.0.0.1:4173',
   reuseExistingServer:!process.env.CI,
   timeout:120_000,
-  env:{...process.env,VITE_E2E:'true',VITE_API_URL:'/api'},
+  env:{...process.env,VITE_E2E:'true',VITE_API_URL:'/api',VITE_APP_VERSION:'e2e-2026.08.04'},
  },
 });

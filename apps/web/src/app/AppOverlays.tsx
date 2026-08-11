@@ -1,8 +1,8 @@
-import {lazy} from 'react';
+import {lazy,Suspense} from 'react';
+import NotificationCenter from '../NotificationCenter';
 
 const CRMLeadManager=lazy(()=>import('../CRMLeadManager'));
-const NotificationCenter=lazy(()=>import('../NotificationCenter'));
 
 export default function AppOverlays(){
- return <><CRMLeadManager/><NotificationCenter/></>
+ return <><Suspense fallback={null}><CRMLeadManager/></Suspense><NotificationCenter/></>
 }

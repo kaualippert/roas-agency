@@ -41,6 +41,7 @@ import './reports-filters.css';
 import './kanban-card-limit.css';
 import './task-description.css';
 import './appearance-themes.css';
+import './notification-center-enhanced.css';
 
 applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')));
 

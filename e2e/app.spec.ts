@@ -84,6 +84,26 @@ test('cria lead com serviço mensal e valor automático',async({page})=>{
  await expect(page.getByText('Clínica Aurora')).toBeVisible();
 });
 
+test('abre a tarefa pela notificação e permite limpar todos os alertas',async({page})=>{
+ await page.goto('/dashboard');
+ await page.getByRole('button',{name:'Abrir notificações'}).click();
+ await expect(page.getByText('Nova versão do Flow ROAS')).toBeVisible();
+ const taskNotification=page.locator('.notificationList article').filter({hasText:'Relatório atrasado'});
+ await expect(taskNotification).toBeVisible();
+ await taskNotification.locator('.notificationOpen').click();
+ await expect(page).toHaveURL(/\/tasks/);
+ const taskModal=page.locator('.enhancedTaskModal');
+ await expect(taskModal).toBeVisible();
+ await expect(taskModal.locator('input[name="title"]')).toHaveValue('Relatório atrasado');
+ await taskModal.locator('.modalHead .iconBtn').click();
+ await page.getByRole('button',{name:'Abrir notificações'}).click();
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Limpar todas'}).click();
+ await expect(page.locator('.notificationEmpty')).toBeVisible();
+ await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+ await expect(page.locator('.notificationList article')).toHaveCount(0);
+});
+
 test('bloqueia configurações quando a área não foi concedida',async({page})=>{
  await page.unroute('**/api/**');
  await mockRoasApi(page,['general']);

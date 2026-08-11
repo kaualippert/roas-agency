@@ -42,7 +42,8 @@ export const testState={
   {id:'service-site',name:'Landing Page',description:'Projeto sob orçamento',price:0,pricingType:'variable',active:true,createdAt:now},
  ],
  financial_entries:[],
- notifications:[{id:'notification-1',title:'Teste de notificação',read:false,createdAt:now,updatedAt:now}],
+ notifications:[{id:'notification-1',title:'Teste de notificação',description:'Alerta usado na validação da central.',type:'task',read:false,createdAt:now,updatedAt:now}],
+ notification_dismissals:[],
  reports:[],
  team_invitations:[],
 };

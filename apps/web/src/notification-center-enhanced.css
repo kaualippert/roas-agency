@@ -1,0 +1,24 @@
+.notificationTools{align-items:center}
+.notificationFilters,.notificationActions{display:flex;align-items:center;gap:4px}
+.notificationTools .notificationActions button{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.notificationTools button:disabled{opacity:.4;cursor:not-allowed}
+.notificationTools .clearNotifications{color:#d14343}
+.notificationList article{grid-template-columns:minmax(0,1fr) 34px;gap:0;padding:0;align-items:stretch}
+.notificationOpen{min-width:0;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start;padding:13px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.notificationOpen:focus-visible{outline:2px solid #7358ef;outline-offset:-2px}
+.notificationList article.actionable .notificationOpen:hover{background:#faf9ff}
+.notificationOpen>div{min-width:0}
+.notificationOpen small{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.notificationOpen small em{color:#5b36f2;font-size:8px;font-style:normal;font-weight:800;white-space:nowrap}
+.notificationType.version{background:#f0eaff;color:#7048e8}
+.notificationType.task{background:#e8f2ff;color:#287cf0}
+.notificationList article>.deleteNotification{align-self:center;margin-right:7px}
+html[data-theme="dark"] .notificationList article.actionable .notificationOpen:hover{background:#1d273a}
+html[data-theme="dark"] .notificationOpen small em{color:#b8a8ff}
+html[data-theme="dark"] .notificationType.version{background:#30275f;color:#c6b8ff}
+html[data-theme="dark"] .notificationType.task{background:#172d4d;color:#77afff}
+html[data-theme-variant="all-black"] .notificationPanel{background:#080808;border-color:#292929}
+html[data-theme-variant="all-black"] .notificationHead,html[data-theme-variant="all-black"] .notificationTools,html[data-theme-variant="all-black"] .notificationList article{border-color:#292929}
+html[data-theme-variant="all-black"] .notificationList article.actionable .notificationOpen:hover{background:#111}
+@media(max-width:600px){.notificationTools{align-items:stretch;flex-direction:column}.notificationFilters,.notificationActions{width:100%}.notificationFilters button{flex:1}.notificationActions button{flex:1;justify-content:center}.notificationOpen{padding:12px 10px}.notificationTools .notificationActions button span{display:inline}}
+@media(max-width:370px){.notificationTools .notificationActions button span{display:none}.notificationActions button{min-height:34px}}
