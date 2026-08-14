@@ -52,14 +52,15 @@ type AccessArea='general'|'marketing'|'finance'|'settings';
 
 export async function mockRoasApi(page:Page,areas:AccessArea[]=['general','marketing','finance','settings']){
  const member={...admin,accessAreas:areas};
- await page.route('**/api/**',async route=>handleApi(route,member,areas));
+ const state=structuredClone({...testState,team:[member]}) as Record<string,unknown>;
+ await page.route('**/api/**',async route=>handleApi(route,member,areas,state));
 }
 
-async function handleApi(route:Route,member:typeof admin,areas:AccessArea[]){
+async function handleApi(route:Route,member:typeof admin,areas:AccessArea[],state:Record<string,unknown>){
  const request=route.request();
  const path=new URL(request.url()).pathname;
  if(request.method()==='GET'&&path==='/api/state'){
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({state:{...testState,team:[member]}})});
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({state})});
   return;
  }
  if(request.method()==='GET'&&path==='/api/access/me'){
@@ -68,7 +69,9 @@ async function handleApi(route:Route,member:typeof admin,areas:AccessArea[]){
  }
  if(request.method()==='PUT'&&path.startsWith('/api/state/')){
   const body=request.postDataJSON() as {value:unknown};
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({key:path.split('/').pop(),value:body.value})});
+  const key=String(path.split('/').pop());
+  state[key]=body.value;
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({key,value:body.value})});
   return;
  }
  await route.fulfill({status:204,body:''});

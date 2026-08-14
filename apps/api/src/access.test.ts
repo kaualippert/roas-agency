@@ -13,6 +13,7 @@ const limited:AccessContext={
 
 test('blocks state areas that were not granted',()=>{
  assert.equal(canAccessStateKey(limited,'tasks'),true);
+ assert.equal(canAccessStateKey(limited,'crm_goal'),true);
  assert.equal(canAccessStateKey(limited,'financial_entries'),false);
  assert.equal(canAccessStateKey(limited,'team',true),false);
 });

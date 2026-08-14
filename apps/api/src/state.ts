@@ -5,7 +5,7 @@ const allowedKeys=new Set([
   'notifications','notification_dismissals','notification_preferences','notification_sound_enabled','onboarding','projects','prospects','reports','services','tasks','team',
   'team_invitations',
   'campaigns','ads','creatives','invoices','payments','timeline','permissions','integrations','marketing_integrations','settings',
-  'app_version'
+  'app_version','crm_goal'
 ]);
 
 const stateSchema=new Schema({

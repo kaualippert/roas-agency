@@ -19,6 +19,8 @@ import {
  type CRMStage as Stage,
 } from './crm-leads';
 import CRMServicesAnalytics from './CRMServicesAnalytics';
+import SalesGoalGauge from './SalesGoalGauge';
+import {calculateCRMGoalProgress,emptyCRMGoal,formatCRMGoalValue,normalizeCRMGoal,type CRMGoal,type CRMGoalMetric} from './crm-goal';
 import './crm-funnel.css';
 
 type FunnelItem={stage:string;fullStage:Stage;leads:number;percentage:number;color:string};
@@ -33,6 +35,10 @@ export default function CRMPage(){
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[]));
  const [modal,setModal]=useState(false);
+ const [goalModal,setGoalModal]=useState(false);
+ const [goal,setGoal]=useState<CRMGoal>(()=>normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)));
+ const [goalMetric,setGoalMetric]=useState<CRMGoalMetric>('value');
+ const [goalTarget,setGoalTarget]=useState(0);
  const [newLeadStage,setNewLeadStage]=useState<Stage>('Leads captados');
  const [dragged,setDragged]=useState<string|null>(null);
  const [selectedServiceIds,setSelectedServiceIds]=useState<string[]>([]);
@@ -48,6 +54,7 @@ export default function CRMPage(){
    setServices(store.get('services',[]));
    setTeam(store.get('team',[]));
    setClients(store.get('clients',[]));
+   setGoal(normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)));
   };
   window.addEventListener('roas-change',update);
   return()=>window.removeEventListener('roas-change',update);
@@ -59,6 +66,7 @@ export default function CRMPage(){
  const sources=useMemo(()=>Array.from(new Set(leads.map(lead=>lead.source?.trim()).filter(Boolean))).sort(),[leads]);
  const activeTeam=useMemo(()=>team.filter(member=>member.status==='active'),[team]);
  const availableServices=useMemo(()=>services.filter(service=>service.active||leads.some(lead=>leadServiceIds(lead,services).includes(service.id))),[services,leads]);
+ const goalResult=useMemo(()=>calculateCRMGoalProgress(goal,leads),[goal,leads]);
 
  const save=(next:Lead[])=>{setLeads(next);store.set('prospects',next)};
  const moveLead=(leadId:string,stage:Stage)=>{
@@ -87,6 +95,15 @@ export default function CRMPage(){
   setFocusedStage(stage);
   pipelineRef.current?.querySelector<HTMLElement>(`[data-crm-stage="${stage}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
  };
+ const openGoalModal=()=>{setGoalMetric(goal.metric);setGoalTarget(goal.target);setGoalModal(true)};
+ const saveGoal=(event:React.FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();
+  if(goalTarget<=0)return;
+  const next:CRMGoal={metric:goalMetric,target:goalMetric==='quantity'?Math.max(1,Math.round(goalTarget)):goalTarget,updatedAt:new Date().toISOString()};
+  setGoal(next);
+  store.set('crm_goal',next);
+  setGoalModal(false);
+ };
 
  const funnel=useMemo<FunnelItem[]>(()=>stages.map((stage,index)=>{const count=filteredLeads.filter(lead=>lead.stage===stage).length;return{stage:stage.length>15?stage.split(' ')[0]:stage,fullStage:stage,leads:count,percentage:filteredLeads.length?Math.round(count/filteredLeads.length*100):0,color:palette[index]}}),[filteredLeads]);
  const sourceData=useMemo(()=>Array.from(new Set(filteredLeads.map(lead=>lead.source||'Sem origem'))).map(source=>({name:source,value:filteredLeads.filter(lead=>(lead.source||'Sem origem')===source).length})),[filteredLeads]);
@@ -98,6 +115,7 @@ export default function CRMPage(){
  return <main className="crmPage">
   <div className="crmPageTitle"><div><h2>CRM de Prospecção</h2><p>Acompanhe oportunidades, serviços solicitados e a saúde do funil.</p></div><button className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div>
   <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((sum,lead)=>sum+Number(lead.value||0),0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((sum,lead)=>sum+Number(lead.value||0),0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão" value={`${conversion}%`} note="Do recorte atual" tone="orange"/></div>
+  <SalesGoalGauge goal={goal} result={goalResult} onConfigure={openGoalModal}/>
 
   <section className="card crmFilterBar" aria-label="Filtros do CRM">
    <div className="crmStatusFilters" role="group" aria-label="Situação das oportunidades">
@@ -142,6 +160,7 @@ export default function CRMPage(){
   </div>
   <CRMServicesAnalytics leads={filteredLeads} services={services}/>
 
+  {goalModal&&<div className="overlay" role="presentation"><div className="modal salesGoalModal" role="dialog" aria-modal="true" aria-labelledby="sales-goal-title"><div className="modalHead"><div><small>META COMERCIAL</small><h2 id="sales-goal-title">Configurar meta mensal</h2><p>Escolha como o desempenho de vendas deve ser acompanhado.</p></div><button type="button" className="iconBtn" aria-label="Fechar" onClick={()=>setGoalModal(false)}><X/></button></div><form className="form" onSubmit={saveGoal}><div className="full goalMetricOptions" role="radiogroup" aria-label="Tipo da meta"><label><input type="radio" name="goalMetric" value="value" checked={goalMetric==='value'} onChange={()=>setGoalMetric('value')}/><b>Valor de vendas</b><small>Soma o valor estimado dos negócios fechados no mês.</small></label><label><input type="radio" name="goalMetric" value="quantity" checked={goalMetric==='quantity'} onChange={()=>setGoalMetric('quantity')}/><b>Quantidade</b><small>Conta quantos negócios foram fechados no mês.</small></label></div><label className="full">{goalMetric==='value'?'Valor da meta (R$)':'Quantidade de negócios'}<input type="number" min={goalMetric==='quantity'?1:.01} step={goalMetric==='quantity'?1:.01} required autoFocus value={goalTarget||''} onChange={event=>setGoalTarget(Number(event.target.value)||0)} placeholder={goalMetric==='value'?'Ex.: 50000':'Ex.: 10'}/></label><div className="full goalPreview">A meta será de <b>{formatCRMGoalValue(goalMetric==='quantity'?Math.round(goalTarget):goalTarget,goalMetric)}</b> por mês.</div><div className="formActions full"><button type="button" className="btn secondary" onClick={()=>setGoalModal(false)}>Cancelar</button><button className="btn" disabled={goalTarget<=0}>Salvar meta</button></div></form></div></div>}
   {modal&&<div className="overlay" role="presentation"><div className="modal crmModal" role="dialog" aria-modal="true" aria-labelledby="new-lead-title"><div className="modalHead"><div><small>NOVO LEAD</small><h2 id="new-lead-title">Adicionar oportunidade</h2><p>Cadastre o contato, o responsável e os serviços solicitados.</p></div><button type="button" className="iconBtn" aria-label="Fechar" onClick={closeModal}><X/></button></div><form className="form" onSubmit={add}><label>Empresa<input name="name" required autoFocus/></label><label>Contato<input name="contact" required/></label><label>Telefone<input name="phone" type="tel" placeholder="(00) 00000-0000"/></label><label>Responsável pelo lead<select name="responsibleId"><option value="">Definir depois</option>{activeTeam.map(member=><option key={member.id} value={member.id}>{member.name}</option>)}</select></label><label>Etapa inicial<select name="stage" value={newLeadStage} onChange={event=>setNewLeadStage(event.target.value as Stage)}>{stages.map(stage=><option key={stage}>{stage}</option>)}</select></label><label>Origem<select name="source"><option>Instagram</option><option>Site</option><option>Indicação</option><option>Google</option><option>WhatsApp</option><option>Outro</option></select></label><div className="full"><b className="formGroupLabel">Serviços solicitados</b><small className="formHelper">Serviços mensais entram automaticamente no valor estimado.</small><div className="selectionGrid crmServicesSelect">{services.filter(service=>service.active).map(service=><label key={service.id}><input type="checkbox" checked={selectedServiceIds.includes(service.id)} onChange={event=>setSelectedServiceIds(current=>event.target.checked?[...current,service.id]:current.filter(id=>id!==service.id))}/><span><b>{service.name}</b><small>{service.pricingType==='variable'||service.price<=0?'Valor a definir':`${money(service.price)}/mês`}</small></span></label>)}</div>{!services.some(service=>service.active)&&<p className="noServices">Cadastre serviços ativos em Configurações → Serviços.</p>}</div><div className="leadEstimateBox full"><div><span>Valor automático dos serviços</span><strong>{money(estimate.fixedValue)}</strong></div>{(estimate.hasVariable||!selectedServiceIds.length)&&<label>{selectedServiceIds.length?'Estimativa dos serviços sem valor fixo':'Valor estimado'}<input type="number" min="0" step="0.01" value={variableEstimate||''} onChange={event=>setVariableEstimate(Number(event.target.value)||0)} placeholder="0,00"/><small>{selectedServiceIds.length?'Adicione uma estimativa para os serviços de valor variável.':'Selecione serviços ou informe uma estimativa manual.'}</small></label>}<div className="leadEstimateTotal"><span>Valor estimado total</span><strong>{money(estimatedValue)}</strong></div></div><div className="formActions full"><button type="button" className="btn secondary" onClick={closeModal}>Cancelar</button><button className="btn">Adicionar ao CRM</button></div></form></div></div>}
  </main>;
 }
