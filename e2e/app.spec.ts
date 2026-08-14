@@ -96,11 +96,13 @@ test('configura a meta comercial no CRM e compartilha o velocímetro com o dashb
  await saved;
  await expect(crmGoal).toContainText('Meta por negócios fechados');
  await expect(crmGoal).toContainText('5 negócios');
+ await expect(crmGoal.locator('.salesGoalArc')).toHaveCSS('opacity','0');
  await page.goto('/dashboard');
  const dashboardGoal=page.locator('.dashboardSalesGoal');
  await expect(dashboardGoal).toContainText('Meta por negócios fechados');
  await expect(dashboardGoal).toContainText('5 negócios');
  await expect(dashboardGoal).toContainText('0%');
+ await expect(dashboardGoal.locator('.salesGoalArc')).toHaveCSS('opacity','0');
 });
 
 test('abre a tarefa pela notificação e permite limpar todos os alertas',async({page})=>{

@@ -12,8 +12,7 @@ type Props={
 
 export default function SalesGoalGauge({goal,result,onConfigure,dashboard=false}:Props){
  const configured=result.target>0;
- const radius=78,circumference=Math.PI*radius;
- const offset=circumference*(1-result.progress/100);
+ const progress=Math.max(0,Math.min(100,Number(result.progress)||0));
  return <section className={`card salesGoalCard${dashboard?' dashboardSalesGoal':''}`} aria-label="Meta comercial mensal">
   <div className="salesGoalCopy">
    <span className="salesGoalEyebrow"><Flag/> META COMERCIAL MENSAL</span>
@@ -27,12 +26,12 @@ export default function SalesGoalGauge({goal,result,onConfigure,dashboard=false}
    {onConfigure?<button type="button" className="salesGoalAction" onClick={onConfigure}><Settings2/>{configured?'Editar meta':'Configurar meta'}</button>:<Link className="salesGoalAction" to="/crm"><span>Gerenciar no CRM</span><ArrowRight/></Link>}
   </div>
   <div className={`salesGoalGauge${configured?'':' empty'}`}>
-   <svg viewBox="0 0 200 112" role="img" aria-label={`${result.progress}% da meta atingida`}>
-    <path className="salesGoalTrack" d="M 22 98 A 78 78 0 0 1 178 98" pathLength={circumference}/>
-    <path className="salesGoalArc" d="M 22 98 A 78 78 0 0 1 178 98" pathLength={circumference} style={{strokeDasharray:circumference,strokeDashoffset:offset}}/>
+   <svg viewBox="0 0 200 112" role="img" aria-label={`${progress}% da meta atingida`}>
+    <path className="salesGoalTrack" d="M 22 98 A 78 78 0 0 1 178 98" pathLength={100}/>
+    <path className="salesGoalArc" d="M 22 98 A 78 78 0 0 1 178 98" pathLength={100} style={{strokeDasharray:`${progress} 100`,opacity:progress===0?0:1}}/>
     {[0,25,50,75,100].map((tick,index)=>{const angle=Math.PI-(Math.PI*index/4),x1=100+68*Math.cos(angle),y1=98-68*Math.sin(angle),x2=100+74*Math.cos(angle),y2=98-74*Math.sin(angle);return <line key={tick} x1={x1} y1={y1} x2={x2} y2={y2}/>})}
    </svg>
-   <div className="salesGoalGaugeValue"><Trophy/><strong>{result.progress}%</strong><span>{configured?'da meta atingida':'meta não configurada'}</span></div>
+   <div className="salesGoalGaugeValue"><Trophy/><strong>{progress}%</strong><span>{configured?'da meta atingida':'meta não configurada'}</span></div>
    <div className="salesGoalScale"><span>0%</span><span>100%</span></div>
   </div>
  </section>;
