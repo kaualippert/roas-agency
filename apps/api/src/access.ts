@@ -28,7 +28,7 @@ export interface AccessContext{
 const allAreas:AccessArea[]=['general','marketing','finance','settings'];
 const keyAreas:Record<string,AccessArea>={
  activities:'general',clients:'general',notifications:'general',notification_dismissals:'general',notification_preferences:'general',
- notification_sound_enabled:'general',onboarding:'general',projects:'general',prospects:'general',tasks:'general',
+ notification_sound_enabled:'general',onboarding:'general',projects:'general',prospects:'general',tasks:'general',crm_goal:'general',
  campaigns:'marketing',ads:'marketing',creatives:'marketing',integrations:'marketing',marketing_integrations:'marketing',reports:'marketing',
  financial_entries:'finance',invoices:'finance',payments:'finance',
  agency_profile:'settings',general_settings:'settings',permissions:'settings',services:'settings',settings:'settings',team:'settings',team_invitations:'settings',

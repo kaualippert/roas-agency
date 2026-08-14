@@ -5,8 +5,10 @@ import {store} from './storage';
 import {effectiveTaskStatus,isTaskOverdue} from './task-rules';
 import type {Client,Project,Task} from './types';
 import {dashboardPeriods as periods,dashboardPeriodStart,type DashboardPeriod as Period} from './dashboard-period';
+import {calculateCRMGoalProgress,emptyCRMGoal,normalizeCRMGoal,type CRMGoal} from './crm-goal';
+import type {CRMLead as Lead} from './crm-leads';
+import SalesGoalGauge from './SalesGoalGauge';
 
-type Lead={id:string;name:string;value:number;stage:string;createdAt?:string};
 type FinancialEntry={id:string;clientId:string;kind:'recurring'|'variable'|'one_off';value:number;dueDate:string;status:'pending'|'received';receivedAt?:string};
 const stages=['Leads captados','Primeiro contato','Em andamento','Reunião','Ciclo de acompanhamento','Em espera','Negócio fechado','Negócio perdido'];
 const stageColors=['#6d4bf2','#3b82f6','#16a269','#e99a18','#e8547c','#7c8aa2','#17a66a','#e04a52'];
@@ -19,8 +21,9 @@ export default function DashboardPage(){
  const [tasks,setTasks]=useState<Task[]>(()=>store.get('tasks',[]));
  const [leads,setLeads]=useState<Lead[]>(()=>store.get('prospects',[]));
  const [entries,setEntries]=useState<FinancialEntry[]>(()=>store.get('financial_entries',[]));
+ const [goal,setGoal]=useState<CRMGoal>(()=>normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)));
  const [period,setPeriod]=useState<Period>('6m');
- useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTasks(store.get('tasks',[]));setLeads(store.get('prospects',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
+ useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTasks(store.get('tasks',[]));setLeads(store.get('prospects',[]));setEntries(store.get('financial_entries',[]));setGoal(normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
  const from=useMemo(()=>dashboardPeriodStart(period),[period]);
  const activeClients=clients.filter(client=>client.status==='active');
  const activeProjects=projects.filter(project=>project.status==='active');
@@ -37,6 +40,7 @@ export default function DashboardPage(){
  const overdueTasks=openTasks.filter(task=>isTaskOverdue(task));
  const conversion=leads.length?Math.round(leads.filter(lead=>lead.stage==='Negócio fechado').length/leads.length*100):0;
  const projectAverage=Math.round(activeProjects.reduce((sum,project)=>sum+project.progress,0)/Math.max(1,activeProjects.length));
+ const goalResult=useMemo(()=>calculateCRMGoalProgress(goal,leads),[goal,leads]);
  const revenueData=useMemo(()=>buildRevenueData(period,entries,mrr),[period,entries,mrr]);
  const funnelData=stages.map((stage,index)=>({stage:stage==='Negócio fechado'?'Fechado':stage==='Negócio perdido'?'Perdido':stage.length>13?stage.split(' ')[0]:stage,total:leads.filter(lead=>lead.stage===stage&&(isAfter(lead.createdAt,from)||!lead.createdAt)).length,color:stageColors[index]}));
  const taskData=[
@@ -62,6 +66,7 @@ export default function DashboardPage(){
    <DashboardKpi icon={<BriefcaseBusiness/>} label="Projetos ativos" value={String(activeProjects.length)} note={`${projectAverage}% de progresso médio`} trend="project" tone="green"/>
    <DashboardKpi icon={<Clock3/>} label="Tarefas em aberto" value={String(openTasks.length)} note={`${overdueTasks.length} precisam de atenção`} trend="task" tone={overdueTasks.length?'orange':'green'}/>
   </div>
+  <SalesGoalGauge goal={goal} result={goalResult} dashboard/>
   <div className="dashboardMainGrid">
    <section className="card dashboardRevenue"><DashboardTitle title="Receita e previsão" subtitle={`Movimentações financeiras — ${periods[period].label.toLowerCase()}`} action={<a href="/finance">Abrir financeiro <ArrowRight/></a>}/><div className="revenueHighlights"><span><i className="received"/><small>Recebido</small><b>{money(received)}</b></span><span><i className="forecast"/><small>Previsão recorrente</small><b>{money(mrr)}</b></span><span><i className="variable"/><small>Receitas variáveis</small><b>{money(variable)}</b></span></div><ResponsiveContainer width="100%" height={270}><AreaChart data={revenueData}><defs><linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#6541ee" stopOpacity={.24}/><stop offset="1" stopColor="#6541ee" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="label"/><YAxis tickFormatter={value=>`${Math.round(value/1000)}k`}/><Tooltip formatter={(value:any)=>money(Number(value))}/><Area type="monotone" dataKey="previsto" stroke="#6541ee" fill="url(#dashboardRevenueGradient)" strokeWidth={2}/><Line type="monotone" dataKey="recebido" stroke="#18a267" strokeWidth={3}/></AreaChart></ResponsiveContainer></section>
    <section className="card agencyPulse"><DashboardTitle title="Saúde da operação" subtitle="Indicadores essenciais do período"/><Pulse label="Conclusão de tarefas" value={taskRate} icon={<CheckCircle2/>} tone="green"/><Pulse label="Progresso dos projetos" value={projectAverage} icon={<Target/>} tone="blue"/><Pulse label="Conversão comercial" value={conversion} icon={<Funnel/>} tone="purple"/><div className="attentionBox"><AlertTriangle/><div><b>{overdueTasks.length} tarefas atrasadas</b><span>Revise responsáveis e prazos prioritários.</span></div><a href="/tasks">Ver tarefas</a></div></section>

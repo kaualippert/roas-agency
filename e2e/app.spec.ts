@@ -84,6 +84,25 @@ test('cria lead com serviço mensal e valor automático',async({page})=>{
  await expect(page.getByText('Clínica Aurora')).toBeVisible();
 });
 
+test('configura a meta comercial no CRM e compartilha o velocímetro com o dashboard',async({page})=>{
+ await page.goto('/crm');
+ const crmGoal=page.locator('.salesGoalCard');
+ await crmGoal.getByRole('button',{name:'Configurar meta'}).click();
+ const dialog=page.getByRole('dialog',{name:'Configurar meta mensal'});
+ await dialog.getByRole('radio',{name:/Quantidade/}).check();
+ await dialog.getByLabel('Quantidade de negócios').fill('5');
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/crm_goal')&&response.request().method()==='PUT');
+ await dialog.getByRole('button',{name:'Salvar meta'}).click();
+ await saved;
+ await expect(crmGoal).toContainText('Meta por negócios fechados');
+ await expect(crmGoal).toContainText('5 negócios');
+ await page.goto('/dashboard');
+ const dashboardGoal=page.locator('.dashboardSalesGoal');
+ await expect(dashboardGoal).toContainText('Meta por negócios fechados');
+ await expect(dashboardGoal).toContainText('5 negócios');
+ await expect(dashboardGoal).toContainText('0%');
+});
+
 test('abre a tarefa pela notificação e permite limpar todos os alertas',async({page})=>{
  await page.goto('/dashboard');
  await page.getByRole('button',{name:'Abrir notificações'}).click();
