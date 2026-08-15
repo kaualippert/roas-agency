@@ -11,6 +11,7 @@ import {hasEditorialCapability,resolveServiceIds} from '../service-links';
 import {store} from '../storage';
 import {removeProjectFinancialEntry,syncProjectFinancialEntry,syncProjectsFinancialEntries,type FinancialEntry} from '../financial-entries';
 import {syncProjectProgress} from '../project-progress';
+import {usePersistentState} from '../persistent-ui';
 import '../projects-responsibles.css';
 import '../project-billing.css';
 import '../projects-social-link.css';
@@ -31,7 +32,7 @@ const isSocialMediaProject=(project:Project,services:AgencyService[])=>services.
 export default function ProjectsPage(){
  const navigate=useNavigate();
  const [projects,setProjects]=useStoreData<Project[]>('projects',[]),[clients]=useStoreData<Client[]>('clients',[]),[team]=useStoreData<TeamMember[]>('team',[]),[tasks,setTasks]=useStoreData<Task[]>('tasks',[]),[services]=useStoreData<AgencyService[]>('services',[]);
- const [query,setQuery]=useState(''),[tab,setTab]=useState<Tab>('all'),[clientFilter,setClientFilter]=useState(''),[responsibleFilter,setResponsibleFilter]=useState(''),[priorityFilter,setPriorityFilter]=useState(''),[sort,setSort]=useState<Sort>('recent'),[selected,setSelected]=useState<Project|null>(projects[0]||null),[editing,setEditing]=useState<Project|null>(null),[creating,setCreating]=useState(false),[taskProject,setTaskProject]=useState<Project|null>(null);
+ const [query,setQuery]=usePersistentState('roas_filter_projects_query',''),[tab,setTab]=usePersistentState<Tab>('roas_filter_projects_tab','all'),[clientFilter,setClientFilter]=usePersistentState('roas_filter_projects_client',''),[responsibleFilter,setResponsibleFilter]=usePersistentState('roas_filter_projects_responsible',''),[priorityFilter,setPriorityFilter]=usePersistentState('roas_filter_projects_priority',''),[sort,setSort]=usePersistentState<Sort>('roas_filter_projects_sort','recent'),[selected,setSelected]=useState<Project|null>(projects[0]||null),[editing,setEditing]=useState<Project|null>(null),[creating,setCreating]=useState(false),[taskProject,setTaskProject]=useState<Project|null>(null);
  useEffect(()=>setSelected(current=>current?projects.find(project=>project.id===current.id)||null:current),[projects]);
  useEffect(()=>{if(!services.length)return;const legacy=projects.filter(project=>!project.serviceIds?.length&&project.services?.length);if(legacy.length)setProjects(projects.map(project=>legacy.some(item=>item.id===project.id)?{...project,serviceIds:resolveServiceIds(project,services),updatedAt:new Date().toISOString()}:project))},[services]);
  useEffect(()=>{const current=store.get<FinancialEntry[]>('financial_entries',[]),next=syncProjectsFinancialEntries(current,projects,clients);if(JSON.stringify(next)!==JSON.stringify(current))store.set('financial_entries',next)},[projects,clients]);

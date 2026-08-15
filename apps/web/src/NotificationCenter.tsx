@@ -6,6 +6,7 @@ import {playNotificationSound} from './notification-sound';
 import {createVersionNotification,currentAppVersion,mergeNotificationAlerts,notificationTarget,type AppNotification as Notification} from './notifications';
 import {store} from './storage';
 import type {GenericItem,Task} from './types';
+import {usePersistentState} from './persistent-ui';
 
 type ConvertedLead={id:string;name:string;convertedClientId?:string};
 type FinancialEntry={id:string;description:string;dueDate:string;status:'pending'|'received';receivedAt?:string;updatedAt?:string};
@@ -16,7 +17,7 @@ const startOfDay=(value=new Date())=>new Date(value.getFullYear(),value.getMonth
 
 export default function NotificationCenter(){
  const navigate=useNavigate();
- const [open,setOpen]=useState(false),[items,setItems]=useState<Notification[]>(initialNotifications),[filter,setFilter]=useState('all');
+ const [open,setOpen]=useState(false),[items,setItems]=useState<Notification[]>(initialNotifications),[filter,setFilter]=usePersistentState('roas_filter_notifications','all');
  const knownNotificationIds=useRef(new Set(items.map(item=>item.id)));
  const convertedLeadIds=useRef(new Set(store.get<ConvertedLead[]>('prospects',[]).filter(lead=>lead.convertedClientId).map(lead=>lead.id)));
  const receivedEntryIds=useRef(new Set(store.get<FinancialEntry[]>('financial_entries',[]).filter(entry=>entry.status==='received').map(entry=>entry.id)));

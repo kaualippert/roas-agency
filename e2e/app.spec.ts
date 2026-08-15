@@ -5,6 +5,7 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+<<<<<<< HEAD
 test('exibe a identidade configurada no centro do carregamento',async({page})=>{
  const logo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
  await page.addInitScript(brand=>localStorage.setItem('roas_loading_brand',JSON.stringify(brand)),{agencyName:'Agência E2E',logoDataUrl:logo,logoScale:100});
@@ -16,6 +17,38 @@ test('exibe a identidade configurada no centro do carregamento',async({page})=>{
  const box=await loader.boundingBox(),viewport=page.viewportSize();
  expect(Math.abs((box?.x||0)+(box?.width||0)/2-(viewport?.width||0)/2)).toBeLessThan(3);
  await expect(page.locator('.headTitle h1')).toHaveText('Dashboard');
+=======
+test('mantém os últimos filtros ao navegar entre as páginas',async({page})=>{
+ await page.goto('/dashboard');
+ await page.getByLabel('Período').selectOption('month');
+ await page.goto('/clients');
+ await page.goto('/dashboard');
+ await expect(page.getByLabel('Período')).toHaveValue('month');
+
+ await page.goto('/crm');
+ await page.getByRole('button',{name:'Ganhos'}).click();
+ await page.goto('/projects');
+ await page.goto('/crm');
+ await expect(page.getByRole('button',{name:'Ganhos'})).toHaveClass(/active/);
+
+ await page.goto('/tasks');
+ const search=page.getByPlaceholder('Buscar tarefa, cliente ou projeto...');
+ await search.fill('Planejamento futuro');
+ await page.goto('/dashboard');
+ await page.goto('/tasks');
+ await expect(page.getByPlaceholder('Buscar tarefa, cliente ou projeto...')).toHaveValue('Planejamento futuro');
+});
+
+test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
+ await page.goto('/crm');
+ await page.getByRole('button',{name:'Cards compactos'}).click();
+ await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
+ await page.goto('/tasks');
+ await page.getByRole('button',{name:'Minimizar cards'}).click();
+ await expect(page.locator('.enhancedTaskCard').first()).toHaveClass(/compact/);
+ await page.goto('/crm');
+ await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
+>>>>>>> a1ceb7b (Persiste filtros e adiciona visualização compacta nos kanbans)
 });
 
 test('carrega o dashboard, a identidade da agência e os arquivos principais',async({page})=>{

@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {BarChart3,CalendarDays,FilterX,Funnel,GripVertical,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
+import {BarChart3,CalendarDays,FilterX,Funnel,GripVertical,Maximize2,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Cell,Line,LineChart,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
 import {KanbanMoreButton,useKanbanColumnLimit,visibleKanbanCards} from './KanbanColumnLimit';
@@ -22,6 +22,7 @@ import CRMServicesAnalytics from './CRMServicesAnalytics';
 import SalesGoalGauge from './SalesGoalGauge';
 import {calculateCRMGoalProgress,emptyCRMGoal,formatCRMGoalValue,normalizeCRMGoal,type CRMGoal,type CRMGoalMetric} from './crm-goal';
 import './crm-funnel.css';
+import {useKanbanDensity,usePersistentState} from './persistent-ui';
 
 type FunnelItem={stage:string;fullStage:Stage;leads:number;percentage:number;color:string};
 
@@ -43,10 +44,11 @@ export default function CRMPage(){
  const [dragged,setDragged]=useState<string|null>(null);
  const [selectedServiceIds,setSelectedServiceIds]=useState<string[]>([]);
  const [variableEstimate,setVariableEstimate]=useState(0);
- const [filters,setFilters]=useState<CRMLeadFilters>(emptyFilters);
- const [focusedStage,setFocusedStage]=useState<Stage>('Leads captados');
+ const [filters,setFilters]=usePersistentState<CRMLeadFilters>('roas_filter_crm',emptyFilters);
+ const [focusedStage,setFocusedStage]=usePersistentState<Stage>('roas_filter_crm_stage','Leads captados');
  const pipelineRef=useRef<HTMLDivElement>(null);
  const {isExpanded,toggleColumn}=useKanbanColumnLimit();
+ const {compact,toggleDensity}=useKanbanDensity('roas_kanban_crm_density');
 
  useEffect(()=>{
   const update=()=>{
@@ -129,7 +131,7 @@ export default function CRMPage(){
   </section>
 
   <section className="card crmPageBoard">
-   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><small>{filteredLeads.length} oportunidades visíveis</small></div>
+   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button type="button" onClick={toggleDensity} aria-pressed={compact} title={compact?'Expandir cards':'Minimizar cards'}>{compact?<Maximize2/>:<Minimize2/>}{compact?'Cards expandidos':'Cards compactos'}</button></div></div>
    <div className="crmStageNav" aria-label="Navegar pelas etapas">{stages.map(stage=><button type="button" key={stage} className={focusedStage===stage?'active':''} onClick={()=>focusStage(stage)}><span>{stage}</span><b>{filteredLeads.filter(lead=>lead.stage===stage).length}</b></button>)}</div>
    <div className="crmColumns" ref={pipelineRef}>{stages.map((stage,index)=>{
     const items=filteredLeads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);
@@ -139,7 +141,7 @@ export default function CRMPage(){
       const linked=services.filter(service=>leadServiceIds(lead,services).includes(service.id));
       const responsible=team.find(member=>member.id===lead.responsibleId);
       const converted=isConvertedLead(lead,convertedLeadIds);
-      return <article className={`leadCard${converted?' converted':''}`} data-lead-id={lead.id} key={lead.id} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>requestCRMLeadOpen(lead.id)}>
+      return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>requestCRMLeadOpen(lead.id)}>
        <div className="leadTop"><i style={{background:lead.color}}>{lead.name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase()}</i><div>{converted&&<span className="convertedLeadBadge">Cliente</span>}<GripVertical aria-hidden="true"/><button type="button" className="leadEditButton" aria-label={`Editar ${lead.name}`} onClick={event=>{event.stopPropagation();requestCRMLeadOpen(lead.id)}}><Pencil/></button></div></div>
        <h3>{lead.name}</h3><p><UserRound/>{lead.contact||'Contato não informado'}</p>{responsible&&<span className="leadResponsible">Responsável: {responsible.name}</span>}
        {linked.length?<div className="leadServices">{linked.slice(0,2).map(service=><span key={service.id}>{service.name}</span>)}{linked.length>2&&<span>+{linked.length-2}</span>}</div>:<span className="leadNoService">Sem serviço vinculado</span>}

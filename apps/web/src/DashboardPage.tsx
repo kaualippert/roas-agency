@@ -6,6 +6,7 @@ import {effectiveTaskStatus,isTaskOverdue} from './task-rules';
 import type {Client,Project,Task} from './types';
 import {dashboardDateInRange,dashboardPeriodRange,dashboardPeriods as periods,type DashboardPeriod as Period,type DashboardPeriodRange} from './dashboard-period';
 import {calculateCRMGoalProgress,emptyCRMGoal,normalizeCRMGoal,type CRMGoal} from './crm-goal';
+import {usePersistentState} from './persistent-ui';
 import type {CRMLead as Lead} from './crm-leads';
 import SalesGoalGauge from './SalesGoalGauge';
 import {dueEntriesInRange,receivedEntriesInRange} from './dashboard-metrics';
@@ -22,7 +23,7 @@ export default function DashboardPage(){
  const [leads,setLeads]=useState<Lead[]>(()=>store.get('prospects',[]));
  const [entries,setEntries]=useState<FinancialEntry[]>(()=>store.get('financial_entries',[]));
  const [goal,setGoal]=useState<CRMGoal>(()=>normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)));
- const [period,setPeriod]=useState<Period>('6m');
+ const [period,setPeriod]=usePersistentState<Period>('roas_filter_dashboard_period','6m');
  useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setProjects(store.get('projects',[]));setTasks(store.get('tasks',[]));setLeads(store.get('prospects',[]));setEntries(store.get('financial_entries',[]));setGoal(normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
  const range=useMemo(()=>dashboardPeriodRange(period),[period]);
  const activeClients=clients.filter(client=>client.status==='active');

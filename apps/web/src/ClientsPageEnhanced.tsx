@@ -6,12 +6,13 @@ import type {AgencyService} from './ServicesManager';
 import {linkedServices,resolveServiceIds} from './service-links';
 import ClientTaskModal from './ClientTaskModal';
 import type {ClientProcess} from './client-processes';
+import {usePersistentState} from './persistent-ui';
 const money=(n=0)=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const initials=(name:string)=>name.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
 
 export default function ClientsPageEnhanced(){
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[])),[projects]=useState<Project[]>(()=>store.get('projects',[])),[services,setServices]=useState<AgencyService[]>(()=>store.get('services',[])),[team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
- const [query,setQuery]=useState(''),[tab,setTab]=useState('active'),[selected,setSelected]=useState<Client|null>(clients.find(client=>client.status==='active')||null),[editing,setEditing]=useState<Client|null>(null),[creating,setCreating]=useState(false),[taskClient,setTaskClient]=useState<Client|null>(null);
+ const [query,setQuery]=usePersistentState('roas_filter_clients_query',''),[tab,setTab]=usePersistentState('roas_filter_clients_status','active'),[selected,setSelected]=useState<Client|null>(clients.find(client=>client.status==='active')||null),[editing,setEditing]=useState<Client|null>(null),[creating,setCreating]=useState(false),[taskClient,setTaskClient]=useState<Client|null>(null);
  useEffect(()=>{const update=()=>{const next=store.get<Client[]>('clients',[]);setClients(next);setServices(store.get('services',[]));setTeam(store.get('team',[]));setSelected(current=>current?next.find(client=>client.id===current.id)||null:current)};window.addEventListener('roas-change',update);return()=>window.removeEventListener('roas-change',update)},[]);
  const save=(next:Client[])=>{setClients(next);store.set('clients',next)};
  const serviceNames=(client:Client)=>linkedServices(client,services).map(service=>service.name);

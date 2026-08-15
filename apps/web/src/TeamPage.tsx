@@ -4,6 +4,7 @@ import {createInvitation,listInvitations,resendInvitation,revokeInvitation,type 
 import {auth} from './firebase';
 import {store} from './storage';
 import type {AccessArea,Client,TeamInvitation,TeamMember} from './types';
+import {usePersistentState} from './persistent-ui';
 
 const departments=['Todos','Gestão','Marketing','Criação','Operações','Financeiro'];
 const roles=['Administrador','Gestor de tráfego','Social Media','Designer','Copywriter','Desenvolvedor','Financeiro','Atendimento'];
@@ -26,8 +27,8 @@ export default function TeamPage(){
  const [members,setMembers]=useState<TeamMember[]>(()=>store.get('team',[]));
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[]));
  const [invitations,setInvitations]=useState<TeamInvitation[]>([]);
- const [tab,setTab]=useState<'members'|'invitations'>('members');
- const [query,setQuery]=useState(''),[department,setDepartment]=useState('Todos');
+ const [tab,setTab]=usePersistentState<'members'|'invitations'>('roas_filter_team_tab','members');
+ const [query,setQuery]=usePersistentState('roas_filter_team_query',''),[department,setDepartment]=usePersistentState('roas_filter_team_department','Todos');
  const [editing,setEditing]=useState<TeamMember|null>(null),[inviting,setInviting]=useState(false);
  const [notice,setNotice]=useState(''),[error,setError]=useState(''),[busyId,setBusyId]=useState('');
  const [shareUrl,setShareUrl]=useState('');

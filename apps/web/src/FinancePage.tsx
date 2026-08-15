@@ -6,6 +6,7 @@ import type {Client} from './types';
 import type {AgencyService} from './ServicesManager';
 import {linkedServices} from './service-links';
 import type {EntryKind,EntryStatus,FinancialEntry} from './financial-entries';
+import {usePersistentState} from './persistent-ui';
 
 const money=(value=0)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const monthKey=(date:Date)=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
@@ -16,7 +17,7 @@ const statusLabel={received:'Recebido',pending:'Pendente',overdue:'Atrasado'};
 
 export default function FinancePage(){
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[])),[services,setServices]=useState<AgencyService[]>(()=>store.get('services',[])),[entries,setEntries]=useState<FinancialEntry[]>(()=>store.get('financial_entries',[]));
- const [query,setQuery]=useState(''),[filter,setFilter]=useState<'all'|'pending'|'received'|'overdue'>('all'),[modal,setModal]=useState(false),[selectedClientId,setSelectedClientId]=useState(''),[presetServiceId,setPresetServiceId]=useState('');
+ const [query,setQuery]=usePersistentState('roas_filter_finance_query',''),[filter,setFilter]=usePersistentState<'all'|'pending'|'received'|'overdue'>('roas_filter_finance_status','all'),[modal,setModal]=useState(false),[selectedClientId,setSelectedClientId]=useState(''),[presetServiceId,setPresetServiceId]=useState('');
  useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setServices(store.get('services',[]));setEntries(store.get('financial_entries',[]))};window.addEventListener('roas-change',update);update();return()=>window.removeEventListener('roas-change',update)},[]);
  const save=(next:FinancialEntry[])=>{setEntries(next);store.set('financial_entries',next)};
  const month=currentMonth(),activeClients=clients.filter(client=>client.status==='active');

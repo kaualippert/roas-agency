@@ -5,6 +5,7 @@ import {Badge,Button,Empty,Modal,Toast} from './components/ui';
 import {findMarketingResourceConflict,markMarketingIntegrationSynced,marketingProviders,migratableLegacyMarketingIntegrations,migrateLegacyMarketingIntegration,normalizeClientMarketingIntegrations,providerById,removeClientMarketingIntegration,upsertClientMarketingIntegration,type ClientMarketingIntegration,type LegacyMarketingIntegration,type MarketingProvider} from './marketing-integrations';
 import type {Client} from './types';
 import {beginOAuth,loadMarketingResources,loadOAuthOverview,oauthProviderFor,type AgencyOAuthConnection,type AgencyOAuthProvider,type MarketingResource,type OAuthProviderConfiguration} from './marketing-oauth-client';
+import {usePersistentState} from './persistent-ui';
 
 type Editing={provider:MarketingProvider;integration?:ClientMarketingIntegration};
 
@@ -15,7 +16,7 @@ export default function MarketingIntegrationsPage(){
  const activeClients=useMemo(()=>clients.filter(client=>client.status==='active'),[clients]);
  const integrations=useMemo(()=>normalizeClientMarketingIntegrations(storedIntegrations),[storedIntegrations]);
  const legacyCandidates=useMemo(()=>migratableLegacyMarketingIntegrations(legacy),[legacy]);
- const [clientId,setClientId]=useState(()=>activeClients[0]?.id||'');
+ const [clientId,setClientId]=usePersistentState('roas_filter_marketing_brand',activeClients[0]?.id||'');
  const [editing,setEditing]=useState<Editing|null>(null),[migrating,setMigrating]=useState<LegacyMarketingIntegration|null>(null),[toast,setToast]=useState('');
  const [connections,setConnections]=useState<AgencyOAuthConnection[]>([]),[oauthConfig,setOauthConfig]=useState<Record<AgencyOAuthProvider,OAuthProviderConfiguration>|null>(null),[oauthLoading,setOauthLoading]=useState(true);
  useEffect(()=>{if(!activeClients.some(client=>client.id===clientId))setClientId(activeClients[0]?.id||'')},[activeClients,clientId]);

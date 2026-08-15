@@ -4,6 +4,7 @@ import {store} from './storage';
 import type {Client,TeamMember} from './types';
 import type {AgencyService} from './ServicesManager';
 import {linkedServices} from './service-links';
+import {usePersistentState} from './persistent-ui';
 
 type StepId='contract'|'payment'|'accesses'|'briefing'|'strategy'|'project';
 type StepState={completed:boolean;completedAt:string;responsibleId:string;notes:string};
@@ -25,11 +26,11 @@ export default function OnboardingPage(){
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
  const [records,setRecords]=useState<OnboardingRecord[]>(()=>store.get('onboarding',[]));
  const [services,setServices]=useState<AgencyService[]>(()=>store.get('services',[]));
- const [selectedId,setSelectedId]=useState(()=>clients.find(client=>client.status==='active')?.id||'');
- const [query,setQuery]=useState(''),[filter,setFilter]=useState<'all'|'progress'|'done'>('all');
+ const [selectedId,setSelectedId]=usePersistentState('roas_filter_onboarding_client',clients.find(client=>client.status==='active')?.id||'');
+ const [query,setQuery]=usePersistentState('roas_filter_onboarding_query',''),[filter,setFilter]=usePersistentState<'all'|'progress'|'done'>('roas_filter_onboarding_status','all');
  useEffect(()=>{const update=()=>{setClients(store.get('clients',[]));setTeam(store.get('team',[]));setRecords(store.get('onboarding',[]));setServices(store.get('services',[]))};window.addEventListener('roas-change',update);return()=>window.removeEventListener('roas-change',update)},[]);
  const activeClients=clients.filter(client=>client.status==='active');
- useEffect(()=>{if(!selectedId&&activeClients[0])setSelectedId(activeClients[0].id)},[clients,selectedId]);
+ useEffect(()=>{if(!activeClients.some(client=>client.id===selectedId))setSelectedId(activeClients[0]?.id||'')},[clients,selectedId]);
  const getRecord=(clientId:string)=>records.find(record=>record.clientId===clientId);
  const getStep=(clientId:string,stepId:StepId)=>getRecord(clientId)?.steps[stepId]||emptyStep();
  const progress=(clientId:string)=>Math.round(onboardingSteps.filter(step=>getStep(clientId,step.id).completed).length/onboardingSteps.length*100);
