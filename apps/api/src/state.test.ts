@@ -9,6 +9,7 @@ test('accepts application collections and rejects arbitrary keys',()=>{
   assert.equal(isAllowedKey('notification_dismissals'),true);
   assert.equal(isAllowedKey('notification_sound_enabled'),true);
   assert.equal(isAllowedKey('marketing_integrations'),true);
+  assert.equal(isAllowedKey('client_marketing_integrations'),true);
   assert.equal(isAllowedKey('crm_goal'),true);
   assert.equal(isAllowedKey('client_processes'),true);
   assert.equal(isAllowedKey('editorial_project-123'),true);

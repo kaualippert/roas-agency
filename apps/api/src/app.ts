@@ -10,6 +10,7 @@ import {allState,deleteState,getState,isAllowedKey,replaceAllState,replaceState}
 import {requireFirebaseAuth} from './auth.js';
 import {canAccessClient,canAccessStateKey,filterState,filterStateValue,requireAgencyAccess,scopeStateWrite,type AccessContext} from './access.js';
 import {invitationRouter} from './invitations.js';
+import {marketingOAuthRouter} from './marketing-oauth.js';
 
 const valueSchema=z.object({value:z.unknown()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
@@ -100,6 +101,8 @@ export function createApp(){
 
   app.use(express.json({limit:'5mb'}));
 
+  app.use('/api/marketing',marketingOAuthRouter());
+
   app.use('/api/invitations',(_request,response,next)=>{
     if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
     next();
@@ -167,7 +170,8 @@ export function createApp(){
   app.use((_request,response)=>response.status(404).json({error:'Route not found'}));
   app.use((error:unknown,_request:express.Request,response:express.Response,_next:express.NextFunction)=>{
     const message=error instanceof z.ZodError?'Invalid request body':error instanceof Error?error.message:'Internal server error';
-    response.status(error instanceof z.ZodError?400:500).json({error:message});
+    const status=error instanceof z.ZodError?400:typeof (error as {status?:unknown})?.status==='number'?(error as {status:number}).status:500;
+    response.status(status).json({error:message});
   });
   return app;
 }

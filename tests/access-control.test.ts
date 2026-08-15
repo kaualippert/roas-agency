@@ -9,6 +9,12 @@ test('verified server areas override the permissive legacy fallback',()=>{
 });
 
 test('redirects a restricted member to the first server-authorized area',()=>{
- assert.equal(firstAllowedPath(undefined,['marketing']),'/integrations');
+ assert.equal(firstAllowedPath(undefined,['marketing']),'/marketing/dashboard');
  assert.equal(firstAllowedPath(undefined,['finance']),'/finance');
+});
+
+test('protects every nested marketing route with the marketing permission',()=>{
+ assert.equal(canAccessPath(undefined,'/marketing/dashboard',['marketing']),true);
+ assert.equal(canAccessPath(undefined,'/marketing/integrations',['general']),false);
+ assert.equal(canAccessPath(undefined,'/marketing/reports',['marketing']),true);
 });

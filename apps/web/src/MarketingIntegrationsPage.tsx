@@ -1,80 +1,137 @@
 import {useEffect,useMemo,useState} from 'react';
-import {BarChart3,Check,CheckCircle2,Clock3,PlugZap,RefreshCw,Settings2,ShieldCheck,Unplug} from 'lucide-react';
+import {AlertTriangle,Building2,Check,CheckCircle2,KeyRound,LoaderCircle,PlugZap,RefreshCw,Settings2,ShieldCheck,Unplug,Users} from 'lucide-react';
 import {useStoreData} from './app/useStoreData';
-import {Badge,Button,Modal,Toast} from './components/ui';
+import {Badge,Button,Empty,Modal,Toast} from './components/ui';
+import {findMarketingResourceConflict,markMarketingIntegrationSynced,marketingProviders,migratableLegacyMarketingIntegrations,migrateLegacyMarketingIntegration,normalizeClientMarketingIntegrations,providerById,removeClientMarketingIntegration,upsertClientMarketingIntegration,type ClientMarketingIntegration,type LegacyMarketingIntegration,type MarketingProvider} from './marketing-integrations';
+import type {Client} from './types';
+import {beginOAuth,loadMarketingResources,loadOAuthOverview,oauthProviderFor,type AgencyOAuthConnection,type AgencyOAuthProvider,type MarketingResource,type OAuthProviderConfiguration} from './marketing-oauth-client';
 
-type Provider='meta'|'google';
-type IntegrationStatus='connected'|'disconnected';
-
-interface MarketingIntegration{
- id:string;
- provider:Provider;
- status:IntegrationStatus;
- accountName:string;
- accountId:string;
- email:string;
- autoSync:boolean;
- connectedAt?:string;
- lastSync?:string;
-}
-
-const providers:{id:Provider;name:string;shortName:string;description:string;features:string[]}[]=[
- {id:'meta',name:'Meta Ads',shortName:'Meta',description:'Centralize campanhas do Facebook e Instagram Ads.',features:['Campanhas e conjuntos de anúncios','Investimento, alcance e conversões','Contas de anúncios vinculadas']},
- {id:'google',name:'Google Ads',shortName:'Google',description:'Acompanhe mídia de pesquisa, display e YouTube.',features:['Campanhas e grupos de anúncios','Cliques, custo e conversões','Contas de administrador e clientes']},
-];
-
-const emptyIntegration=(provider:Provider):MarketingIntegration=>({id:provider,provider,status:'disconnected',accountName:'',accountId:'',email:'',autoSync:true});
-const dateTime=(value?:string)=>value?new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Ainda não sincronizado';
+type Editing={provider:MarketingProvider;integration?:ClientMarketingIntegration};
 
 export default function MarketingIntegrationsPage(){
- const [stored,setStored]=useStoreData<MarketingIntegration[]>('marketing_integrations',[]);
- const [editing,setEditing]=useState<Provider|null>(null),[toast,setToast]=useState('');
- const integrations=useMemo(()=>providers.map(provider=>stored.find(item=>item.provider===provider.id)||emptyIntegration(provider.id)),[stored]);
- const connected=integrations.filter(item=>item.status==='connected');
+ const [clients]=useStoreData<Client[]>('clients',[]);
+ const [storedIntegrations,setIntegrations]=useStoreData<ClientMarketingIntegration[]>('client_marketing_integrations',[]);
+ const [legacy,setLegacy]=useStoreData<LegacyMarketingIntegration[]>('marketing_integrations',[]);
+ const activeClients=useMemo(()=>clients.filter(client=>client.status==='active'),[clients]);
+ const integrations=useMemo(()=>normalizeClientMarketingIntegrations(storedIntegrations),[storedIntegrations]);
+ const legacyCandidates=useMemo(()=>migratableLegacyMarketingIntegrations(legacy),[legacy]);
+ const [clientId,setClientId]=useState(()=>activeClients[0]?.id||'');
+ const [editing,setEditing]=useState<Editing|null>(null),[migrating,setMigrating]=useState<LegacyMarketingIntegration|null>(null),[toast,setToast]=useState('');
+ const [connections,setConnections]=useState<AgencyOAuthConnection[]>([]),[oauthConfig,setOauthConfig]=useState<Record<AgencyOAuthProvider,OAuthProviderConfiguration>|null>(null),[oauthLoading,setOauthLoading]=useState(true);
+ useEffect(()=>{if(!activeClients.some(client=>client.id===clientId))setClientId(activeClients[0]?.id||'')},[activeClients,clientId]);
  useEffect(()=>{if(!toast)return;const timer=window.setTimeout(()=>setToast(''),2600);return()=>window.clearTimeout(timer)},[toast]);
+ useEffect(()=>{loadOAuthOverview().then(result=>{setConnections(result.connections);setOauthConfig(result.providers)}).catch(error=>setToast(error instanceof Error?error.message:'Não foi possível carregar as conexões OAuth.')).finally(()=>setOauthLoading(false));const params=new URLSearchParams(location.search);if(params.get('oauth')){setToast(params.get('oauth')==='success'?'Conta conectada com sucesso.':params.get('message')||'Não foi possível conectar a conta.');history.replaceState({},'',location.pathname)}},[]);
+ const selectedClient=activeClients.find(client=>client.id===clientId);
+ const selectedIntegrations=integrations.filter(item=>item.clientId===clientId);
+ const connectedBrands=new Set(integrations.filter(item=>item.status==='connected').map(item=>item.clientId)).size;
+ const autoSync=integrations.filter(item=>item.status==='connected'&&item.autoSync).length;
 
- const update=(provider:Provider,changes:Partial<MarketingIntegration>)=>{
-  const next=providers.map(item=>{const current=stored.find(saved=>saved.provider===item.id)||emptyIntegration(item.id);return item.id===provider?{...current,...changes}:current});
-  setStored(next);
- };
  const save=(event:React.FormEvent<HTMLFormElement>)=>{
-  event.preventDefault();if(!editing)return;
-  const form=new FormData(event.currentTarget),now=new Date().toISOString();
-  update(editing,{status:'connected',accountName:String(form.get('accountName')),accountId:String(form.get('accountId')),email:String(form.get('email')),autoSync:form.get('autoSync')==='on',connectedAt:integrations.find(item=>item.provider===editing)?.connectedAt||now,lastSync:now});
-  const name=providers.find(item=>item.id===editing)?.name;setEditing(null);setToast(`${name} conectado com sucesso.`);
+  event.preventDefault();if(!editing||!clientId)return;
+  const form=new FormData(event.currentTarget),now=new Date().toISOString(),current=editing.integration;
+  const integration:ClientMarketingIntegration={
+   schemaVersion:1,id:current?.id||crypto.randomUUID(),clientId,provider:editing.provider,agencyConnectionId:String(form.get('agencyConnectionId')),status:'connected',
+   primaryName:String(form.get('primaryName')).trim(),primaryId:String(form.get('primaryId')).trim(),
+   resourceName:String(form.get('resourceName')).trim(),resourceId:String(form.get('resourceId')).trim(),
+   accessEmail:String(form.get('accessEmail')).trim(),autoSync:form.get('autoSync')==='on',
+   connectedAt:current?.connectedAt||now,lastSync:current?.lastSync||now,createdAt:current?.createdAt||now,updatedAt:now,
+  };
+  const conflict=findMarketingResourceConflict(integrations,integration);
+  if(conflict){const client=clients.find(item=>item.id===conflict.clientId);setToast(`Esta conta já está vinculada a ${client?.companyName||'outra marca'}.`);return}
+  setIntegrations(upsertClientMarketingIntegration(integrations,integration));
+  setEditing(null);setToast(`${providerById(integration.provider).name} vinculada a ${selectedClient?.companyName}.`);
  };
- const disconnect=(provider:Provider)=>{const name=providers.find(item=>item.id===provider)?.name;if(!confirm(`Desconectar ${name}? A conta deixará de sincronizar novos dados.`))return;update(provider,emptyIntegration(provider));setToast(`${name} desconectado.`)};
- const sync=(provider:Provider)=>{update(provider,{lastSync:new Date().toISOString()});setToast('Dados sincronizados com sucesso.')};
+ const disconnect=(integration:ClientMarketingIntegration)=>{
+  if(!confirm(`Remover ${providerById(integration.provider).name} de ${selectedClient?.companyName}?`))return;
+  setIntegrations(removeClientMarketingIntegration(integrations,integration.id));setToast('Integração removida da marca.');
+ };
+ const sync=(integration:ClientMarketingIntegration)=>{setIntegrations(markMarketingIntegrationSynced(integrations,integration.id));setToast('Sincronização registrada com sucesso.')};
+ const migrate=(event:React.FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();if(!migrating)return;
+  const form=new FormData(event.currentTarget),targetClientId=String(form.get('clientId'));
+  const integration=migrateLegacyMarketingIntegration(migrating,{clientId:targetClientId,primaryName:String(form.get('primaryName')),primaryId:String(form.get('primaryId')),resourceName:String(form.get('resourceName')),resourceId:String(form.get('resourceId'))});
+  const targetClient=activeClients.find(client=>client.id===targetClientId);
+  if(integrations.some(item=>item.clientId===targetClientId&&item.provider===integration.provider)){setToast(`${targetClient?.companyName||'Esta marca'} já possui ${providerById(integration.provider).name}.`);return}
+  const conflict=findMarketingResourceConflict(integrations,integration);
+  if(conflict){const client=clients.find(item=>item.id===conflict.clientId);setToast(`Esta conta já está vinculada a ${client?.companyName||'outra marca'}.`);return}
+  setIntegrations(upsertClientMarketingIntegration(integrations,integration));
+  const remaining=legacy.filter(item=>item.id!==migrating.id);setLegacy(remaining);setClientId(targetClientId);
+  const next=migratableLegacyMarketingIntegrations(remaining)[0]||null;setMigrating(next);
+  setToast(`${providerById(integration.provider).name} migrada para ${targetClient?.companyName}.`);
+ };
+ const connect=async(provider:AgencyOAuthProvider)=>{try{await beginOAuth(provider)}catch(error){setToast(error instanceof Error?error.message:'Não foi possível iniciar a conexão.')}};
 
- return <main className="marketingIntegrationsPage">
-  <section className="integrationHero">
-   <div><span className="integrationEyebrow"><PlugZap/> CENTRAL DE INTEGRAÇÕES</span><h2>Conecte seus canais de mídia</h2><p>Reúna dados de campanhas em um só lugar para acompanhar resultados, clientes e investimentos.</p></div>
-   <div className="integrationHeroStatus"><span><i className={connected.length?'online':''}/>{connected.length} de {providers.length} conectadas</span><b>{connected.length===providers.length?'Tudo pronto':'Conecte suas contas'}</b></div>
+ return <main className="marketingIntegrationsPage brandIntegrationsPage">
+  <section className="card agencyConnections">
+   <div className="agencyConnectionsHead"><div><small>CONEXÕES SEGURAS DA AGÊNCIA</small><h3>Meta e Google</h3><p>Conecte cada ecossistema uma vez. Depois selecione as contas reais de cada marca.</p></div><KeyRound/></div>
+   <div className="agencyConnectionGrid">{(['meta','google'] as AgencyOAuthProvider[]).map(provider=>{const linked=connections.filter(item=>item.provider===provider),configured=oauthConfig?.[provider];return <article key={provider}><div className={`providerLogo ${provider==='meta'?'meta_ads':'google_ads'}`}>{provider==='meta'?'M':'G'}</div><div><b>{provider==='meta'?'Meta Business':'Google'}</b>{oauthLoading?<span><LoaderCircle className="spin"/> Carregando</span>:linked.length?<span className="connectedLabel"><Check/> {linked.map(item=>item.accountEmail||item.accountName).join(', ')}</span>:<span>{configured?.configured?'Nenhuma conta conectada':`Configuração pendente${configured?.missing?.length?`: ${configured.missing.join(', ')}`:''}`}</span>}</div><Button secondary disabled={oauthLoading||configured?.configured===false} onClick={()=>connect(provider)}>{linked.length?'Reconectar':'Conectar'}</Button></article>})}</div>
+  </section>
+  <section className="integrationHero brandIntegrationHero">
+   <div><span className="integrationEyebrow"><PlugZap/> INTEGRAÇÕES DE MARCA</span><h2>Contas certas para cada cliente</h2><p>Escolha uma marca e vincule as contas de mídia, Analytics e presença local que pertencem a ela.</p></div>
+   <label className="brandClientSelector"><span>Marca selecionada</span><select value={clientId} onChange={event=>setClientId(event.target.value)}><option value="">Selecione um cliente</option>{activeClients.map(client=><option key={client.id} value={client.id}>{client.companyName}</option>)}</select></label>
   </section>
 
   <section className="integrationStats">
-   <article className="card"><span className="integrationStatIcon purple"><PlugZap/></span><div><small>Plataformas disponíveis</small><strong>{providers.length}</strong></div></article>
-   <article className="card"><span className="integrationStatIcon green"><CheckCircle2/></span><div><small>Contas conectadas</small><strong>{connected.length}</strong></div></article>
-   <article className="card"><span className="integrationStatIcon orange"><Clock3/></span><div><small>Aguardando conexão</small><strong>{providers.length-connected.length}</strong></div></article>
-   <article className="card"><span className="integrationStatIcon blue"><RefreshCw/></span><div><small>Sincronização automática</small><strong>{connected.filter(item=>item.autoSync).length}</strong></div></article>
+   <article className="card"><span className="integrationStatIcon purple"><Users/></span><div><small>Marcas ativas</small><strong>{activeClients.length}</strong></div></article>
+   <article className="card"><span className="integrationStatIcon green"><CheckCircle2/></span><div><small>Marcas integradas</small><strong>{connectedBrands}</strong></div></article>
+   <article className="card"><span className="integrationStatIcon blue"><PlugZap/></span><div><small>Canais vinculados</small><strong>{integrations.length}</strong></div></article>
+   <article className="card"><span className="integrationStatIcon orange"><RefreshCw/></span><div><small>Sincronização automática</small><strong>{autoSync}</strong></div></article>
   </section>
 
-  <section className="integrationGrid">
-   {providers.map(provider=>{const integration=integrations.find(item=>item.provider===provider.id)!;const isConnected=integration.status==='connected';return <article className={`card integrationCard ${isConnected?'isConnected':''}`} key={provider.id}>
-    <div className="integrationCardHead"><div className={`providerLogo ${provider.id}`} aria-hidden="true">{provider.id==='meta'?'∞':'G'}</div><div><h3>{provider.name}</h3><p>{provider.description}</p></div><Badge tone={isConnected?'green':'orange'}>{isConnected?'Conectado':'Não conectado'}</Badge></div>
-    <div className="integrationFeatures">{provider.features.map(feature=><span key={feature}><Check/>{feature}</span>)}</div>
-    {isConnected?<div className="connectedAccount"><div><small>Conta conectada</small><b>{integration.accountName}</b><span>ID {integration.accountId}</span></div><div><small>Última sincronização</small><b>{dateTime(integration.lastSync)}</b><span>{integration.autoSync?'Sincronização automática ativa':'Sincronização manual'}</span></div></div>:<div className="integrationEmpty"><ShieldCheck/><div><b>Conexão segura</b><span>Configure a conta que será usada para importar os dados.</span></div></div>}
-    <footer>{isConnected?<><button className="integrationTextButton danger" onClick={()=>disconnect(provider.id)}><Unplug/> Desconectar</button><div><button className="integrationIconButton" title="Configurar integração" onClick={()=>setEditing(provider.id)}><Settings2/></button><Button secondary onClick={()=>sync(provider.id)}><RefreshCw/> Sincronizar agora</Button></div></>:<Button onClick={()=>setEditing(provider.id)}><PlugZap/> Conectar {provider.shortName}</Button>}</footer>
-   </article>})}
-  </section>
+  {legacyCandidates.length>0&&<div className="legacyIntegrationNotice"><AlertTriangle/><div><b>{legacyCandidates.length} {legacyCandidates.length===1?'cadastro manual pendente':'cadastros manuais pendentes'}</b><span>Reaproveite as contas existentes e escolha a marca correta para concluir a migração.</span></div><Button secondary onClick={()=>setMigrating(legacyCandidates[0])}>Migrar cadastros</Button></div>}
 
-  <section className="card integrationGuide"><div><span><BarChart3/></span><div><h3>Dados de marketing mais próximos da operação</h3><p>Ao conectar uma plataforma, a estrutura fica preparada para associar contas de anúncios aos clientes e alimentar relatórios e dashboards.</p></div></div><ol><li><b>1</b><span><strong>Conecte a conta</strong><small>Informe a identificação da conta de anúncios.</small></span></li><li><b>2</b><span><strong>Associe aos clientes</strong><small>Organize cada conta dentro da agência.</small></span></li><li><b>3</b><span><strong>Acompanhe os dados</strong><small>Sincronize métricas sempre que precisar.</small></span></li></ol></section>
+  {selectedClient?<>
+   <div className="brandSectionTitle"><div><small>CONFIGURAR MARCA</small><h3>{selectedClient.companyName}</h3><p>{selectedIntegrations.length} de {marketingProviders.length} canais configurados</p></div><span className="brandInitial" style={{background:selectedClient.color}}>{initials(selectedClient.companyName)}</span></div>
+   <section className="integrationGrid brandIntegrationGrid">
+    {marketingProviders.map(provider=>{const integration=selectedIntegrations.find(item=>item.provider===provider.id),connected=integration?.status==='connected';return <article className={`card integrationCard ${connected?'isConnected':''}`} key={provider.id}>
+     <div className="integrationCardHead"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><h3>{provider.name}</h3><p>{provider.description}</p></div><Badge tone={connected?'green':'orange'}>{connected?'Vinculado':'Não configurado'}</Badge></div>
+     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div><div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div></>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
+     <footer>{integration?<><button className="integrationTextButton danger" onClick={()=>disconnect(integration)}><Unplug/> Remover vínculo</button><div><button className="integrationIconButton" title="Editar integração" onClick={()=>setEditing({provider:provider.id,integration})}><Settings2/></button><Button secondary onClick={()=>sync(integration)}><RefreshCw/> Sincronizar</Button></div></>:<Button onClick={()=>setEditing({provider:provider.id})}><PlugZap/> Configurar {provider.short}</Button>}</footer>
+    </article>})}
+   </section>
+  </>:<section className="card brandNoClient"><Empty label="cliente ativo"/></section>}
 
-  {editing&&<IntegrationModal provider={editing} integration={integrations.find(item=>item.provider===editing)!} onClose={()=>setEditing(null)} onSubmit={save}/>}<Toast text={toast}/>
+  <section className="card brandCoverage"><div className="brandCoverageHead"><div><h3>Cobertura das marcas</h3><p>Visualize rapidamente quais canais estão configurados em cada cliente.</p></div><Building2/></div><div className="brandCoverageList">{activeClients.map(client=><article key={client.id} onClick={()=>setClientId(client.id)}><div><span className="avatar" style={{background:client.color}}>{initials(client.companyName)}</span><b>{client.companyName}</b></div><div>{marketingProviders.map(provider=>{const active=integrations.some(item=>item.clientId===client.id&&item.provider===provider.id&&item.status==='connected');return <span key={provider.id} className={active?'active':''} title={provider.name}>{provider.mark}</span>})}</div><button>Configurar</button></article>)}</div></section>
+
+  {editing&&<RealBrandIntegrationModal editing={editing} client={selectedClient} connections={connections} onConnect={connect} onClose={()=>setEditing(null)} onSubmit={save}/>} {migrating&&<LegacyMigrationModal legacy={migrating} clients={activeClients} pending={legacyCandidates.length} onClose={()=>setMigrating(null)} onSubmit={migrate}/>}<Toast text={toast}/>
  </main>;
 }
 
-function IntegrationModal({provider,integration,onClose,onSubmit}:{provider:Provider;integration:MarketingIntegration;onClose:()=>void;onSubmit:(event:React.FormEvent<HTMLFormElement>)=>void}){
- const meta=providers.find(item=>item.id===provider)!;
- return <Modal title={`Conectar ${meta.name}`} onClose={onClose}><form className="form integrationForm" onSubmit={onSubmit}><div className="integrationModalIntro full"><div className={`providerLogo ${provider}`}>{provider==='meta'?'∞':'G'}</div><div><b>{meta.name}</b><span>Cadastre a conta de anúncios que será vinculada à agência.</span></div></div><label className="full">Nome da conta<input name="accountName" required placeholder="Ex.: Agência ROAS — Conta principal" defaultValue={integration.accountName}/></label><label>ID da conta de anúncios<input name="accountId" required placeholder={provider==='meta'?'Ex.: act_123456789':'Ex.: 123-456-7890'} defaultValue={integration.accountId}/></label><label>E-mail administrador<input name="email" type="email" required placeholder="contato@agencia.com" defaultValue={integration.email}/></label><label className="integrationSync full"><input name="autoSync" type="checkbox" defaultChecked={integration.autoSync}/><span><b>Sincronização automática</b><small>Manter os dados desta conta atualizados automaticamente.</small></span></label><p className="integrationNotice full"><ShieldCheck/> Seus dados de acesso não são armazenados nesta etapa. A autenticação oficial por OAuth poderá ser ativada quando as credenciais das plataformas forem configuradas no backend.</p><div className="formActions full"><Button secondary onClick={onClose}>Cancelar</Button><Button type="submit"><PlugZap/> Salvar conexão</Button></div></form></Modal>;
+function RealBrandIntegrationModal({editing,client,connections,onConnect,onClose,onSubmit}:{editing:Editing;client?:Client;connections:AgencyOAuthConnection[];onConnect:(provider:AgencyOAuthProvider)=>void;onClose:()=>void;onSubmit:(event:React.FormEvent<HTMLFormElement>)=>void}){
+ const provider=providerById(editing.provider),integration=editing.integration,oauthProvider=oauthProviderFor(editing.provider),available=connections.filter(item=>item.provider===oauthProvider);
+ const [connectionId,setConnectionId]=useState(integration?.agencyConnectionId||available[0]?.id||''),[primaryId,setPrimaryId]=useState(integration?.primaryId||''),[resourceId,setResourceId]=useState(integration?.resourceId||''),[primaries,setPrimaries]=useState<MarketingResource[]>([]),[resources,setResources]=useState<MarketingResource[]>([]),[loading,setLoading]=useState(false),[error,setError]=useState('');
+ useEffect(()=>{if(!connectionId)return;setLoading(true);setError('');loadMarketingResources(editing.provider,connectionId).then(result=>setPrimaries(result.primaries)).catch(error=>setError(error instanceof Error?error.message:'Não foi possível listar as estruturas.')).finally(()=>setLoading(false))},[connectionId,editing.provider]);
+ useEffect(()=>{if(!connectionId||!primaryId)return;setLoading(true);setError('');loadMarketingResources(editing.provider,connectionId,primaryId).then(result=>setResources(result.resources)).catch(error=>setError(error instanceof Error?error.message:'Não foi possível listar as contas.')).finally(()=>setLoading(false))},[connectionId,editing.provider,primaryId]);
+ const selectedPrimary=primaries.find(item=>item.id===primaryId),selectedResource=resources.find(item=>item.id===resourceId),connection=available.find(item=>item.id===connectionId);
+ return <Modal title={`Configurar ${provider.name}`} onClose={onClose}><form className="form integrationForm" onSubmit={onSubmit}>
+  <div className="integrationModalIntro full"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><b>{client?.companyName}</b><span>{provider.name} será vinculada somente a esta marca.</span></div></div>
+  {!available.length?<div className="oauthRequired full"><KeyRound/><div><b>Conecte a agência primeiro</b><span>Autorize uma conta {oauthProvider==='meta'?'Meta Business':'Google'} para carregar estruturas e contas reais.</span></div><Button type="button" onClick={()=>onConnect(oauthProvider)}>Conectar {oauthProvider==='meta'?'Meta':'Google'}</Button></div>:<>
+   <label className="full">Conexão da agência<select name="agencyConnectionId" required value={connectionId} onChange={event=>{setConnectionId(event.target.value);setPrimaryId('');setResourceId('');setResources([])}}><option value="">Selecione a conexão</option>{available.map(item=><option key={item.id} value={item.id}>{item.accountName} {item.accountEmail&&`· ${item.accountEmail}`}</option>)}</select></label>
+   <label className="full">{provider.primaryLabel}<select required value={primaryId} onChange={event=>{setPrimaryId(event.target.value);setResourceId('');setResources([])}}><option value="">Selecione uma estrutura real</option>{integration&&!primaries.some(item=>item.id===integration.primaryId)&&<option value={integration.primaryId}>{integration.primaryName}</option>}{primaries.map(item=><option key={item.id} value={item.id}>{item.name} · {item.id}</option>)}</select></label>
+   <label className="full">{provider.resourceLabel}<select required value={resourceId} onChange={event=>setResourceId(event.target.value)}><option value="">Selecione uma conta ou recurso real</option>{integration&&!resources.some(item=>item.id===integration.resourceId)&&<option value={integration.resourceId}>{integration.resourceName}</option>}{resources.map(item=><option key={item.id} value={item.id}>{item.name} · {item.id}</option>)}</select></label>
+   <input type="hidden" name="primaryId" value={primaryId}/><input type="hidden" name="primaryName" value={selectedPrimary?.name||integration?.primaryName||''}/><input type="hidden" name="resourceId" value={resourceId}/><input type="hidden" name="resourceName" value={selectedResource?.name||integration?.resourceName||''}/><input type="hidden" name="accessEmail" value={connection?.accountEmail||''}/>
+  </>}
+  {loading&&<p className="integrationLoading full"><LoaderCircle className="spin"/> Consultando a plataforma...</p>}{error&&<p className="integrationError full"><AlertTriangle/> {error}</p>}
+  <label className="integrationSync full"><input name="autoSync" type="checkbox" defaultChecked={integration?.autoSync??true}/><span><b>Sincronização automática</b><small>Manter os dados desta marca atualizados.</small></span></label>
+  <p className="integrationNotice full"><ShieldCheck/> Tokens e credenciais ficam criptografados no servidor e nunca são armazenados no cadastro do cliente.</p>
+  <div className="formActions full"><Button secondary type="button" onClick={onClose}>Cancelar</Button><Button type="submit" disabled={!available.length||loading}><PlugZap/> Salvar vínculo</Button></div>
+ </form></Modal>;
 }
+
+function LegacyMigrationModal({legacy,clients,pending,onClose,onSubmit}:{legacy:LegacyMarketingIntegration;clients:Client[];pending:number;onClose:()=>void;onSubmit:(event:React.FormEvent<HTMLFormElement>)=>void}){
+ const provider=providerById(legacy.provider==='meta'?'meta_ads':'google_ads');
+ return <Modal title={`Migrar ${provider.name}`} onClose={onClose}><form className="form integrationForm legacyMigrationForm" onSubmit={onSubmit}>
+  <div className="integrationModalIntro full"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><b>{legacy.accountName||'Conta sem nome'}</b><span>{pending} {pending===1?'cadastro pendente':'cadastros pendentes'} · os dados existentes serão preservados.</span></div></div>
+  <label className="full">Vincular à marca<select name="clientId" required defaultValue={clients[0]?.id||''}><option value="">Selecione um cliente</option>{clients.map(client=><option key={client.id} value={client.id}>{client.companyName}</option>)}</select></label>
+  <label>{provider.primaryLabel}<input name="primaryName" required placeholder={provider.primaryPlaceholder}/></label>
+  <label>ID da estrutura<input name="primaryId" required placeholder="Identificador da BM ou conta administradora"/></label>
+  <label>{provider.resourceLabel}<input name="resourceName" required defaultValue={legacy.accountName}/></label>
+  <label>ID da conta<input name="resourceId" required defaultValue={legacy.accountId}/></label>
+  <div className="legacyDataPreview full"><span><b>E-mail preservado</b>{legacy.email||'Não informado'}</span><span><b>Sincronização</b>{legacy.autoSync===false?'Manual':'Automática'}</span></div>
+  <p className="integrationNotice full"><ShieldCheck/> O cadastro antigo será removido somente depois que o novo vínculo por cliente for salvo.</p>
+  <div className="formActions full"><Button secondary onClick={onClose}>Migrar depois</Button><Button type="submit"><RefreshCw/> Migrar vínculo</Button></div>
+ </form></Modal>;
+}
+
+const initials=(name:string)=>name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase();
+const dateTime=(value?:string)=>value?new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Ainda não sincronizado';

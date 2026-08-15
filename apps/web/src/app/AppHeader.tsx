@@ -15,8 +15,8 @@ export default function AppHeader({onMenu,member,accessAreas,notifications}:{onM
  const location=useLocation();
  const profileRef=useRef<HTMLDivElement>(null);
  const [profileOpen,setProfileOpen]=useState(false);
- const key=location.pathname.split('/')[1]||'dashboard';
- const meta=pageMeta[key]||pageMeta.dashboard;
+ const parts=location.pathname.split('/').filter(Boolean),key=parts.slice(0,2).join('/')||'dashboard';
+ const meta=pageMeta[key]||pageMeta[parts[0]]||pageMeta.dashboard;
  const name=auth.currentUser?.displayName||member?.name||auth.currentUser?.email||'Usuário';
  const email=auth.currentUser?.email||member?.email||'';
  const role=memberRoles(member)[0]||'Usuário autenticado';

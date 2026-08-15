@@ -42,6 +42,7 @@ export const testState={
   {id:'service-site',name:'Landing Page',description:'Projeto sob orçamento',price:0,pricingType:'variable',active:true,createdAt:now},
  ],
  financial_entries:[],
+ marketing_integrations:[{id:'legacy-meta',provider:'meta',status:'connected',accountName:'Meta Ads Legado',accountId:'act_legacy_123',email:'admin@roas-e2e.test',autoSync:true,connectedAt:now,lastSync:now}],
  client_processes:[],
  notifications:[{id:'notification-1',title:'Teste de notificação',description:'Alerta usado na validação da central.',type:'task',read:false,createdAt:now,updatedAt:now}],
  notification_dismissals:[],
@@ -59,7 +60,18 @@ export async function mockRoasApi(page:Page,areas:AccessArea[]=['general','marke
 
 async function handleApi(route:Route,member:typeof admin,areas:AccessArea[],state:Record<string,unknown>){
  const request=route.request();
- const path=new URL(request.url()).pathname;
+ const url=new URL(request.url()),path=url.pathname;
+ if(request.method()==='GET'&&path==='/api/marketing/configuration'){
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({providers:{meta:{configured:true,missing:[]},google:{configured:true,missing:[]}},callbacks:{}})});return;
+ }
+ if(request.method()==='GET'&&path==='/api/marketing/connections'){
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({connections:[{id:'oauth-meta-e2e',provider:'meta',externalUserId:'meta-user',accountName:'Meta E2E',accountEmail:'admin@roas-e2e.test',scopes:['ads_read'],createdAt:now,updatedAt:now},{id:'oauth-google-e2e',provider:'google',externalUserId:'google-user',accountName:'Google E2E',accountEmail:'admin@roas-e2e.test',scopes:[],createdAt:now,updatedAt:now}]})});return;
+ }
+ if(request.method()==='GET'&&path.startsWith('/api/marketing/resources/')){
+  const primaryId=url.searchParams.get('primaryId');
+  const data=primaryId?{primaries:[],resources:[{id:'act_123',name:'Conta Principal',kind:'ad_account'}]}:{primaries:[{id:'bm-123',name:'BM Cliente Teste',kind:'business'}],resources:[]};
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});return;
+ }
  if(request.method()==='GET'&&path==='/api/state'){
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({state})});
   return;
@@ -75,7 +87,7 @@ async function handleApi(route:Route,member:typeof admin,areas:AccessArea[],stat
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({key,value:body.value})});
   return;
  }
- await route.fulfill({status:204,body:''});
+ await route.fulfill({status:404,contentType:'application/json',body:JSON.stringify({error:'Rota E2E não simulada'})});
 }
 
 export function captureBrowserErrors(page:Page){

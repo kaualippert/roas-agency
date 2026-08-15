@@ -35,6 +35,7 @@ import './readability.css';
 import './auth.css';
 import './billing-payments.css';
 import './marketing-integrations.css';
+import './marketing-module.css';
 import './mobile.css';
 import './team-invitations.css';
 import './reports-filters.css';

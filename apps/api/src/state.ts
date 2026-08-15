@@ -4,7 +4,7 @@ const allowedKeys=new Set([
   'activities','agency_profile','clients','documents','financial_entries','general_settings',
   'notifications','notification_dismissals','notification_preferences','notification_sound_enabled','onboarding','projects','prospects','reports','services','tasks','team',
   'team_invitations',
-  'campaigns','ads','creatives','invoices','payments','timeline','permissions','integrations','marketing_integrations','settings',
+  'campaigns','ads','creatives','invoices','payments','timeline','permissions','integrations','marketing_integrations','client_marketing_integrations','settings',
   'app_version','crm_goal','client_processes'
 ]);
 
