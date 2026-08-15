@@ -1,5 +1,6 @@
 import {getIdToken} from './firebase';
 import type {CurrentAccess} from './types';
+import {cacheLoadingBrand} from './loading-brand';
 
 const apiUrl=(import.meta.env.VITE_API_URL||(import.meta.env.PROD?'/api':'http://127.0.0.1:3333/api')).replace(/\/$/,'');
 
@@ -39,11 +40,11 @@ function clearPending(){pending.clear();window.clearTimeout(flushTimer);flushTim
 export const store={
  get<T>(key:string,fallback:T):T{return key in state?state[key] as T:fallback},
  access(){return currentAccess},
- set<T>(key:string,value:T){if(!hydrated)throw new Error('A API ainda não foi carregada.');state[key]=value;emit(key);queueSync(key,value)},
+ set<T>(key:string,value:T){if(!hydrated)throw new Error('A API ainda não foi carregada.');state[key]=value;if(key==='general_settings')cacheLoadingBrand(value);emit(key);queueSync(key,value)},
  async remove(key:string){if(!hydrated)throw new Error('A API ainda não foi carregada.');pending.delete(key);await apiRequest(`/state/${key}`,{method:'DELETE'});delete state[key];emit(key)},
- async init(){if(hydrated)return;const [result,accessResult]=await Promise.all([apiRequest('/state'),apiRequest('/access/me')]);state=result.state||{};currentAccess=accessResult.access||null;hydrated=true;emit('hydrate')},
+ async init(){if(hydrated)return;const [result,accessResult]=await Promise.all([apiRequest('/state'),apiRequest('/access/me')]);state=result.state||{};if(state.general_settings)cacheLoadingBrand(state.general_settings);currentAccess=accessResult.access||null;hydrated=true;emit('hydrate')},
  clearSession(){hydrated=false;state={};currentAccess=null;clearPending();emit('hydrate')},
  snapshot(){return structuredClone(state)},
- async replaceAll(next:Record<string,unknown>){clearPending();const result=await apiRequest('/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:next})});state=result.state||{};hydrated=true;emit('hydrate')},
+ async replaceAll(next:Record<string,unknown>){clearPending();const result=await apiRequest('/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:next})});state=result.state||{};if(state.general_settings)cacheLoadingBrand(state.general_settings);hydrated=true;emit('hydrate')},
  async reset(){clearPending();await apiRequest('/state',{method:'DELETE'});state={};hydrated=true;emit('hydrate')}
 };
