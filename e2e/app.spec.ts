@@ -5,6 +5,19 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('exibe a identidade configurada no centro do carregamento',async({page})=>{
+ const logo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+ await page.addInitScript(brand=>localStorage.setItem('roas_loading_brand',JSON.stringify(brand)),{agencyName:'Agência E2E',logoDataUrl:logo,logoScale:100});
+ await page.route('**/api/state',async route=>{await new Promise(resolve=>setTimeout(resolve,700));await route.fallback()});
+ await page.goto('/dashboard');
+ const loader=page.locator('.authLoadingContent');
+ await expect(loader.getByAltText('Logo Agência E2E')).toBeVisible();
+ await expect(loader.getByText('Agência E2E',{exact:true})).toBeVisible();
+ const box=await loader.boundingBox(),viewport=page.viewportSize();
+ expect(Math.abs((box?.x||0)+(box?.width||0)/2-(viewport?.width||0)/2)).toBeLessThan(3);
+ await expect(page.locator('.headTitle h1')).toHaveText('Dashboard');
+});
+
 test('carrega o dashboard, a identidade da agência e os arquivos principais',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.goto('/dashboard');
