@@ -49,3 +49,18 @@ test('pipeline do CRM usa navegação horizontal e ações acessíveis no telefo
  expect(box?.width).toBeLessThanOrEqual(412);
  expect(errors).toEqual([]);
 });
+
+test('processos do cliente e checklist permanecem utilizáveis no telefone',async({page})=>{
+ const errors=captureBrowserErrors(page);
+ await page.goto('/clients/client-1');
+ await page.getByRole('button',{name:'Processos'}).click();
+ await expect(page.getByRole('button',{name:'Novo processo'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ await page.getByRole('button',{name:'Novo processo'}).click();
+ const modal=page.getByRole('dialog',{name:'Novo processo'});
+ await expect(modal.getByLabel('Nome do processo')).toBeVisible();
+ await expect(modal.getByRole('textbox',{name:'Etapa 1',exact:true})).toBeVisible();
+ const box=await modal.boundingBox();
+ expect(box?.width).toBeLessThanOrEqual(412);
+ expect(errors).toEqual([]);
+});
