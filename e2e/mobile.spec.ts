@@ -64,3 +64,12 @@ test('processos do cliente e checklist permanecem utilizáveis no telefone',asyn
  expect(box?.width).toBeLessThanOrEqual(412);
  expect(errors).toEqual([]);
 });
+
+test('integrações de marca permanecem legíveis e configuráveis no telefone',async({page})=>{
+ await page.goto('/marketing/integrations');
+ await expect(page.getByRole('heading',{name:'Contas certas para cada cliente'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.getByRole('button',{name:'Configurar Meta'}).click();
+ await expect(page.locator('.modal').getByText('Cliente Teste',{exact:true})).toBeVisible();
+ await expect(page.locator('.modal').getByRole('button',{name:'Salvar vínculo'})).toBeVisible();
+});

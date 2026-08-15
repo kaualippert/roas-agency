@@ -137,6 +137,41 @@ test('configura a meta comercial no CRM e compartilha o velocímetro com o dashb
  await expect(dashboardGoal.locator('.salesGoalArc')).toHaveCSS('opacity','0');
 });
 
+test('configura uma integração por marca e apresenta a cobertura no dashboard de marketing',async({page})=>{
+ await page.goto('/marketing/integrations');
+ await expect(page.locator('.headTitle h1')).toHaveText('Integrações de marca');
+ await expect(page.getByRole('heading',{name:'Contas certas para cada cliente'})).toBeVisible();
+ await page.getByRole('button',{name:'Configurar Meta'}).click();
+ const modal=page.locator('.modal');
+ await modal.getByLabel('Portfólio empresarial (BM)').selectOption('bm-123');
+ await modal.getByLabel('Conta de anúncios').selectOption('act_123');
+ const persisted=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/client_marketing_integrations'));
+ await modal.getByRole('button',{name:'Salvar vínculo'}).click();
+ await persisted;
+ await expect(page.getByText('BM Cliente Teste')).toBeVisible();
+ await page.goto('/marketing/dashboard');
+ await expect(page.locator('.headTitle h1')).toHaveText('Marketing');
+ await expect(page.getByText('1 de 4 canais')).toBeVisible();
+});
+
+test('migra um cadastro manual para o vínculo permanente do cliente',async({page})=>{
+ await page.goto('/marketing/integrations');
+ await expect(page.getByText('1 cadastro manual pendente')).toBeVisible();
+ await page.getByRole('button',{name:'Migrar cadastros'}).click();
+ const modal=page.locator('.modal');
+ await expect(modal.getByLabel('Conta de anúncios')).toHaveValue('Meta Ads Legado');
+ await expect(modal.getByLabel('ID da conta')).toHaveValue('act_legacy_123');
+ await modal.getByLabel('Portfólio empresarial (BM)').fill('BM Migrada');
+ await modal.getByLabel('ID da estrutura').fill('bm-migrada-1');
+ const newLink=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/client_marketing_integrations'));
+ const oldRecord=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_integrations'));
+ await modal.getByRole('button',{name:'Migrar vínculo'}).click();
+ await Promise.all([newLink,oldRecord]);
+ await expect(page.getByText('1 cadastro manual pendente')).toHaveCount(0);
+ await expect(page.getByText('BM Migrada')).toBeVisible();
+ await expect(page.getByText('Meta Ads Legado')).toBeVisible();
+});
+
 test('abre a tarefa pela notificação e permite limpar todos os alertas',async({page})=>{
  await page.goto('/dashboard');
  await page.getByRole('button',{name:'Abrir notificações'}).click();

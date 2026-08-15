@@ -4,7 +4,7 @@ import {CircleCheck,Inbox,Search,X} from 'lucide-react';
 export const money=(value=0)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 export const initials=(name='')=>name.split(' ').slice(0,2).map(part=>part[0]).join('').toUpperCase();
 
-export function Button({children,onClick,secondary=false,type='button'}:{children:React.ReactNode;onClick?:()=>void;secondary?:boolean;type?:'button'|'submit'}){return <button type={type} onClick={onClick} className={secondary?'btn secondary':'btn'}>{children}</button>}
+export function Button({children,onClick,secondary=false,type='button',disabled=false}:{children:React.ReactNode;onClick?:()=>void;secondary?:boolean;type?:'button'|'submit';disabled?:boolean}){return <button type={type} onClick={onClick} disabled={disabled} className={secondary?'btn secondary':'btn'}>{children}</button>}
 export function Avatar({name,color='#111'}:{name:string;color?:string}){return <span className="avatar" style={{background:color}}>{initials(name)}</span>}
 export function Badge({children,tone='green'}:{children:React.ReactNode;tone?:string}){return <span className={`badge ${tone}`}>{children}</span>}
 export function Progress({value}:{value:number}){return <div className="progressCell"><span>{value}%</span><div><i style={{width:`${value}%`}}/></div></div>}

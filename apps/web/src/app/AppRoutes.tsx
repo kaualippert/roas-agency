@@ -17,6 +17,7 @@ const BillingPage=lazy(()=>import('../BillingPaymentsPage').then(module=>({defau
 const PaymentsPage=lazy(()=>import('../BillingPaymentsPage').then(module=>({default:module.PaymentsPage})));
 const SettingsPage=lazy(()=>import('../SettingsPage'));
 const MarketingIntegrationsPage=lazy(()=>import('../MarketingIntegrationsPage'));
+const MarketingDashboardPage=lazy(()=>import('../MarketingDashboardPage'));
 const GenericPage=lazy(()=>import('../pages/GenericPage'));
 
 export default function AppRoutes(){
@@ -30,10 +31,15 @@ export default function AppRoutes(){
   <Route path="/projects/:projectId/editorial" element={<EditorialPage/>}/>
   <Route path="/tasks" element={<TasksPage/>}/>
   <Route path="/team" element={<TeamPage/>}/>
-  <Route path="/reports" element={<ReportsPage/>}/>
+  <Route path="/marketing/dashboard" element={<MarketingDashboardPage/>}/>
+  <Route path="/marketing/integrations" element={<MarketingIntegrationsPage/>}/>
+  <Route path="/marketing/reports" element={<ReportsPage/>}/>
+  <Route path="/reports" element={<Navigate to="/marketing/reports" replace/>}/>
   <Route path="/crm" element={<CRMPage/>}/>
-  <Route path="/integrations" element={<MarketingIntegrationsPage/>}/>
-  <Route path="/campaigns" element={<Navigate to="/integrations" replace/>}/>
+  <Route path="/integrations" element={<Navigate to="/marketing/integrations" replace/>}/>
+  <Route path="/campaigns" element={<Navigate to="/marketing/integrations" replace/>}/>
+  <Route path="/ads" element={<Navigate to="/marketing/dashboard" replace/>}/>
+  <Route path="/creatives" element={<Navigate to="/marketing/dashboard" replace/>}/>
   <Route path="/finance" element={<FinancePage/>}/>
   <Route path="/invoices" element={<BillingPage/>}/>
   <Route path="/payments" element={<PaymentsPage/>}/>

@@ -26,15 +26,15 @@ export interface AccessContext{
 }
 
 const allAreas:AccessArea[]=['general','marketing','finance','settings'];
-const keyAreas:Record<string,AccessArea>={
- activities:'general',clients:'general',notifications:'general',notification_dismissals:'general',notification_preferences:'general',
+const keyAreas:Record<string,AccessArea|AccessArea[]>={
+ activities:'general',clients:['general','marketing','finance'],notifications:'general',notification_dismissals:'general',notification_preferences:'general',
  notification_sound_enabled:'general',onboarding:'general',projects:'general',prospects:'general',tasks:'general',crm_goal:'general',client_processes:'general',
- campaigns:'marketing',ads:'marketing',creatives:'marketing',integrations:'marketing',marketing_integrations:'marketing',reports:'marketing',
+ campaigns:'marketing',ads:'marketing',creatives:'marketing',integrations:'marketing',marketing_integrations:'marketing',client_marketing_integrations:'marketing',reports:'marketing',
  financial_entries:'finance',invoices:'finance',payments:'finance',
  agency_profile:'settings',general_settings:'settings',permissions:'settings',services:'settings',settings:'settings',team:'settings',team_invitations:'settings',
 };
 const administratorOnly=new Set(['agency_profile','general_settings','permissions','services','settings','team','team_invitations']);
-const clientScopedKeys=new Set(['clients','client_processes','documents','financial_entries','invoices','onboarding','payments','projects','reports','tasks']);
+const clientScopedKeys=new Set(['clients','client_processes','client_marketing_integrations','documents','financial_entries','invoices','onboarding','payments','projects','reports','tasks']);
 
 const normalizeEmail=(value:unknown)=>String(value||'').trim().toLowerCase();
 const roles=(member:StoredMember)=>member.roles?.length?member.roles:member.role?[member.role]:[];
@@ -69,7 +69,7 @@ export function canAccessStateKey(context:AccessContext,key:string,write=false){
  if(context.isAdministrator)return true;
  if(write&&administratorOnly.has(key))return false;
  const area=key.startsWith('editorial_')?'general':keyAreas[key];
- return !area||context.accessAreas.includes(area);
+ return !area||(Array.isArray(area)?area.some(item=>context.accessAreas.includes(item)):context.accessAreas.includes(area));
 }
 
 function recordClientId(key:string,record:unknown){

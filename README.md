@@ -53,6 +53,16 @@ MONGODB_URI
 MONGODB_USERNAME
 MONGODB_PASSWORD
 FIREBASE_PROJECT_ID
+APP_ORIGIN
+OAUTH_STATE_SECRET
+MARKETING_TOKEN_ENCRYPTION_KEY
+META_APP_ID
+META_APP_SECRET
+META_GRAPH_API_VERSION
+GOOGLE_OAUTH_CLIENT_ID
+GOOGLE_OAUTH_CLIENT_SECRET
+GOOGLE_ADS_DEVELOPER_TOKEN
+GOOGLE_ADS_API_VERSION
 ```
 
 Use `FIREBASE_PROJECT_ID=flowroas-space`. As variáveis públicas `VITE_FIREBASE_*` estão documentadas em `apps/web/.env.example` e possuem os valores do projeto como padrão no cliente.
@@ -60,6 +70,15 @@ Use `FIREBASE_PROJECT_ID=flowroas-space`. As variáveis públicas `VITE_FIREBASE
 Se `MONGODB_URI` já contiver usuário e senha, as duas variáveis separadas são opcionais. O arquivo local `atlas-credentials.env` não deve ser enviado para a Vercel nem versionado.
 
 No MongoDB Atlas, a Network Access list precisa aceitar conexões da Vercel. Para cargas serverless, use uma regra de acesso compatível com os endereços de saída do projeto ou uma integração privada disponível no plano utilizado.
+
+### OAuth de marketing
+
+Em produção, use `APP_ORIGIN=https://flowroas.space` e cadastre nas plataformas os retornos autorizados:
+
+- Meta: `https://flowroas.space/api/marketing/oauth/meta/callback`
+- Google: `https://flowroas.space/api/marketing/oauth/google/callback`
+
+`OAUTH_STATE_SECRET` assina solicitações temporárias e `MARKETING_TOKEN_ENCRYPTION_KEY` cifra os tokens OAuth no MongoDB. Gere valores longos e diferentes. A conexão é feita por um administrador em **Marketing → Integrações de marca**; os membros com acesso a Marketing podem usar as contas já autorizadas, sem receber os tokens.
 
 ## Validação
 

@@ -35,6 +35,17 @@ test('filters client processes by assigned client',()=>{
  assert.deepEqual(value,[{id:'process-1',clientId:'client-1'}]);
 });
 
+test('filters brand integrations by the clients assigned to a marketing member',()=>{
+ const marketingLimited:AccessContext={...limited,accessAreas:['marketing']};
+ assert.equal(canAccessStateKey(marketingLimited,'clients'),true);
+ assert.deepEqual(filterStateValue(marketingLimited,'clients',[{id:'client-1'},{id:'client-2'}]),[{id:'client-1'}]);
+ const value=filterStateValue(marketingLimited,'client_marketing_integrations',[
+  {id:'integration-1',clientId:'client-1',provider:'meta_ads'},
+  {id:'integration-2',clientId:'client-2',provider:'google_ads'},
+ ]);
+ assert.deepEqual(value,[{id:'integration-1',clientId:'client-1',provider:'meta_ads'}]);
+});
+
 test('preserves hidden records when a limited member writes a collection',()=>{
  const current=[
   {id:'task-1',clientId:'client-1',title:'Antes'},
