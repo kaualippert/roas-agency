@@ -43,6 +43,7 @@ import './task-description.css';
 import './appearance-themes.css';
 import './notification-center-enhanced.css';
 import './sales-goal.css';
+import './client-processes.css';
 
 applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')));
 

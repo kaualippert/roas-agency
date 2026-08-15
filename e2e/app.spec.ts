@@ -84,6 +84,36 @@ test('cria lead com serviço mensal e valor automático',async({page})=>{
  await expect(page.getByText('Clínica Aurora')).toBeVisible();
 });
 
+test('cria um processo do cliente e acompanha o checklist',async({page})=>{
+ await page.goto('/clients/client-1');
+ await page.getByRole('button',{name:'Processos'}).click();
+ await expect(page.getByText('Nenhum processo criado')).toBeVisible();
+ await page.getByRole('button',{name:'Novo processo'}).click();
+ const dialog=page.getByRole('dialog',{name:'Novo processo'});
+ await dialog.getByLabel('Nome do processo').fill('Aprovação mensal');
+ await dialog.getByLabel('Descrição').fill('Fluxo de aprovação dos conteúdos do mês.');
+ await dialog.getByRole('textbox',{name:'Etapa 1',exact:true}).fill('Enviar planejamento');
+ await dialog.getByRole('button',{name:'Adicionar etapa'}).click();
+ await dialog.getByRole('textbox',{name:'Etapa 2',exact:true}).fill('Receber aprovação');
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_processes')&&response.request().method()==='PUT');
+ await dialog.getByRole('button',{name:'Criar processo'}).click();
+ await saved;
+ const process=page.locator('.clientProcessCard').filter({hasText:'Aprovação mensal'});
+ await expect(process).toContainText('0%');
+ const firstCheckSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_processes')&&response.request().method()==='PUT');
+ await process.getByRole('checkbox',{name:'Enviar planejamento'}).check();
+ await firstCheckSaved;
+ await expect(process).toContainText('50%');
+ const secondCheckSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_processes')&&response.request().method()==='PUT');
+ await process.getByRole('checkbox',{name:'Receber aprovação'}).check();
+ await secondCheckSaved;
+ await expect(process).toContainText('100%');
+ await expect(process).toContainText('Concluído');
+ await page.reload();
+ await page.getByRole('button',{name:'Processos'}).click();
+ await expect(page.locator('.clientProcessCard').filter({hasText:'Aprovação mensal'})).toContainText('100%');
+});
+
 test('configura a meta comercial no CRM e compartilha o velocímetro com o dashboard',async({page})=>{
  await page.goto('/crm');
  const crmGoal=page.locator('.salesGoalCard');

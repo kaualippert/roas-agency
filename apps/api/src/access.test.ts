@@ -14,6 +14,7 @@ const limited:AccessContext={
 test('blocks state areas that were not granted',()=>{
  assert.equal(canAccessStateKey(limited,'tasks'),true);
  assert.equal(canAccessStateKey(limited,'crm_goal'),true);
+ assert.equal(canAccessStateKey(limited,'client_processes'),true);
  assert.equal(canAccessStateKey(limited,'financial_entries'),false);
  assert.equal(canAccessStateKey(limited,'team',true),false);
 });
@@ -24,6 +25,14 @@ test('filters records by assigned client',()=>{
   {id:'project-2',clientId:'client-2'},
  ]);
  assert.deepEqual(value,[{id:'project-1',clientId:'client-1'}]);
+});
+
+test('filters client processes by assigned client',()=>{
+ const value=filterStateValue(limited,'client_processes',[
+  {id:'process-1',clientId:'client-1'},
+  {id:'process-2',clientId:'client-2'},
+ ]);
+ assert.deepEqual(value,[{id:'process-1',clientId:'client-1'}]);
 });
 
 test('preserves hidden records when a limited member writes a collection',()=>{
