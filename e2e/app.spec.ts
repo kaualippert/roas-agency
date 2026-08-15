@@ -11,6 +11,8 @@ test('carrega o dashboard, a identidade da agência e os arquivos principais',as
  await expect(page.locator('.headTitle h1')).toHaveText('Dashboard');
  await expect(page.getByText('Visão geral da agência')).toBeVisible();
  await expect(page.locator('.logo b')).toHaveText('Agência E2E');
+ await expect(page.locator('.dashboardKpis .dataSource.period')).toHaveText('No período');
+ await expect(page.locator('.dashboardKpis .dataSource.current')).toHaveCount(4);
  const frame=page.locator('.agencyLogoFrame');
  await expect(frame).toBeVisible();
  const size=await frame.boundingBox();
