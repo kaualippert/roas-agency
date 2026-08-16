@@ -1,12 +1,14 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {Bell,CheckCheck,Clock3,CreditCard,FileClock,FolderKanban,Sparkles,Trash2,UserPlus,X} from 'lucide-react';
+import {Bell,CheckCheck,Clock3,CreditCard,FileClock,Flag,FolderKanban,Sparkles,Trash2,UserPlus,X} from 'lucide-react';
 import {useNavigate} from 'react-router-dom';
 import {getNotificationPreferences} from './notification-preferences';
 import {playNotificationSound} from './notification-sound';
-import {createVersionNotification,currentAppVersion,mergeNotificationAlerts,notificationTarget,type AppNotification as Notification} from './notifications';
+import {createGoalAchievementNotification,createVersionNotification,currentAppVersion,mergeNotificationAlerts,notificationTarget,type AppNotification as Notification} from './notifications';
 import {store} from './storage';
 import type {GenericItem,Task} from './types';
 import {usePersistentState} from './persistent-ui';
+import {calculateCRMGoalProgress,emptyCRMGoal,normalizeCRMGoal} from './crm-goal';
+import type {CRMLead} from './crm-leads';
 
 type ConvertedLead={id:string;name:string;convertedClientId?:string};
 type FinancialEntry={id:string;description:string;dueDate:string;status:'pending'|'received';receivedAt?:string;updatedAt?:string};
@@ -14,6 +16,12 @@ const initialNotifications=()=>store.get<Notification[]>('notifications',[]);
 const dismissedNotifications=()=>store.get<string[]>('notification_dismissals',[]);
 const relative=(date:string)=>{const timestamp=new Date(date).getTime();if(Number.isNaN(timestamp))return'Agora';const minutes=Math.max(1,Math.round((Date.now()-timestamp)/60000));return minutes<60?`${minutes} min atrás`:minutes<1440?`${Math.floor(minutes/60)} h atrás`:`${Math.floor(minutes/1440)} d atrás`};
 const startOfDay=(value=new Date())=>new Date(value.getFullYear(),value.getMonth(),value.getDate());
+const currentGoalState=(reference=new Date())=>{
+ const goal=normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal));
+ const result=calculateCRMGoalProgress(goal,store.get<CRMLead[]>('prospects',[]),reference);
+ const month=`${reference.getFullYear()}-${reference.getMonth()}`;
+ return {goal,result,signature:`${month}:${goal.metric}:${goal.target}:${goal.updatedAt}`};
+};
 
 export default function NotificationCenter(){
  const navigate=useNavigate();
@@ -21,12 +29,19 @@ export default function NotificationCenter(){
  const knownNotificationIds=useRef(new Set(items.map(item=>item.id)));
  const convertedLeadIds=useRef(new Set(store.get<ConvertedLead[]>('prospects',[]).filter(lead=>lead.convertedClientId).map(lead=>lead.id)));
  const receivedEntryIds=useRef(new Set(store.get<FinancialEntry[]>('financial_entries',[]).filter(entry=>entry.status==='received').map(entry=>entry.id)));
+ const goalState=useRef(currentGoalState());
 
  useEffect(()=>{
   const appendAlerts=(alerts:Notification[])=>{
    if(!alerts.length)return;
    const current=store.get<Notification[]>('notifications',[]),next=mergeNotificationAlerts(current,alerts,dismissedNotifications());
    if(next!==current)store.set('notifications',next);
+  };
+  const scanGoalAchievement=()=>{
+   const previous=goalState.current,next=currentGoalState();
+   goalState.current=next;
+   const startedBelowTarget=previous.signature===next.signature?previous.result.progress<100:true;
+   if(next.goal.target>0&&next.result.progress>=100&&startedBelowTarget)appendAlerts([createGoalAchievementNotification(next.goal.updatedAt)]);
   };
   const scanSystemAlerts=()=>{
    const preferences=getNotificationPreferences(),today=startOfDay(),todayKey=today.toISOString().slice(0,10),tomorrow=new Date(today);
@@ -43,6 +58,7 @@ export default function NotificationCenter(){
    if(preferences.billingOverdue)entries.filter(entry=>entry.status==='pending'&&entry.dueDate<todayKey).forEach(entry=>alerts.push({id:`billing-overdue-${entry.id}-${entry.dueDate}`,title:'Cobrança vencida',description:`${entry.description} está com pagamento atrasado.`,type:'billing',read:false,createdAt:now,targetPath:'/invoices'}));
    if(preferences.reportPending)store.get<GenericItem[]>('reports',[]).filter(report=>report.status.toLowerCase().includes('pend')).forEach(report=>alerts.push({id:`report-pending-${report.id}`,title:'Relatório pendente',description:`${report.name} ainda precisa ser enviado.`,type:'report',read:false,createdAt:now,targetPath:'/reports'}));
    appendAlerts(alerts);
+   scanGoalAchievement();
   };
   const toggle=()=>setOpen(value=>!value);
   const update=(event:Event)=>{
@@ -50,14 +66,20 @@ export default function NotificationCenter(){
    if(changedKey==='prospects'){
     const converted=store.get<ConvertedLead[]>('prospects',[]).filter(lead=>lead.convertedClientId),newlyConverted=converted.filter(lead=>!convertedLeadIds.current.has(lead.id));
     convertedLeadIds.current=new Set(converted.map(lead=>lead.id));
-    if(newlyConverted.length){const createdAt=new Date().toISOString();appendAlerts(newlyConverted.map(lead=>({id:`conversion-${lead.id}`,title:'Lead convertido em cliente',description:`${lead.name} entrou para a carteira de clientes.`,type:'crm',read:false,createdAt,targetPath:'/crm'})));return}
+    if(newlyConverted.length){const createdAt=new Date().toISOString();appendAlerts(newlyConverted.map(lead=>({id:`conversion-${lead.id}`,title:'Lead convertido em cliente',description:`${lead.name} entrou para a carteira de clientes.`,type:'crm',read:false,createdAt,targetPath:'/crm'})))}
    }
    if(['tasks','financial_entries','reports'].includes(changedKey))scanSystemAlerts();
+   if(changedKey==='prospects'||changedKey==='crm_goal')scanGoalAchievement();
    if(changedKey!=='notifications')return;
    const next=initialNotifications(),added=next.filter(item=>!knownNotificationIds.current.has(item.id));
    knownNotificationIds.current=new Set(next.map(item=>item.id));
    setItems(next);
-   if(added.length)playNotificationSound(added.some(item=>item.type==='crm')?'conversion':'notification');
+   if(added.length){
+    const preferences=getNotificationPreferences();
+    if(added.some(item=>item.type==='crm'))playNotificationSound('conversion');
+    else if(added.some(item=>item.type==='goal')){if(preferences.goalAchievedSound)playNotificationSound('goal')}
+    else playNotificationSound('notification');
+   }
   };
   const preferenceUpdate=()=>scanSystemAlerts();
   const visibilityUpdate=()=>{if(document.visibilityState==='visible')scanSystemAlerts()};
@@ -95,6 +117,6 @@ export default function NotificationCenter(){
   if(target){setOpen(false);navigate(target)}
  };
  const visible=useMemo(()=>filter==='unread'?items.filter(item=>!item.read):items,[items,filter]);
- const icon=(type:string)=>type==='billing'||type==='payment'?<CreditCard/>:type==='report'?<FileClock/>:type==='project'?<FolderKanban/>:type==='crm'?<UserPlus/>:type==='version'?<Sparkles/>:<Clock3/>;
+ const icon=(type:string)=>type==='billing'||type==='payment'?<CreditCard/>:type==='report'?<FileClock/>:type==='project'?<FolderKanban/>:type==='crm'?<UserPlus/>:type==='goal'?<Flag/>:type==='version'?<Sparkles/>:<Clock3/>;
  return open?<><button className="notificationBackdrop" aria-label="Fechar notificações" onClick={()=>setOpen(false)}/><aside className="notificationPanel" aria-label="Central de notificações"><div className="notificationHead"><div><small>CENTRAL</small><h2>Notificações</h2></div><button type="button" className="iconBtn" aria-label="Fechar" onClick={()=>setOpen(false)}><X/></button></div><div className="notificationTools"><div className="notificationFilters"><button className={filter==='all'?'active':''} onClick={()=>setFilter('all')}>Todas</button><button className={filter==='unread'?'active':''} onClick={()=>setFilter('unread')}>Não lidas <span>{unread}</span></button></div><div className="notificationActions"><button disabled={!unread} title="Marcar todas como lidas" onClick={()=>save(items.map(item=>({...item,read:true})))}><CheckCheck/> <span>Marcar lidas</span></button><button className="clearNotifications" disabled={!items.length} title="Excluir todas as notificações" onClick={clearAll}><Trash2/> <span>Limpar todas</span></button></div></div><div className="notificationList">{visible.map(item=>{const target=notificationTarget(item);return <article key={item.id} className={`${item.read?'read ':''}${target?'actionable':''}`}><button type="button" className="notificationOpen" onClick={()=>openItem(item)}><span className={'notificationType '+item.type}>{icon(item.type)}</span><div><b>{item.title}</b><p>{item.description}</p><small>{relative(item.createdAt)}{target&&<em>{item.taskId?'Abrir tarefa':'Ver detalhes'}</em>}</small></div></button><button type="button" className="iconBtn deleteNotification" aria-label={`Excluir notificação: ${item.title}`} title="Excluir" onClick={()=>dismiss([item.id])}><Trash2/></button></article>})}{!visible.length&&<div className="notificationEmpty"><Bell/><b>Tudo em dia</b><span>Nenhuma notificação nesta visualização.</span></div>}</div></aside></>:null;
 }

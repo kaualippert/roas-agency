@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createVersionNotification,mergeNotificationAlerts,notificationTarget,type AppNotification} from '../apps/web/src/notifications';
+import {createGoalAchievementNotification,createVersionNotification,mergeNotificationAlerts,notificationTarget,type AppNotification} from '../apps/web/src/notifications';
 
 const now='2026-08-04T12:00:00.000Z';
 
@@ -10,6 +10,14 @@ test('cria uma notificação estável para cada versão publicada',()=>{
  assert.equal(notification?.type,'version');
  assert.match(notification?.description||'',/build abcdef1/);
  assert.equal(createVersionNotification('',now),null);
+});
+
+test('cria uma notificação mensal estável quando a meta é atingida',()=>{
+ const date=new Date('2026-08-16T12:00:00.000Z');
+ const notification=createGoalAchievementNotification('2026-08-10T10:00:00.000Z',date);
+ assert.equal(notification.id,'crm-goal-achieved-2026-08-2026-08-10T10:00:00.000Z');
+ assert.equal(notification.type,'goal');
+ assert.equal(notification.targetPath,'/crm');
 });
 
 test('notificação de tarefa aponta para a tarefa específica',()=>{

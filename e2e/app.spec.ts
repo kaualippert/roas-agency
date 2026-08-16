@@ -5,7 +5,6 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
-<<<<<<< HEAD
 test('exibe a identidade configurada no centro do carregamento',async({page})=>{
  const logo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
  await page.addInitScript(brand=>localStorage.setItem('roas_loading_brand',JSON.stringify(brand)),{agencyName:'Agência E2E',logoDataUrl:logo,logoScale:100});
@@ -17,7 +16,8 @@ test('exibe a identidade configurada no centro do carregamento',async({page})=>{
  const box=await loader.boundingBox(),viewport=page.viewportSize();
  expect(Math.abs((box?.x||0)+(box?.width||0)/2-(viewport?.width||0)/2)).toBeLessThan(3);
  await expect(page.locator('.headTitle h1')).toHaveText('Dashboard');
-=======
+});
+
 test('mantém os últimos filtros ao navegar entre as páginas',async({page})=>{
  await page.goto('/dashboard');
  await page.getByLabel('Período').selectOption('month');
@@ -48,7 +48,6 @@ test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
  await expect(page.locator('.enhancedTaskCard').first()).toHaveClass(/compact/);
  await page.goto('/crm');
  await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
->>>>>>> a1ceb7b (Persiste filtros e adiciona visualização compacta nos kanbans)
 });
 
 test('carrega o dashboard, a identidade da agência e os arquivos principais',async({page})=>{
@@ -236,6 +235,20 @@ test('abre a tarefa pela notificação e permite limpar todos os alertas',async(
  await expect(page.locator('.notificationEmpty')).toBeVisible();
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
  await expect(page.locator('.notificationList article')).toHaveCount(0);
+});
+
+test('salva a preferência do aviso sonoro de meta batida',async({page})=>{
+ await page.goto('/settings');
+ await page.getByRole('button',{name:'Notificações',exact:true}).click();
+ const goalSound=page.locator('.toggleList label').filter({hasText:'Som de meta batida'}).locator('input');
+ await expect(goalSound).toBeChecked();
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/notification_preferences')&&response.request().method()==='PUT');
+ await goalSound.uncheck();
+ await saved;
+ await page.goto('/dashboard');
+ await page.goto('/settings');
+ await page.getByRole('button',{name:'Notificações',exact:true}).click();
+ await expect(page.locator('.toggleList label').filter({hasText:'Som de meta batida'}).locator('input')).not.toBeChecked();
 });
 
 test('bloqueia configurações quando a área não foi concedida',async({page})=>{

@@ -21,6 +21,12 @@ export function createVersionNotification(version:string,createdAt=new Date().to
  return {id:`app-version-${normalized}`,title:'Nova versão do Flow ROAS',description:`O aplicativo foi atualizado para a ${label}. Você já está usando as melhorias mais recentes.`,type:'version',read:false,createdAt,version:normalized};
 }
 
+export function createGoalAchievementNotification(goalUpdatedAt:string,reference=new Date()):AppNotification{
+ const month=`${reference.getFullYear()}-${String(reference.getMonth()+1).padStart(2,'0')}`;
+ const goalVersion=goalUpdatedAt.trim()||'current';
+ return {id:`crm-goal-achieved-${month}-${goalVersion}`,title:'Meta comercial atingida',description:'Parabéns! A meta comercial mensal chegou a 100%.',type:'goal',read:false,createdAt:reference.toISOString(),targetPath:'/crm'};
+}
+
 export function notificationTarget(item:Pick<AppNotification,'taskId'|'targetPath'>){
  if(item.taskId)return `/tasks?task=${encodeURIComponent(item.taskId)}`;
  return item.targetPath||'';

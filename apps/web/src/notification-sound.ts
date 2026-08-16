@@ -2,7 +2,7 @@ import {store} from './storage';
 
 export const notificationSoundEnabled=()=>store.get('notification_sound_enabled',true);
 
-export function playNotificationSound(kind:'notification'|'conversion'='notification'){
+export function playNotificationSound(kind:'notification'|'conversion'|'goal'='notification'){
  if(!notificationSoundEnabled())return;
  try{
   const AudioContextClass=window.AudioContext||(window as typeof window&{webkitAudioContext:typeof AudioContext}).webkitAudioContext;
@@ -17,6 +17,17 @@ export function playNotificationSound(kind:'notification'|'conversion'='notifica
     oscillator.connect(gain);gain.connect(context.destination);oscillator.start(strike);oscillator.stop(strike+tone.duration+.02);
    });
    window.setTimeout(()=>void context.close(),1250);
+   return;
+  }
+  if(kind==='goal'){
+   const start=context.currentTime+.015;
+   [523.25,659.25,783.99,1046.5].forEach((frequency,index)=>{
+    const oscillator=context.createOscillator(),gain=context.createGain(),strike=start+index*.12;
+    oscillator.type='triangle';oscillator.frequency.setValueAtTime(frequency,strike);
+    gain.gain.setValueAtTime(.0001,strike);gain.gain.exponentialRampToValueAtTime(.14,strike+.016);gain.gain.exponentialRampToValueAtTime(.0001,strike+.28);
+    oscillator.connect(gain);gain.connect(context.destination);oscillator.start(strike);oscillator.stop(strike+.3);
+   });
+   window.setTimeout(()=>void context.close(),900);
    return;
   }
   [659.25,880].forEach((frequency,index)=>{
