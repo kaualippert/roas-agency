@@ -28,8 +28,15 @@ test('formulário de nova tarefa permanece utilizável no telefone',async({page}
  await expect(modal).toBeVisible();
  await expect(modal.getByRole('textbox',{name:/T.tulo/})).toBeVisible();
  await expect(modal.getByText('Admin E2E')).toBeVisible();
+ const description=modal.locator('.taskDescriptionSection textarea');
+ await description.scrollIntoViewIfNeeded();
+ await expect(description).toBeVisible();
+ const descriptionBox=await description.boundingBox();
+ expect(descriptionBox?.height||0).toBeGreaterThan(220);
  const box=await modal.boundingBox();
  expect(box?.width).toBeLessThanOrEqual(412);
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+ expect(overflow).toBeLessThanOrEqual(1);
 });
 
 test('pipeline do CRM usa navegação horizontal e ações acessíveis no telefone',async({page})=>{

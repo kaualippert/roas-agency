@@ -41,6 +41,7 @@ import './team-invitations.css';
 import './reports-filters.css';
 import './kanban-card-limit.css';
 import './task-description.css';
+import './task-detail.css';
 import './appearance-themes.css';
 import './notification-center-enhanced.css';
 import './sales-goal.css';

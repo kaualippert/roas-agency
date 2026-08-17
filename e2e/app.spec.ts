@@ -50,6 +50,24 @@ test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
  await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
 });
 
+test('abre a tarefa da lista com informações antes da descrição ampla',async({page})=>{
+ await page.goto('/tasks');
+ await page.getByRole('button',{name:'Lista'}).click();
+ const row=page.locator('.enhancedTaskTable tbody tr').filter({hasText:'Planejamento futuro'});
+ await expect(row.getByText('Descrição',{exact:true})).toBeVisible();
+ await row.click();
+ const modal=page.locator('.enhancedTaskModal');
+ await expect(modal.getByRole('heading',{name:'Visualizar e editar tarefa'})).toBeVisible();
+ await expect(modal.locator('input[name="title"]')).toHaveValue('Planejamento futuro');
+ await expect(modal.getByRole('heading',{name:'Informações da tarefa'})).toBeVisible();
+ await expect(modal.getByRole('heading',{name:'Descrição'})).toBeVisible();
+ const information=await modal.locator('.taskInformationSection').boundingBox();
+ const description=await modal.locator('.taskDescriptionSection').boundingBox();
+ const textarea=await modal.locator('textarea[name="description"]').boundingBox();
+ expect((information?.y||0)).toBeLessThan(description?.y||0);
+ expect(textarea?.height||0).toBeGreaterThan(220);
+});
+
 test('carrega o dashboard, a identidade da agência e os arquivos principais',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.goto('/dashboard');

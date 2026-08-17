@@ -1,0 +1,47 @@
+.enhancedTaskModal{width:min(920px,calc(100vw - 32px));max-height:94vh}
+.enhancedTaskModal .taskDetailHeader{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(12px)}
+.taskDetailHeader p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.taskDetailForm{display:block;padding:0 28px 26px}
+.taskTitleSection{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:14px;padding:25px 0 22px}
+.taskTitleSection>span{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:#eeeaff;color:var(--purple)}
+.taskTitleSection>span svg{width:22px}
+.taskTitleSection label{gap:5px;color:var(--muted);font-size:10px}
+.taskTitleSection input{border:0!important;border-radius:0!important;padding:2px 0!important;box-shadow:none!important;background:transparent!important;color:var(--text)!important;font-size:25px;font-weight:750;line-height:1.25}
+.taskTitleSection input::placeholder{color:#a4abba}
+.taskInformationSection,.taskDescriptionSection{min-width:0}
+.taskInformationSection{padding:20px;border:1px solid var(--border);border-radius:13px;background:color-mix(in srgb,var(--card) 97%,var(--purple) 3%)}
+.taskSectionHeading{display:flex;align-items:flex-start;gap:10px;margin-bottom:17px}
+.taskSectionHeading>span{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#eeeaff;color:var(--purple);flex:0 0 auto}
+.taskSectionHeading>span svg{width:17px}
+.taskSectionHeading h3{margin:0;color:var(--text);font-size:15px}
+.taskSectionHeading p{margin:4px 0 0;color:var(--muted);font-size:10px;line-height:1.45}
+.taskPropertiesGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.taskProperty{min-width:0;gap:7px!important}
+.taskProperty>span{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:9px;font-weight:650}
+.taskProperty>span svg{width:14px;height:14px;color:var(--purple)}
+.taskProperty input,.taskProperty select{height:42px}
+.taskResponsiblesField{margin-top:18px}
+.taskResponsiblesHeading{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.taskResponsiblesHeading>span{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:#eeeaff;color:var(--purple)}
+.taskResponsiblesHeading svg{width:16px}
+.taskResponsiblesHeading b,.taskResponsiblesHeading small{display:block}
+.taskResponsiblesHeading small{margin-top:3px;color:var(--muted);font-size:9px}
+.taskStoredSummary{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;padding-top:13px;border-top:1px solid var(--border)}
+.taskStoredSummary span{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:7px;background:var(--card);color:var(--muted);font-size:9px}
+.taskStoredSummary svg{width:13px;color:var(--purple)}
+.taskStoredSummary b{color:var(--text)}
+.taskDescriptionSection{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
+.taskDescriptionSection .taskSectionHeading{margin-bottom:13px}
+.taskDescriptionSection .taskDescriptionBox{border-radius:11px}
+.taskDescriptionSection .taskDescriptionBox textarea{min-height:280px;padding:18px!important;font-size:13px;line-height:1.7}
+.taskDescriptionSection .taskDescriptionPreview{padding:16px;font-size:12px}
+.taskDetailForm .taskModalActions{margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
+.taskListIndicators{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px}
+.taskListIndicators span,.taskListIndicators i{display:inline-flex;align-items:center;gap:3px;padding:3px 6px;border-radius:5px;background:#f2f3f7;color:var(--muted);font-size:8px;font-style:normal;font-weight:500}
+.taskListIndicators span svg{width:11px;height:11px;color:var(--purple)}
+.enhancedTaskTable tbody td:first-child{min-width:250px;max-width:390px}
+html[data-theme="dark"] .taskTitleSection>span,html[data-theme="dark"] .taskSectionHeading>span,html[data-theme="dark"] .taskResponsiblesHeading>span{background:#30264d}
+html[data-theme="dark"] .taskInformationSection{background:#151d2c;border-color:#303c55}
+html[data-theme="dark"] .taskStoredSummary span,html[data-theme="dark"] .taskListIndicators span,html[data-theme="dark"] .taskListIndicators i{background:#202a3d}
+@media(max-width:760px){.enhancedTaskModal{width:100%}.taskDetailForm{padding:0 18px 22px}.taskPropertiesGrid{grid-template-columns:1fr 1fr}.taskTitleSection input{font-size:21px}.taskDescriptionSection .taskDescriptionBox textarea{min-height:230px}}
+@media(max-width:520px){.taskDetailForm{padding-inline:15px}.taskTitleSection{grid-template-columns:38px minmax(0,1fr);gap:10px;padding:18px 0}.taskTitleSection>span{width:38px;height:38px}.taskTitleSection input{font-size:18px}.taskInformationSection{padding:15px}.taskPropertiesGrid{grid-template-columns:1fr}.taskDescriptionSection{margin-top:19px;padding-top:19px}.taskDescriptionSection .taskDescriptionBox textarea{min-height:260px}.taskStoredSummary{align-items:stretch;flex-direction:column}.taskStoredSummary span{width:100%}}
