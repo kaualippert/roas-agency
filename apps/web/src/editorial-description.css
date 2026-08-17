@@ -1,0 +1,8 @@
+.editorialDescriptionField textarea{min-height:120px;resize:vertical;line-height:1.55}
+.editorialContentCell{min-width:190px;max-width:270px}
+.editorialContentCell strong,.editorialContentCell small{display:block}
+.editorialContentCell small{margin-top:4px;color:var(--muted);font-size:8px;line-height:1.4;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.editorialPostHeadline{font-weight:650;color:var(--text)!important}
+.editorialPostDescription{margin-top:6px!important;padding-top:6px;border-top:1px solid var(--border);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+html[data-theme="dark"] .editorialPostDescription{border-color:#34405a}
+@media(max-width:600px){.editorialDescriptionField textarea{min-height:150px}}

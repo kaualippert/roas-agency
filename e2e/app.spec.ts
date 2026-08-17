@@ -68,6 +68,22 @@ test('abre a tarefa da lista com informações antes da descrição ampla',async
  expect(textarea?.height||0).toBeGreaterThan(220);
 });
 
+test('cadastra e edita a descrição de um conteúdo da linha editorial',async({page})=>{
+ await page.goto('/projects/project-1/editorial');
+ await page.getByRole('button',{name:'Novo conteúdo'}).click();
+ const dialog=page.getByRole('dialog',{name:'Novo conteúdo'});
+ await dialog.getByLabel('Nome do post').fill('Campanha de lançamento');
+ await dialog.getByLabel('Headline').fill('Uma nova fase começa agora');
+ await dialog.getByLabel('Descrição').fill('Apresentar o conceito da campanha, seus benefícios e a chamada para ação.');
+ const created=page.waitForResponse(response=>response.url().endsWith('/api/state/editorial_project-1')&&response.request().method()==='PUT');
+ await dialog.getByRole('button',{name:'Salvar conteúdo'}).click();
+ await created;
+ await expect(page.locator('.editorialContentCell').filter({hasText:'Campanha de lançamento'})).toContainText('Apresentar o conceito da campanha');
+ await expect(page.locator('.editorialPostDescription')).toContainText('seus benefícios e a chamada para ação');
+ await page.locator('.editorialTable tbody tr').filter({hasText:'Campanha de lançamento'}).getByTitle('Editar').click();
+ await expect(page.getByRole('dialog',{name:'Editar conteúdo'}).getByLabel('Descrição')).toHaveValue('Apresentar o conceito da campanha, seus benefícios e a chamada para ação.');
+});
+
 test('carrega o dashboard, a identidade da agência e os arquivos principais',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.goto('/dashboard');
