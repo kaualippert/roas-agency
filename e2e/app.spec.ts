@@ -66,6 +66,17 @@ test('abre a tarefa da lista com informações antes da descrição ampla',async
  const textarea=await modal.locator('textarea[name="description"]').boundingBox();
  expect((information?.y||0)).toBeLessThan(description?.y||0);
  expect(textarea?.height||0).toBeGreaterThan(220);
+ const preview=modal.locator('.taskDescriptionPreview');
+ await expect(preview.locator('.formattedTaskDescription')).toBeVisible();
+ await preview.getByRole('button',{name:/Minimizar/}).click();
+ await expect(preview.getByRole('button')).toHaveAttribute('aria-expanded','false');
+ await expect(preview.locator('.formattedTaskDescription')).toHaveCount(0);
+ await modal.getByRole('button',{name:'Fechar'}).click();
+ await row.click();
+ const reopened=page.locator('.enhancedTaskModal .taskDescriptionPreview');
+ await expect(reopened.getByRole('button',{name:/Expandir/})).toBeVisible();
+ await reopened.getByRole('button',{name:/Expandir/}).click();
+ await expect(reopened.locator('.formattedTaskDescription')).toBeVisible();
 });
 
 test('cadastra e edita a descrição de um conteúdo da linha editorial',async({page})=>{
