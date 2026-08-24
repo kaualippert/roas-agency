@@ -298,6 +298,27 @@ test('mantém editar e excluir somente dentro da central do cliente',async({page
  await expect(page).toHaveURL(/\/clients\/client-1$/);
 });
 
+test('formata descrição com cor e checklist interativo',async({page})=>{
+ await page.goto('/tasks');
+ await page.locator('.tasksPageTop').getByRole('button',{name:'Nova tarefa'}).click();
+ const dialog=page.getByRole('dialog',{name:'Criar tarefa'}),description=dialog.locator('textarea[name="description"]'),toolbar=dialog.getByRole('toolbar',{name:'Formatação da descrição'});
+ await description.fill('Texto importante');
+ await description.evaluate(element=>(element as HTMLTextAreaElement).setSelectionRange(0,5));
+ await toolbar.getByRole('button',{name:'Negrito'}).click();
+ await expect(description).toHaveValue('**Texto** importante');
+ await description.fill('Alerta');
+ await description.evaluate(element=>(element as HTMLTextAreaElement).setSelectionRange(0,6));
+ await toolbar.getByRole('button',{name:'Cor do texto'}).click();
+ await dialog.getByRole('button',{name:'Vermelho'}).click();
+ await expect(description).toHaveValue('[color=#dc2626]Alerta[/color]');
+ await description.fill('Planejar');
+ await description.evaluate(element=>(element as HTMLTextAreaElement).setSelectionRange(0,8));
+ await toolbar.getByRole('button',{name:'Adicionar checklist'}).click();
+ await expect(description).toHaveValue('- [ ] Planejar');
+ await dialog.locator('.taskDescriptionPreview input[type="checkbox"]').check();
+ await expect(description).toHaveValue('- [x] Planejar');
+});
+
 test('salva a preferência do aviso sonoro de meta batida',async({page})=>{
  await page.goto('/settings');
  await page.getByRole('button',{name:'Notificações',exact:true}).click();

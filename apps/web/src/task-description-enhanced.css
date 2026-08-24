@@ -1,0 +1,23 @@
+.taskDescriptionToolbar{position:relative;flex-wrap:wrap}
+.taskToolbarGroup{display:flex;align-items:center;gap:3px}
+.taskDescriptionToolbar .taskToolbarGroup button{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:7px;background:transparent;color:var(--muted)}
+.taskDescriptionToolbar .taskToolbarGroup button:hover,.taskDescriptionToolbar .taskToolbarGroup button.active{background:var(--card);color:var(--purple);box-shadow:0 0 0 1px var(--border)}
+.taskDescriptionToolbar .taskToolbarGroup button:focus-visible{outline:2px solid var(--purple);outline-offset:1px}
+.taskColorPicker{display:flex;align-items:center;gap:7px;padding:9px 11px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--card) 96%,var(--purple) 4%)}
+.taskColorPicker>span{font-size:10px;font-weight:700;color:var(--muted);margin-right:3px}
+.taskColorPicker>button:not(.applyCustomColor){width:23px;height:23px;border:2px solid var(--card);border-radius:50%;box-shadow:0 0 0 1px var(--border);padding:0}
+.taskColorPicker>button:not(.applyCustomColor):hover{transform:scale(1.12)}
+.taskColorPicker label{width:25px;height:25px;border-radius:50%;overflow:hidden;border:1px solid var(--border);cursor:pointer}
+.taskColorPicker input[type="color"]{width:34px;height:34px;border:0;padding:0;transform:translate(-5px,-5px);cursor:pointer}
+.taskColorPicker .applyCustomColor{border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:9px;padding:5px 8px}
+.formattedTaskDescription .descriptionTextLine{min-height:1.55em}
+.descriptionChecklistItem{display:flex!important;grid-template-columns:none!important;align-items:flex-start;gap:8px!important;min-height:27px;padding:3px 0;font-weight:400!important;cursor:default}
+.descriptionChecklistItem input{width:16px!important;height:16px;margin:2px 0 0;padding:0!important;accent-color:var(--purple);flex:none}
+.descriptionChecklistItem input:not(:disabled){cursor:pointer}
+.descriptionChecklistItem>span{min-width:0;line-height:1.5}
+.descriptionChecklistItem.checked>span{text-decoration:line-through;color:var(--muted)}
+.taskAttachments article>span{overflow:hidden}
+.taskAttachments article>span svg{flex:none}
+html[data-theme="dark"] .taskColorPicker{background:#1b2435}
+html[data-theme="dark"] .taskColorPicker .applyCustomColor{background:#171f30;color:#f1f5f9}
+@media(max-width:700px){.taskDescriptionToolbar{gap:6px}.taskDescriptionToolbar>i{display:none}.taskToolbarGroup{flex:1}.taskDescriptionToolbar .taskToolbarGroup:last-of-type{justify-content:flex-end}.taskColorPicker{flex-wrap:wrap}.taskColorPicker>span{width:100%}}
