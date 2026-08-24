@@ -282,6 +282,22 @@ test('abre a tarefa pela notificação e permite limpar todos os alertas',async(
  await expect(page.locator('.notificationList article')).toHaveCount(0);
 });
 
+test('mantém editar e excluir somente dentro da central do cliente',async({page})=>{
+ await page.goto('/clients');
+ await expect(page.getByRole('button',{name:/Editar/})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:/Excluir cliente/})).toHaveCount(0);
+ await page.getByRole('link',{name:'Abrir central do cliente'}).click();
+ await expect(page).toHaveURL(/\/clients\/client-1$/);
+ await expect(page.getByRole('button',{name:'Editar cadastro'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Excluir cliente'})).toBeVisible();
+ await page.getByRole('button',{name:'Editar cadastro'}).click();
+ await expect(page.locator('.clientFormModal')).toContainText('Atualizar cadastro');
+ await page.getByRole('button',{name:'Cancelar'}).click();
+ page.once('dialog',dialog=>dialog.dismiss());
+ await page.getByRole('button',{name:'Excluir cliente'}).click();
+ await expect(page).toHaveURL(/\/clients\/client-1$/);
+});
+
 test('salva a preferência do aviso sonoro de meta batida',async({page})=>{
  await page.goto('/settings');
  await page.getByRole('button',{name:'Notificações',exact:true}).click();
