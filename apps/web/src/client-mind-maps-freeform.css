@@ -1,0 +1,24 @@
+.mindMapCanvas path{fill:none;stroke:#a9a0d7;stroke-width:2;stroke-dasharray:5 4}
+.mindMapCanvasHint{position:absolute;top:14px;left:16px;z-index:2;display:flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--card) 88%,transparent);color:var(--muted);font-size:8px;pointer-events:none;backdrop-filter:blur(5px)}
+.mindMapCanvasHint svg{position:static;width:12px;height:12px}
+.mindMapNode{cursor:grab;touch-action:none;user-select:none}
+.mindMapNode.dragging{cursor:grabbing;z-index:8;box-shadow:0 0 0 5px color-mix(in srgb,var(--node-color) 22%,transparent),0 16px 35px #19213a24}
+.mindMapHandle{position:absolute;width:23px;height:23px;padding:0;border:1px solid color-mix(in srgb,var(--node-color) 65%,var(--border));border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--node-color);box-shadow:0 3px 10px #11182720;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:3}
+.mindMapHandle svg{width:12px;height:12px;position:static}
+.mindMapHandle.top{top:-14px;left:50%;transform:translateX(-50%)}
+.mindMapHandle.right{right:-14px;top:50%;transform:translateY(-50%)}
+.mindMapHandle.bottom{bottom:-14px;left:50%;transform:translateX(-50%)}
+.mindMapHandle.left{left:-14px;top:50%;transform:translateY(-50%)}
+.mindMapNode:hover .mindMapHandle,.mindMapNode.selected .mindMapHandle,.mindMapHandle:focus-visible{opacity:1;pointer-events:auto}
+.mindMapHandle:hover{background:var(--node-color);color:#fff}
+.mindMapQuickEditor{position:absolute;z-index:10;transform:translate(-50%,-50%);display:grid;grid-template-columns:180px 34px 34px;gap:5px;padding:7px;border:1px solid var(--purple);border-radius:10px;background:var(--card);box-shadow:0 15px 40px #11182735}
+.mindMapQuickEditor input{width:100%;height:34px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);padding:0 9px;font-size:9px;outline:none}
+.mindMapQuickEditor button{width:34px;height:34px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);display:grid;place-items:center}
+.mindMapQuickEditor button[type="submit"]{background:var(--purple);border-color:var(--purple);color:#fff}
+.mindMapQuickEditor button:disabled{opacity:.45}
+.mindMapQuickEditor svg{position:static;width:14px;height:14px}
+.mindMapToolbar button.mindMapNewTopic{background:var(--purple);border-color:var(--purple);color:#fff}
+html[data-theme="dark"] .mindMapCanvas path{stroke:#5d557d}
+html[data-theme-variant="all-black"] .mindMapQuickEditor{background:#080808}
+@media(max-width:800px){.mindMapCanvasHint{max-width:360px}.mindMapNode.selected .mindMapHandle{opacity:1;pointer-events:auto}}
+@media(max-width:520px){.mindMapToolbar>div:last-child{grid-template-columns:1fr}.mindMapQuickEditor{grid-template-columns:160px 34px 34px}}

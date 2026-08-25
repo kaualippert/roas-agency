@@ -3,6 +3,8 @@ export type ClientMindMapNode={
  parentId:string|null;
  text:string;
  color:string;
+ x?:number;
+ y?:number;
 };
 
 export type ClientMindMap={
@@ -16,6 +18,10 @@ export type ClientMindMap={
 };
 
 export type PositionedMindMapNode=ClientMindMapNode&{x:number;y:number};
+
+export function clampMindMapPosition(x:number,y:number,width=1080,height=620){
+ return {x:Math.max(90,Math.min(width-90,x)),y:Math.max(48,Math.min(height-48,y))};
+}
 
 export function mindMapRoot(nodes:ClientMindMapNode[]){
  return nodes.find(node=>node.parentId===null)||nodes[0];
@@ -37,13 +43,18 @@ export function removeMindMapBranch(nodes:ClientMindMapNode[],nodeId:string){
 export function layoutMindMapNodes(nodes:ClientMindMapNode[],width=1080,height=620):PositionedMindMapNode[]{
  const root=mindMapRoot(nodes);
  if(!root)return [];
- const result:PositionedMindMapNode[]=[{...root,x:width/2,y:height/2}],children=nodes.filter(node=>node.parentId===root.id),radius=Math.min(width,height)*.3;
+ const result:PositionedMindMapNode[]=[{...root,x:width/2,y:height/2}],visited=new Set([root.id]),children=nodes.filter(node=>node.parentId===root.id),radius=Math.min(width,height)*.3;
  const place=(node:ClientMindMapNode,parent:PositionedMindMapNode,angle:number,depth:number)=>{
+  if(visited.has(node.id))return;visited.add(node.id);
   const distance=depth===1?radius:Math.max(125,180-depth*12),position={...node,x:parent.x+Math.cos(angle)*distance,y:parent.y+Math.sin(angle)*distance};
   result.push(position);
   const descendants=nodes.filter(item=>item.parentId===node.id),spread=Math.min(.9,.26*Math.max(1,descendants.length-1));
   descendants.forEach((child,index)=>place(child,position,angle+(index-(descendants.length-1)/2)*(descendants.length===1?0:spread/(descendants.length-1)),depth+1));
  };
  children.forEach((node,index)=>place(node,result[0],-Math.PI/2+index*Math.PI*2/Math.max(1,children.length),1));
- return result.map(node=>({...node,x:Math.max(90,Math.min(width-90,node.x)),y:Math.max(48,Math.min(height-48,node.y))}));
+ nodes.filter(node=>!visited.has(node.id)).forEach((node,index)=>result.push({...node,x:140+index%5*190,y:90+Math.floor(index/5)*110}));
+ return result.map(node=>{
+  const saved=nodes.find(item=>item.id===node.id);
+  return {...node,...clampMindMapPosition(saved?.x??node.x,saved?.y??node.y,width,height)};
+ });
 }

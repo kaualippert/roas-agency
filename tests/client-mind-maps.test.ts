@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {layoutMindMapNodes,mindMapDescendantIds,removeMindMapBranch,type ClientMindMapNode} from '../apps/web/src/client-mind-maps';
+import {clampMindMapPosition,layoutMindMapNodes,mindMapDescendantIds,removeMindMapBranch,type ClientMindMapNode} from '../apps/web/src/client-mind-maps';
 
 const nodes:ClientMindMapNode[]=[
  {id:'root',parentId:null,text:'Campanha',color:'#5b36f2'},
@@ -20,4 +20,11 @@ test('remove uma ramificação com todos os seus descendentes sem excluir a raiz
  assert.deepEqual([...mindMapDescendantIds(nodes,'audience')],['persona']);
  assert.deepEqual(removeMindMapBranch(nodes,'audience').map(node=>node.id),['root','creative']);
  assert.deepEqual(removeMindMapBranch(nodes,'root'),nodes);
+});
+
+test('preserva posições livres e limita nós às bordas da grade',()=>{
+ const free:ClientMindMapNode={id:'free',parentId:null,text:'Ideia livre',color:'#dc2626',x:820,y:510};
+ const positioned=layoutMindMapNodes([...nodes,free],1000,600);
+ assert.deepEqual(positioned.find(node=>node.id==='free'),{...free,x:820,y:510});
+ assert.deepEqual(clampMindMapPosition(-20,900,1000,600),{x:90,y:552});
 });
