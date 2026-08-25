@@ -23,6 +23,7 @@ import SalesGoalGauge from './SalesGoalGauge';
 import {calculateCRMGoalProgress,emptyCRMGoal,formatCRMGoalValue,normalizeCRMGoal,type CRMGoal,type CRMGoalMetric} from './crm-goal';
 import './crm-funnel.css';
 import {useKanbanDensity,usePersistentState} from './persistent-ui';
+import {FullscreenTargetButton} from './FullscreenPanel';
 
 type FunnelItem={stage:string;fullStage:Stage;leads:number;percentage:number;color:string};
 
@@ -131,7 +132,7 @@ export default function CRMPage(){
   </section>
 
   <section className="card crmPageBoard">
-   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button type="button" onClick={toggleDensity} aria-pressed={compact} title={compact?'Expandir cards':'Minimizar cards'}>{compact?<Maximize2/>:<Minimize2/>}{compact?'Cards expandidos':'Cards compactos'}</button></div></div>
+   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button type="button" onClick={toggleDensity} aria-pressed={compact} title={compact?'Expandir cards':'Minimizar cards'}>{compact?<Maximize2/>:<Minimize2/>}{compact?'Cards expandidos':'Cards compactos'}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial"/></div></div>
    <div className="crmStageNav" aria-label="Navegar pelas etapas">{stages.map(stage=><button type="button" key={stage} className={focusedStage===stage?'active':''} onClick={()=>focusStage(stage)}><span>{stage}</span><b>{filteredLeads.filter(lead=>lead.stage===stage).length}</b></button>)}</div>
    <div className="crmColumns" ref={pipelineRef}>{stages.map((stage,index)=>{
     const items=filteredLeads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);

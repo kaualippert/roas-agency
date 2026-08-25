@@ -296,6 +296,11 @@ test('cria e persiste um mapa mental dentro do cliente',async({page})=>{
  await mapSaved;
  const root=page.locator('.mindMapNode.root');
  await expect(root).toContainText('Novo produto');
+ const mapWorkspace=page.locator('.mindMapMain');
+ await page.getByRole('button',{name:'Tela cheia de mapa mental'}).click();
+ await expect(mapWorkspace).toHaveClass(/fullscreenSurfaceActive/);
+ await page.getByRole('button',{name:'Sair da tela cheia de mapa mental'}).click();
+ await expect(mapWorkspace).not.toHaveClass(/fullscreenSurfaceActive/);
  await root.getByRole('button',{name:'Criar ramo right'}).click();
  const quickEditor=page.locator('.mindMapQuickEditor');
  await quickEditor.getByPlaceholder('Nome do novo ramo').fill('Público-alvo');
@@ -323,6 +328,20 @@ test('cria e persiste um mapa mental dentro do cliente',async({page})=>{
  await expect(page.getByText('Estratégia de lançamento',{exact:true}).first()).toBeVisible();
  await expect(page.locator('.mindMapNode').filter({hasText:'Público-alvo'})).toBeVisible();
  await expect(page.locator('.mindMapNode').filter({hasText:'Referências'})).toBeVisible();
+});
+
+test('oferece tela cheia nas áreas densas de tarefas e CRM',async({page})=>{
+ await page.goto('/tasks');
+ const taskWorkspace=page.locator('.taskWorkspace');
+ await page.getByRole('button',{name:'Tela cheia de tarefas'}).click();
+ await expect(taskWorkspace).toHaveClass(/fullscreenSurfaceActive/);
+ await page.keyboard.press('Escape');
+ await expect(taskWorkspace).not.toHaveClass(/fullscreenSurfaceActive/);
+ await page.goto('/crm');
+ await expect(page.getByRole('button',{name:'Tela cheia de pipeline comercial'})).toBeVisible();
+ await page.goto('/projects/project-1/editorial');
+ await expect(page.getByRole('button',{name:'Tela cheia de Kanban editorial'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Tela cheia de calendário editorial'})).toBeVisible();
 });
 
 test('mantém editar e excluir somente dentro da central do cliente',async({page})=>{
