@@ -15,6 +15,7 @@ test('blocks state areas that were not granted',()=>{
  assert.equal(canAccessStateKey(limited,'tasks'),true);
  assert.equal(canAccessStateKey(limited,'crm_goal'),true);
  assert.equal(canAccessStateKey(limited,'client_processes'),true);
+ assert.equal(canAccessStateKey(limited,'client_mind_maps'),true);
  assert.equal(canAccessStateKey(limited,'financial_entries'),false);
  assert.equal(canAccessStateKey(limited,'team',true),false);
 });
@@ -33,6 +34,14 @@ test('filters client processes by assigned client',()=>{
   {id:'process-2',clientId:'client-2'},
  ]);
  assert.deepEqual(value,[{id:'process-1',clientId:'client-1'}]);
+});
+
+test('filters client mind maps by assigned client',()=>{
+ const value=filterStateValue(limited,'client_mind_maps',[
+  {id:'map-1',clientId:'client-1'},
+  {id:'map-2',clientId:'client-2'},
+ ]);
+ assert.deepEqual(value,[{id:'map-1',clientId:'client-1'}]);
 });
 
 test('filters brand integrations by the clients assigned to a marketing member',()=>{

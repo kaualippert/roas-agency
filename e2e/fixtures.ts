@@ -44,6 +44,7 @@ export const testState={
  financial_entries:[],
  marketing_integrations:[{id:'legacy-meta',provider:'meta',status:'connected',accountName:'Meta Ads Legado',accountId:'act_legacy_123',email:'admin@roas-e2e.test',autoSync:true,connectedAt:now,lastSync:now}],
  client_processes:[],
+ client_mind_maps:[],
  notifications:[{id:'notification-1',title:'Teste de notificação',description:'Alerta usado na validação da central.',type:'task',read:false,createdAt:now,updatedAt:now}],
  notification_dismissals:[],
  reports:[],

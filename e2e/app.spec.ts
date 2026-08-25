@@ -282,6 +282,30 @@ test('abre a tarefa pela notificação e permite limpar todos os alertas',async(
  await expect(page.locator('.notificationList article')).toHaveCount(0);
 });
 
+test('cria e persiste um mapa mental dentro do cliente',async({page})=>{
+ await page.goto('/clients/client-1');
+ await page.getByRole('button',{name:'Mapas mentais'}).click();
+ await expect(page.getByText('Nenhum mapa mental criado')).toBeVisible();
+ await page.getByRole('button',{name:'Criar primeiro mapa'}).click();
+ const dialog=page.getByRole('dialog',{name:'Novo mapa mental'});
+ await dialog.getByLabel('Nome do mapa').fill('Estratégia de lançamento');
+ await dialog.getByLabel('Descrição').fill('Organização da campanha do cliente.');
+ await dialog.getByLabel('Tópico central').fill('Novo produto');
+ const mapSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_mind_maps')&&response.request().method()==='PUT');
+ await dialog.getByRole('button',{name:'Criar mapa'}).click();
+ await mapSaved;
+ await expect(page.locator('.mindMapNode.root')).toContainText('Novo produto');
+ await page.getByPlaceholder('Digite uma nova ideia...').fill('Público-alvo');
+ const branchSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_mind_maps')&&response.request().method()==='PUT');
+ await page.getByRole('button',{name:'Adicionar',exact:true}).click();
+ await branchSaved;
+ await expect(page.locator('.mindMapNode').filter({hasText:'Público-alvo'})).toBeVisible();
+ await page.reload();
+ await page.getByRole('button',{name:'Mapas mentais'}).click();
+ await expect(page.getByText('Estratégia de lançamento',{exact:true}).first()).toBeVisible();
+ await expect(page.locator('.mindMapNode').filter({hasText:'Público-alvo'})).toBeVisible();
+});
+
 test('mantém editar e excluir somente dentro da central do cliente',async({page})=>{
  await page.goto('/clients');
  await expect(page.getByRole('button',{name:/Editar/})).toHaveCount(0);
