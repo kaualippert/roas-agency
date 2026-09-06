@@ -6,7 +6,7 @@ import type {Client,GenericItem} from './types';
 
 export default function MarketingDashboardPage(){
  const [clients]=useStoreData<Client[]>('clients',[]),[storedIntegrations]=useStoreData<ClientMarketingIntegration[]>('client_marketing_integrations',[]),[reports]=useStoreData<GenericItem[]>('reports',[]),integrations=normalizeClientMarketingIntegrations(storedIntegrations);
- const activeClients=clients.filter(client=>client.status==='active'),connected=integrations.filter(item=>item.status==='connected'),integratedBrands=new Set(connected.map(item=>item.clientId)).size;
+ const activeClients=clients.filter(client=>client.status==='active'),activeIds=new Set(activeClients.map(client=>client.id)),connected=integrations.filter(item=>item.status==='connected'&&activeIds.has(item.clientId)),integratedBrands=new Set(connected.map(item=>item.clientId)).size;
  const pendingBrands=Math.max(0,activeClients.length-integratedBrands),coverage=activeClients.length?Math.round(integratedBrands/activeClients.length*100):0;
  const recentSync=[...connected].filter(item=>item.lastSync).sort((a,b)=>String(b.lastSync).localeCompare(String(a.lastSync))).slice(0,5);
  return <main className="marketingDashboardPage">

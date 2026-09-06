@@ -1,5 +1,28 @@
 import {expect,test} from '@playwright/test';
-import {captureBrowserErrors,mockRoasApi} from './fixtures';
+import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
+
+test('abre edição de tarefa sem esconder o formulário na tela cheia',async({page})=>{
+ await page.goto('/tasks');
+ await page.getByRole('button',{name:'Tela cheia de tarefas'}).click();
+ await expect(page.locator('.taskWorkspace')).toHaveClass(/fullscreenSurfaceActive/);
+ await page.locator('.enhancedTaskCard').filter({hasText:'Planejamento futuro'}).click();
+ await expect(page.locator('.taskWorkspace')).not.toHaveClass(/fullscreenSurfaceActive/);
+ const modal=page.locator('.enhancedTaskModal');
+ await expect(modal).toBeVisible();
+ await expect(modal.locator('input[name="title"]')).toHaveValue('Planejamento futuro');
+ await modal.locator('input[name="title"]').fill('Planejamento revisado');
+});
+
+test('cobertura de marketing considera somente clientes ativos',async({page})=>{
+ await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,
+  clients:[...testState.clients,{...testState.clients[0],id:'inactive',status:'inactive'}],
+  client_marketing_integrations:[{id:'old',clientId:'inactive',provider:'meta_ads',status:'connected'},{id:'deleted',clientId:'deleted',provider:'google_ads',status:'connected'}],
+ }}}));
+ await page.goto('/marketing/dashboard');
+ const stats=page.locator('.marketingDashboardStats');
+ await expect(stats.locator('article').filter({hasText:'Marcas integradas'}).locator('strong')).toHaveText('0');
+ await expect(stats.locator('article').filter({hasText:'Aguardando configuração'}).locator('strong')).toHaveText('1');
+});
 
 test.beforeEach(async({page})=>{
  await mockRoasApi(page);

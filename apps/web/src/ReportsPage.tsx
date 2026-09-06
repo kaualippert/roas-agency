@@ -1,7 +1,7 @@
 import {useMemo,useState} from 'react';
 import {CalendarDays,CheckCircle2,Copy,Eye,FileText,Plus,Search,Send,Trash2,X} from 'lucide-react';
 import {filterReports,type ReportPeriodFilter,type ReportStatusFilter} from './report-filters';
-import {store} from './storage';
+import {useStoreData} from './app/useStoreData';
 import type {Client,GenericItem} from './types';
 import {usePersistentState} from './persistent-ui';
 
@@ -9,8 +9,8 @@ function currency(n=0){return n.toLocaleString('pt-BR',{style:'currency',currenc
 function displayDate(value?:string){return value?new Date(`${value.slice(0,10)}T12:00:00`).toLocaleDateString('pt-BR'):'—'}
 
 export default function ReportsPage(){
- const [reports,setReports]=useState<GenericItem[]>(()=>store.get('reports',[]));
- const [clients]=useState<Client[]>(()=>store.get('clients',[]));
+ const [reports,setReports]=useStoreData<GenericItem[]>('reports',[]);
+ const [clients]=useStoreData<Client[]>('clients',[]);
  const [query,setQuery]=usePersistentState('roas_filter_reports_query','');
  const [statusFilter,setStatusFilter]=usePersistentState<ReportStatusFilter>('roas_filter_reports_status','all');
  const [periodFilter,setPeriodFilter]=usePersistentState<ReportPeriodFilter>('roas_filter_reports_period','this_month');
@@ -24,7 +24,6 @@ export default function ReportsPage(){
 
  const save=(next:GenericItem[])=>{
   setReports(next);
-  store.set('reports',next);
  };
  const clearFilters=()=>{
   setQuery('');

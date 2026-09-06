@@ -2,8 +2,29 @@ import {Maximize2,Minimize2} from 'lucide-react';
 import {useEffect,useRef,useState} from 'react';
 import './fullscreen-panel.css';
 
+// Forms rendered outside a native fullscreen element would otherwise be hidden.
+function useExitForExternalDialog(active:boolean,surface:()=>HTMLElement|null,exit:()=>void){
+ useEffect(()=>{
+  if(!active)return;
+  const check=()=>{
+   const element=surface();
+   if(!element)return;
+   const external=Array.from(document.querySelectorAll('.overlay,[role="dialog"]')).some(dialog=>!element.contains(dialog));
+   if(external){
+    exit();
+    if(document.fullscreenElement===element)void document.exitFullscreen().catch(()=>undefined);
+   }
+  };
+  const observer=new MutationObserver(check);
+  observer.observe(document.body,{childList:true,subtree:true});
+  check();
+  return()=>observer.disconnect();
+ },[active]);
+}
+
 export function useFullscreenPanel<T extends HTMLElement>(){
  const ref=useRef<T>(null),[active,setActive]=useState(false);
+ useExitForExternalDialog(active,()=>ref.current,()=>setActive(false));
  useEffect(()=>{
   const change=()=>setActive(document.fullscreenElement===ref.current);
   const keydown=(event:KeyboardEvent)=>{if(event.key==='Escape'){setActive(false);if(document.fullscreenElement)void document.exitFullscreen().catch(()=>undefined)}};
@@ -30,6 +51,7 @@ export function FullscreenButton({active,onClick,label='visualização'}:{active
 export function FullscreenTargetButton({target,label}:{target:string;label:string}){
  const buttonRef=useRef<HTMLButtonElement>(null),[active,setActive]=useState(false);
  const surface=()=>buttonRef.current?.closest<HTMLElement>(target)||null;
+ useExitForExternalDialog(active,surface,()=>{surface()?.classList.remove('fullscreenSurfaceActive');setActive(false)});
  useEffect(()=>{
   const change=()=>{const element=surface();if(document.fullscreenElement!==element){element?.classList.remove('fullscreenSurfaceActive');setActive(false)}};
   const keydown=(event:KeyboardEvent)=>{if(event.key==='Escape'){surface()?.classList.remove('fullscreenSurfaceActive');setActive(false);if(document.fullscreenElement)void document.exitFullscreen().catch(()=>undefined)}};
