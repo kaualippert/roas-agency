@@ -5,6 +5,24 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('edita post editorial pelo toque no celular',async({page})=>{
+ await page.goto('/projects/project-1/editorial');
+ await page.getByRole('button',{name:'Novo conteúdo'}).click();
+ const dialog=page.getByRole('dialog');
+ await dialog.getByLabel('Nome do post').fill('Post mobile');
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/editorial_project-1')&&response.request().method()==='PUT');
+ await dialog.getByRole('button',{name:'Salvar conteúdo'}).click();
+ await saved;
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width+1);
+ await page.locator('.editorialKanban').getByRole('button',{name:'Editar post Post mobile'}).tap();
+ await expect(dialog.getByLabel('Nome do post')).toHaveValue('Post mobile');
+ const width=await dialog.evaluate(element=>element.scrollWidth-element.clientWidth);
+ expect(width).toBeLessThanOrEqual(1);
+ await dialog.getByLabel('Criativo',{exact:true}).check();
+ await dialog.getByRole('button',{name:'Salvar conteúdo'}).click();
+ await expect(dialog).toHaveCount(0);
+});
+
 test('menu mobile abre, navega e fecha sem estourar a largura da página',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.goto('/dashboard');
