@@ -60,7 +60,7 @@ test('formulário de nova tarefa permanece utilizável no telefone',async({page}
 test('pipeline do CRM usa navegação horizontal e ações acessíveis no telefone',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.goto('/crm');
- await expect(page.getByText('Pipeline comercial')).toBeVisible();
+ await expect(page.getByText('Pipeline comercial',{exact:true})).toBeVisible();
  const pipeline=page.locator('.crmColumns');
  await expect(pipeline).toBeVisible();
  await expect(page.locator('[data-lead-id="lead-active"] select')).toBeVisible();

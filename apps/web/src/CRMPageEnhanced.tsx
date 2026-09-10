@@ -22,6 +22,7 @@ import CRMServicesAnalytics from './CRMServicesAnalytics';
 import SalesGoalGauge from './SalesGoalGauge';
 import {calculateCRMGoalProgress,emptyCRMGoal,formatCRMGoalValue,normalizeCRMGoal,type CRMGoal,type CRMGoalMetric} from './crm-goal';
 import './crm-funnel.css';
+import './crm-ux-refresh.css';
 import {useKanbanDensity,usePersistentState} from './persistent-ui';
 import {FullscreenTargetButton} from './FullscreenPanel';
 
@@ -66,6 +67,7 @@ export default function CRMPage(){
  const convertedLeadIds=useMemo(()=>new Set(clients.map(client=>client.sourceLeadId).filter(Boolean) as string[]),[clients]);
  const filteredLeads=useMemo(()=>filterCRMLeads(leads,filters,services),[leads,filters,services]);
  const hasFilters=Object.entries(filters).some(([key,value])=>key==='status'?value!=='all':Boolean(value));
+ const activeFilterCount=Object.entries(filters).filter(([key,value])=>key==='status'?value!=='all':Boolean(value)).length;
  const sources=useMemo(()=>Array.from(new Set(leads.map(lead=>lead.source?.trim()).filter(Boolean))).sort(),[leads]);
  const activeTeam=useMemo(()=>team.filter(member=>member.status==='active'),[team]);
  const availableServices=useMemo(()=>services.filter(service=>service.active||leads.some(lead=>leadServiceIds(lead,services).includes(service.id))),[services,leads]);
@@ -113,14 +115,16 @@ export default function CRMPage(){
  const active=filteredLeads.filter(lead=>!['Negócio fechado','Negócio perdido'].includes(lead.stage));
  const won=filteredLeads.filter(lead=>lead.stage==='Negócio fechado');
  const conversion=filteredLeads.length?Math.round(won.length/filteredLeads.length*100):0;
+ const stageMetrics=useMemo(()=>Object.fromEntries(stages.map(stage=>{const items=filteredLeads.filter(lead=>lead.stage===stage);return[stage,{count:items.length,value:items.reduce((sum,lead)=>sum+Number(lead.value||0),0)}]})) as Record<Stage,{count:number;value:number}>,[filteredLeads]);
  const trend=useMemo(()=>Array.from({length:12},(_,index)=>{const end=new Date();end.setHours(23,59,59,999);end.setDate(end.getDate()-(11-index)*7);const start=new Date(end);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);return{week:start.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),leads:filteredLeads.filter(lead=>{if(!lead.createdAt)return false;const createdAt=new Date(lead.createdAt);return !Number.isNaN(createdAt.getTime())&&createdAt>=start&&createdAt<=end}).length}}),[filteredLeads]);
 
  return <main className="crmPage">
-  <div className="crmPageTitle"><div><h2>CRM de Prospecção</h2><p>Acompanhe oportunidades, serviços solicitados e a saúde do funil.</p></div><button className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div>
+  <div className="crmPageTitle"><div><small className="crmEyebrow">VISÃO COMERCIAL</small><h2>CRM de Prospecção</h2><p>Acompanhe oportunidades, serviços solicitados e a saúde do funil.</p></div><button className="btn crmPrimaryAction" onClick={()=>openModal()}><Plus/> Novo lead</button></div>
   <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((sum,lead)=>sum+Number(lead.value||0),0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((sum,lead)=>sum+Number(lead.value||0),0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão" value={`${conversion}%`} note="Do recorte atual" tone="orange"/></div>
   <SalesGoalGauge goal={goal} result={goalResult} onConfigure={openGoalModal}/>
 
   <section className="card crmFilterBar" aria-label="Filtros do CRM">
+   <div className="crmFilterHeading"><span><Funnel/></span><div><b>Filtrar oportunidades</b><small>{activeFilterCount?`${activeFilterCount} ${activeFilterCount===1?'filtro ativo':'filtros ativos'}`:'Visualizando todo o funil'}</small></div></div>
    <div className="crmStatusFilters" role="group" aria-label="Situação das oportunidades">
     {[['all','Todos'],['active','Em aberto'],['won','Ganhos'],['lost','Perdidos']].map(([value,label])=><button type="button" key={value} className={filters.status===value?'active':''} onClick={()=>setFilters(current=>({...current,status:value as CRMLeadFilters['status']}))}>{label}</button>)}
    </div>
@@ -128,31 +132,31 @@ export default function CRMPage(){
    <label><span>Responsável</span><select value={filters.responsibleId} onChange={event=>setFilters(current=>({...current,responsibleId:event.target.value}))}><option value="">Todos</option>{activeTeam.map(member=><option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
    <label><span>Serviço</span><select value={filters.serviceId} onChange={event=>setFilters(current=>({...current,serviceId:event.target.value}))}><option value="">Todos</option>{availableServices.map(service=><option key={service.id} value={service.id}>{service.name}</option>)}</select></label>
    <button type="button" className="crmClearFilters" disabled={!hasFilters} onClick={()=>setFilters(emptyFilters)}><FilterX/> Limpar</button>
-   <small className="crmFilterResult"><b>{filteredLeads.length}</b> de {leads.length} oportunidades</small>
+   <small className="crmFilterResult"><b>{filteredLeads.length}</b> de {leads.length} oportunidades exibidas</small>
   </section>
 
   <section className="card crmPageBoard">
    <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button type="button" onClick={toggleDensity} aria-pressed={compact} title={compact?'Expandir cards':'Minimizar cards'}>{compact?<Maximize2/>:<Minimize2/>}{compact?'Cards expandidos':'Cards compactos'}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial"/></div></div>
-   <div className="crmStageNav" aria-label="Navegar pelas etapas">{stages.map(stage=><button type="button" key={stage} className={focusedStage===stage?'active':''} onClick={()=>focusStage(stage)}><span>{stage}</span><b>{filteredLeads.filter(lead=>lead.stage===stage).length}</b></button>)}</div>
-   <div className="crmColumns" ref={pipelineRef}>{stages.map((stage,index)=>{
+   <div className="crmStageNav" aria-label="Navegar pelas etapas">{stages.map((stage,index)=><button type="button" key={stage} className={focusedStage===stage?'active':''} onClick={()=>focusStage(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}><i/><span><b>{stage}</b><small>{money(stageMetrics[stage].value)}</small></span><strong>{stageMetrics[stage].count}</strong></button>)}</div>
+   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>setFilters(emptyFilters)}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns" ref={pipelineRef}>{stages.map((stage,index)=>{
     const items=filteredLeads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);
-    return <div className="crmColumn" data-crm-stage={stage} key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>drop(stage)}>
-     <header style={{borderBottom:`2px solid ${palette[index]}`}}><b>{stage}</b><span>{items.length}</span></header>
+    return <div className={`crmColumn${focusedStage===stage?' focused':''}`} data-crm-stage={stage} key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>drop(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}>
+     <header><div><i/><b>{stage}</b></div><span>{items.length}</span><small>{money(stageMetrics[stage].value)}</small></header>
      <div className="crmCards">{visibleKanbanCards(items,expanded).map(lead=>{
       const linked=services.filter(service=>leadServiceIds(lead,services).includes(service.id));
       const responsible=team.find(member=>member.id===lead.responsibleId);
       const converted=isConvertedLead(lead,convertedLeadIds);
-      return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>requestCRMLeadOpen(lead.id)}>
+      return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} tabIndex={0} aria-label={`Lead ${lead.name}`} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>{if(!dragged)requestCRMLeadOpen(lead.id)}} onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();requestCRMLeadOpen(lead.id)}}}>
        <div className="leadTop"><i style={{background:lead.color}}>{lead.name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase()}</i><div>{converted&&<span className="convertedLeadBadge">Cliente</span>}<GripVertical aria-hidden="true"/><button type="button" className="leadEditButton" aria-label={`Editar ${lead.name}`} onClick={event=>{event.stopPropagation();requestCRMLeadOpen(lead.id)}}><Pencil/></button></div></div>
        <h3>{lead.name}</h3><p><UserRound/>{lead.contact||'Contato não informado'}</p>{responsible&&<span className="leadResponsible">Responsável: {responsible.name}</span>}
        {linked.length?<div className="leadServices">{linked.slice(0,2).map(service=><span key={service.id}>{service.name}</span>)}{linked.length>2&&<span>+{linked.length-2}</span>}</div>:<span className="leadNoService">Sem serviço vinculado</span>}
-       <strong>{money(lead.value)}</strong>
-       <footer><span>{lead.source||'Sem origem'}</span><small><CalendarDays/>{lead.nextAction||'Definir próxima ação'}</small></footer>
+       <div className="leadValue"><small>Valor estimado</small><strong>{money(lead.value)}</strong></div>
+       <footer><span>{lead.source||'Sem origem'}</span><small><CalendarDays/><span>{lead.nextAction||'Definir próxima ação'}</span></small></footer>
        <label className="crmQuickMove" onClick={event=>event.stopPropagation()}><span>{converted?'Lead convertido':'Mover para'}</span><select aria-label={`Mover ${lead.name} para outra etapa`} value={lead.stage} disabled={converted} onChange={event=>moveLead(lead.id,event.target.value as Stage)}>{stages.map(option=><option key={option}>{option}</option>)}</select></label>
       </article>})}{!items.length&&<div className="crmColumnEmpty"><span>Sem oportunidades</span><small>Nenhum lead nesta etapa com os filtros atuais.</small></div>}</div>
      <KanbanMoreButton total={items.length} expanded={expanded} onToggle={()=>toggleColumn(stage)}/><button className="addLead" onClick={()=>openModal(stage)}>＋ Adicionar nesta etapa</button>
     </div>
-   })}</div>
+   })}</div>}
   </section>
 
   <FunnelOverview data={funnel} total={filteredLeads.length} conversion={conversion}/>

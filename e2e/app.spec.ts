@@ -210,6 +210,10 @@ test('filtra, movimenta e protege oportunidades no CRM',async({page})=>{
  await expect(page.getByText('Academia Horizonte')).toBeVisible();
  await expect(page.getByText('Cliente Convertido')).toHaveCount(0);
  const activeCard=page.locator('[data-lead-id="lead-active"]');
+ await activeCard.focus();
+ await page.keyboard.press('Enter');
+ await expect(page.getByRole('dialog',{name:'Editar oportunidade'})).toBeVisible();
+ await page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Fechar'}).click();
  await activeCard.getByLabel(/Mover Academia Horizonte/).selectOption('Reunião');
  await expect(page.locator('[data-crm-stage="Reunião"]')).toContainText('Academia Horizonte');
  await page.getByRole('button',{name:'Todos'}).click();
