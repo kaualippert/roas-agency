@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {config} from './config.js';
-import {decryptSecret,encryptSecret,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
+import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
 
 test('assina e valida o estado OAuth sem expor os dados',()=>{
  const previous=config.oauthStateSecret;config.oauthStateSecret='estado-oauth-de-teste-com-entropia';
@@ -20,4 +20,20 @@ test('criptografa tokens OAuth com AES-GCM',()=>{
   assert.notEqual(encrypted.value,'access-token-secreto');
   assert.equal(decryptSecret(encrypted),'access-token-secreto');
  }finally{config.marketingTokenEncryptionKey=previous}
+});
+
+test('normaliza os indicadores retornados pela Meta Ads',()=>{
+ const metrics=normalizeMetaMetrics({impressions:'12000',reach:'9000',clicks:'360',spend:'1250.50',actions:[{action_type:'lead',value:'18'}],action_values:[{action_type:'purchase',value:'5000'}],purchase_roas:[{value:'4'}]});
+ assert.deepEqual(metrics,{impressions:12000,reach:9000,clicks:360,conversions:18,spend:1250.5,conversionValue:5000,roas:4});
+});
+
+test('converte micros e calcula ROAS do Google Ads',()=>{
+ const metrics=normalizeGoogleMetrics({impressions:'8000',clicks:'240',conversions:12.5,costMicros:'2000000000',conversionsValue:7000});
+ assert.deepEqual(metrics,{impressions:8000,reach:0,clicks:240,conversions:12.5,spend:2000,conversionValue:7000,roas:3.5});
+});
+
+test('aceita Google Ads sem developer token e normaliza o login customer ID',()=>{
+ const previous=config.googleAdsDeveloperToken;config.googleAdsDeveloperToken='';
+ try{assert.deepEqual(googleAdsHeaders('oauth-token','123-456-7890'),{authorization:'Bearer oauth-token','content-type':'application/json','login-customer-id':'1234567890'})}
+ finally{config.googleAdsDeveloperToken=previous}
 });

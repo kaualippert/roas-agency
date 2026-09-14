@@ -45,6 +45,7 @@ export const testState={
  marketing_integrations:[{id:'legacy-meta',provider:'meta',status:'connected',accountName:'Meta Ads Legado',accountId:'act_legacy_123',email:'admin@roas-e2e.test',autoSync:true,connectedAt:now,lastSync:now}],
  client_processes:[],
  client_mind_maps:[],
+ marketing_metrics:[],
  notifications:[{id:'notification-1',title:'Teste de notificação',description:'Alerta usado na validação da central.',type:'task',read:false,createdAt:now,updatedAt:now}],
  notification_dismissals:[],
  reports:[],
@@ -72,6 +73,10 @@ async function handleApi(route:Route,member:typeof admin,areas:AccessArea[],stat
   const primaryId=url.searchParams.get('primaryId');
   const data=primaryId?{primaries:[],resources:[{id:'act_123',name:'Conta Principal',kind:'ad_account'}]}:{primaries:[{id:'bm-123',name:'BM Cliente Teste',kind:'business'}],resources:[]};
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});return;
+ }
+ if(request.method()==='POST'&&path.startsWith('/api/marketing/sync/')){
+  const provider=path.endsWith('google_ads')?'google_ads':'meta_ads';
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({provider,period:{from:'2026-09-01',to:'2026-09-14'},metrics:{impressions:12500,reach:9000,clicks:480,conversions:24,spend:1234.5,conversionValue:4938,roas:4},syncedAt:'2026-09-14T12:00:00.000Z'})});return;
  }
  if(request.method()==='GET'&&path==='/api/state'){
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({state})});

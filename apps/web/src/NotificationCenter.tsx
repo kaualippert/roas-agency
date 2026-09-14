@@ -7,7 +7,7 @@ import {createGoalAchievementNotification,createVersionNotification,currentAppVe
 import {store} from './storage';
 import type {GenericItem,Task} from './types';
 import {usePersistentState} from './persistent-ui';
-import {calculateCRMGoalProgress,emptyCRMGoal,normalizeCRMGoal} from './crm-goal';
+import {calculateCRMGoalProgress,crmGoalCycleVersion,emptyCRMGoal,normalizeCRMGoal} from './crm-goal';
 import type {CRMLead} from './crm-leads';
 
 type ConvertedLead={id:string;name:string;convertedClientId?:string};
@@ -41,7 +41,7 @@ export default function NotificationCenter(){
    const previous=goalState.current,next=currentGoalState();
    goalState.current=next;
    const startedBelowTarget=previous.signature===next.signature?previous.result.progress<100:true;
-   if(next.goal.target>0&&next.result.progress>=100&&startedBelowTarget)appendAlerts([createGoalAchievementNotification(next.goal.updatedAt)]);
+   if(next.goal.target>0&&next.result.progress>=100&&startedBelowTarget)appendAlerts([createGoalAchievementNotification(crmGoalCycleVersion(next.goal))]);
   };
   const scanSystemAlerts=()=>{
    const preferences=getNotificationPreferences(),today=startOfDay(),todayKey=today.toISOString().slice(0,10),tomorrow=new Date(today);

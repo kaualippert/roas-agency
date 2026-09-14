@@ -277,6 +277,11 @@ test('configura a meta comercial no CRM e compartilha o velocímetro com o dashb
  await expect(crmGoal).toContainText('Meta por negócios fechados');
  await expect(crmGoal).toContainText('5 negócios');
  await expect(crmGoal.locator('.salesGoalArc')).toHaveCSS('opacity','0');
+ page.once('dialog',dialog=>dialog.accept());
+ const resetSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/crm_goal')&&response.request().method()==='PUT');
+ await crmGoal.getByRole('button',{name:'Redefinir meta'}).click();
+ await resetSaved;
+ await expect(crmGoal).toContainText('0%');
  await page.goto('/dashboard');
  const dashboardGoal=page.locator('.dashboardSalesGoal');
  await expect(dashboardGoal).toContainText('Meta por negócios fechados');
@@ -297,9 +302,14 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await modal.getByRole('button',{name:'Salvar vínculo'}).click();
  await persisted;
  await expect(page.getByText('BM Cliente Teste')).toBeVisible();
+ const metricsSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_metrics'));
+ await page.getByRole('button',{name:'Sincronizar agora'}).click();
+ await metricsSaved;
+ await expect(page.getByText('R$ 1.234,50')).toBeVisible();
  await page.goto('/marketing/dashboard');
  await expect(page.locator('.headTitle h1')).toHaveText('Marketing');
  await expect(page.getByText('1 de 4 canais')).toBeVisible();
+ await expect(page.getByRole('region',{name:'Resultados sincronizados de mídia'})).toContainText('4x');
 });
 
 test('migra um cadastro manual para o vínculo permanente do cliente',async({page})=>{

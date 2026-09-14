@@ -1,4 +1,4 @@
-import {ArrowRight,Flag,Settings2,Trophy} from 'lucide-react';
+import {ArrowRight,Flag,RotateCcw,Settings2,Trophy} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import type {CRMGoal,CRMGoalProgress} from './crm-goal';
 import {formatCRMGoalValue} from './crm-goal';
@@ -7,10 +7,11 @@ type Props={
  goal:CRMGoal;
  result:CRMGoalProgress;
  onConfigure?:()=>void;
+ onReset?:()=>void;
  dashboard?:boolean;
 };
 
-export default function SalesGoalGauge({goal,result,onConfigure,dashboard=false}:Props){
+export default function SalesGoalGauge({goal,result,onConfigure,onReset,dashboard=false}:Props){
  const configured=result.target>0;
  const progress=Math.max(0,Math.min(100,Number(result.progress)||0));
  return <section className={`card salesGoalCard${dashboard?' dashboardSalesGoal':''}`} aria-label="Meta comercial mensal">
@@ -23,7 +24,7 @@ export default function SalesGoalGauge({goal,result,onConfigure,dashboard=false}
     <span><small>Meta</small><b>{formatCRMGoalValue(result.target,goal.metric)}</b></span>
     <span><small>Restante</small><b>{formatCRMGoalValue(result.remaining,goal.metric)}</b></span>
    </div>}
-   {onConfigure?<button type="button" className="salesGoalAction" onClick={onConfigure}><Settings2/>{configured?'Editar meta':'Configurar meta'}</button>:<Link className="salesGoalAction" to="/crm"><span>Gerenciar no CRM</span><ArrowRight/></Link>}
+   {onConfigure?<div className="salesGoalActions"><button type="button" className="salesGoalAction" onClick={onConfigure}><Settings2/>{configured?'Editar meta':'Configurar meta'}</button>{configured&&onReset&&<button type="button" className="salesGoalAction reset" onClick={onReset}><RotateCcw/>Redefinir meta</button>}</div>:<Link className="salesGoalAction" to="/crm"><span>Gerenciar no CRM</span><ArrowRight/></Link>}
   </div>
   <div className={`salesGoalGauge${configured?'':' empty'}`}>
    <svg viewBox="0 0 200 112" role="img" aria-label={`${progress}% da meta atingida`}>

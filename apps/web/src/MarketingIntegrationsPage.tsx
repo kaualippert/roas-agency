@@ -1,11 +1,13 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {AlertTriangle,Building2,Check,CheckCircle2,KeyRound,LoaderCircle,PlugZap,RefreshCw,Settings2,ShieldCheck,Unplug,Users} from 'lucide-react';
 import {useStoreData} from './app/useStoreData';
 import {Badge,Button,Empty,Modal,Toast} from './components/ui';
 import {findMarketingResourceConflict,markMarketingIntegrationSynced,marketingProviders,migratableLegacyMarketingIntegrations,migrateLegacyMarketingIntegration,normalizeClientMarketingIntegrations,providerById,removeClientMarketingIntegration,upsertClientMarketingIntegration,type ClientMarketingIntegration,type LegacyMarketingIntegration,type MarketingProvider} from './marketing-integrations';
+import {currentMonthPeriod,isMarketingSyncDue,normalizeMarketingMetricsSnapshots,upsertMarketingMetricsSnapshot,type MarketingMetricsSnapshot} from './marketing-metrics';
 import type {Client} from './types';
-import {beginOAuth,loadMarketingResources,loadOAuthOverview,oauthProviderFor,type AgencyOAuthConnection,type AgencyOAuthProvider,type MarketingResource,type OAuthProviderConfiguration} from './marketing-oauth-client';
+import {beginOAuth,loadMarketingResources,loadOAuthOverview,oauthProviderFor,syncMarketingMetrics,type AgencyOAuthConnection,type AgencyOAuthProvider,type MarketingResource,type OAuthProviderConfiguration} from './marketing-oauth-client';
 import {usePersistentState} from './persistent-ui';
+import './marketing-metrics.css';
 
 type Editing={provider:MarketingProvider;integration?:ClientMarketingIntegration};
 
@@ -13,12 +15,14 @@ export default function MarketingIntegrationsPage(){
  const [clients]=useStoreData<Client[]>('clients',[]);
  const [storedIntegrations,setIntegrations]=useStoreData<ClientMarketingIntegration[]>('client_marketing_integrations',[]);
  const [legacy,setLegacy]=useStoreData<LegacyMarketingIntegration[]>('marketing_integrations',[]);
+ const [storedMetrics,setMetrics]=useStoreData<MarketingMetricsSnapshot[]>('marketing_metrics',[]);
  const activeClients=useMemo(()=>clients.filter(client=>client.status==='active'),[clients]);
  const integrations=useMemo(()=>normalizeClientMarketingIntegrations(storedIntegrations),[storedIntegrations]);
  const legacyCandidates=useMemo(()=>migratableLegacyMarketingIntegrations(legacy),[legacy]);
  const [clientId,setClientId]=usePersistentState('roas_filter_marketing_brand',activeClients[0]?.id||'');
- const [editing,setEditing]=useState<Editing|null>(null),[migrating,setMigrating]=useState<LegacyMarketingIntegration|null>(null),[toast,setToast]=useState('');
+ const [editing,setEditing]=useState<Editing|null>(null),[migrating,setMigrating]=useState<LegacyMarketingIntegration|null>(null),[toast,setToast]=useState(''),[syncingId,setSyncingId]=useState('');
  const [connections,setConnections]=useState<AgencyOAuthConnection[]>([]),[oauthConfig,setOauthConfig]=useState<Record<AgencyOAuthProvider,OAuthProviderConfiguration>|null>(null),[oauthLoading,setOauthLoading]=useState(true);
+ const autoSyncAttempts=useRef(new Set<string>());
  useEffect(()=>{if(!activeClients.some(client=>client.id===clientId))setClientId(activeClients[0]?.id||'')},[activeClients,clientId]);
  useEffect(()=>{if(!toast)return;const timer=window.setTimeout(()=>setToast(''),2600);return()=>window.clearTimeout(timer)},[toast]);
  useEffect(()=>{loadOAuthOverview().then(result=>{setConnections(result.connections);setOauthConfig(result.providers)}).catch(error=>setToast(error instanceof Error?error.message:'Não foi possível carregar as conexões OAuth.')).finally(()=>setOauthLoading(false));const params=new URLSearchParams(location.search);if(params.get('oauth')){setToast(params.get('oauth')==='success'?'Conta conectada com sucesso.':params.get('message')||'Não foi possível conectar a conta.');history.replaceState({},'',location.pathname)}},[]);
@@ -26,6 +30,34 @@ export default function MarketingIntegrationsPage(){
  const selectedIntegrations=integrations.filter(item=>item.clientId===clientId);
  const connectedBrands=new Set(integrations.filter(item=>item.status==='connected').map(item=>item.clientId)).size;
  const autoSync=integrations.filter(item=>item.status==='connected'&&item.autoSync).length;
+
+ useEffect(()=>{
+  if(oauthLoading)return;
+  const candidates=integrations.filter(item=>(item.provider==='meta_ads'||item.provider==='google_ads')&&item.autoSync&&item.agencyConnectionId&&isMarketingSyncDue(item.lastSync)&&!autoSyncAttempts.current.has(item.id));
+  if(!candidates.length)return;
+  candidates.forEach(item=>autoSyncAttempts.current.add(item.id));
+  let cancelled=false;
+  void (async()=>{
+   let nextMetrics=normalizeMarketingMetricsSnapshots(storedMetrics),nextIntegrations=integrations,successes=0,failures=0;
+   for(const integration of candidates){
+    try{
+     const period=currentMonthPeriod(),result=await syncMarketingMetrics(integration.provider,{connectionId:integration.agencyConnectionId,primaryId:integration.primaryId,resourceId:integration.resourceId,...period});
+     const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,...result.metrics};
+     nextMetrics=upsertMarketingMetricsSnapshot(nextMetrics,snapshot);
+     nextIntegrations=markMarketingIntegrationSynced(nextIntegrations,integration.id,result.syncedAt);successes++;
+    }catch{
+     const failedAt=new Date().toISOString();
+     nextIntegrations=nextIntegrations.map(item=>item.id===integration.id?{...item,status:'error' as const,updatedAt:failedAt}:item);failures++;
+    }
+   }
+   if(cancelled)return;
+   if(successes)setMetrics(nextMetrics);
+   if(successes||failures)setIntegrations(nextIntegrations);
+   if(successes)setToast(`${successes} ${successes===1?'conta atualizada':'contas atualizadas'} automaticamente.`);
+   else if(failures)setToast('A sincronização automática falhou. Revise a conexão da conta.');
+  })();
+  return()=>{cancelled=true};
+ },[oauthLoading,integrations,storedMetrics]);
 
  const save=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();if(!editing||!clientId)return;
@@ -35,18 +67,33 @@ export default function MarketingIntegrationsPage(){
    primaryName:String(form.get('primaryName')).trim(),primaryId:String(form.get('primaryId')).trim(),
    resourceName:String(form.get('resourceName')).trim(),resourceId:String(form.get('resourceId')).trim(),
    accessEmail:String(form.get('accessEmail')).trim(),autoSync:form.get('autoSync')==='on',
-   connectedAt:current?.connectedAt||now,lastSync:current?.lastSync||now,createdAt:current?.createdAt||now,updatedAt:now,
+   connectedAt:current?.connectedAt||now,lastSync:current?.lastSync,createdAt:current?.createdAt||now,updatedAt:now,
   };
   const conflict=findMarketingResourceConflict(integrations,integration);
   if(conflict){const client=clients.find(item=>item.id===conflict.clientId);setToast(`Esta conta já está vinculada a ${client?.companyName||'outra marca'}.`);return}
+  if(current&&(current.resourceId!==integration.resourceId||current.agencyConnectionId!==integration.agencyConnectionId))setMetrics(normalizeMarketingMetricsSnapshots(storedMetrics).filter(item=>item.integrationId!==current.id));
   setIntegrations(upsertClientMarketingIntegration(integrations,integration));
   setEditing(null);setToast(`${providerById(integration.provider).name} vinculada a ${selectedClient?.companyName}.`);
  };
  const disconnect=(integration:ClientMarketingIntegration)=>{
   if(!confirm(`Remover ${providerById(integration.provider).name} de ${selectedClient?.companyName}?`))return;
-  setIntegrations(removeClientMarketingIntegration(integrations,integration.id));setToast('Integração removida da marca.');
+  setIntegrations(removeClientMarketingIntegration(integrations,integration.id));setMetrics(normalizeMarketingMetricsSnapshots(storedMetrics).filter(item=>item.integrationId!==integration.id));setToast('Integração removida da marca.');
  };
- const sync=(integration:ClientMarketingIntegration)=>{setIntegrations(markMarketingIntegrationSynced(integrations,integration.id));setToast('Sincronização registrada com sucesso.')};
+ const sync=async(integration:ClientMarketingIntegration)=>{
+  if(integration.provider!=='meta_ads'&&integration.provider!=='google_ads'){setToast('A sincronização real está disponível para Meta Ads e Google Ads.');return}
+  if(!integration.agencyConnectionId){setToast('Reconecte esta integração para selecionar uma conta autorizada.');return}
+  setSyncingId(integration.id);
+  try{
+   const period=currentMonthPeriod(),result=await syncMarketingMetrics(integration.provider,{connectionId:integration.agencyConnectionId,primaryId:integration.primaryId,resourceId:integration.resourceId,...period});
+   const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,...result.metrics};
+   setMetrics(upsertMarketingMetricsSnapshot(normalizeMarketingMetricsSnapshots(storedMetrics),snapshot));
+   setIntegrations(markMarketingIntegrationSynced(integrations,integration.id,result.syncedAt));
+   setToast(`${providerById(integration.provider).name} sincronizado com dados reais.`);
+  }catch(error){
+   setIntegrations(integrations.map(item=>item.id===integration.id?{...item,status:'error' as const,updatedAt:new Date().toISOString()}:item));
+   setToast(error instanceof Error?error.message:'Não foi possível sincronizar a conta.');
+  }finally{setSyncingId('')}
+ };
  const migrate=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();if(!migrating)return;
   const form=new FormData(event.currentTarget),targetClientId=String(form.get('clientId'));
@@ -84,10 +131,10 @@ export default function MarketingIntegrationsPage(){
   {selectedClient?<>
    <div className="brandSectionTitle"><div><small>CONFIGURAR MARCA</small><h3>{selectedClient.companyName}</h3><p>{selectedIntegrations.length} de {marketingProviders.length} canais configurados</p></div><span className="brandInitial" style={{background:selectedClient.color}}>{initials(selectedClient.companyName)}</span></div>
    <section className="integrationGrid brandIntegrationGrid">
-    {marketingProviders.map(provider=>{const integration=selectedIntegrations.find(item=>item.provider===provider.id),connected=integration?.status==='connected';return <article className={`card integrationCard ${connected?'isConnected':''}`} key={provider.id}>
-     <div className="integrationCardHead"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><h3>{provider.name}</h3><p>{provider.description}</p></div><Badge tone={connected?'green':'orange'}>{connected?'Vinculado':'Não configurado'}</Badge></div>
-     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div><div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div></>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
-     <footer>{integration?<><button className="integrationTextButton danger" onClick={()=>disconnect(integration)}><Unplug/> Remover vínculo</button><div><button className="integrationIconButton" title="Editar integração" onClick={()=>setEditing({provider:provider.id,integration})}><Settings2/></button><Button secondary onClick={()=>sync(integration)}><RefreshCw/> Sincronizar</Button></div></>:<Button onClick={()=>setEditing({provider:provider.id})}><PlugZap/> Configurar {provider.short}</Button>}</footer>
+    {marketingProviders.map(provider=>{const integration=selectedIntegrations.find(item=>item.provider===provider.id),connected=integration?.status==='connected',metric=integration?normalizeMarketingMetricsSnapshots(storedMetrics).find(item=>item.integrationId===integration.id):undefined,isAds=provider.id==='meta_ads'||provider.id==='google_ads';return <article className={`card integrationCard ${connected?'isConnected':''}`} key={provider.id}>
+     <div className="integrationCardHead"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><h3>{provider.name}</h3><p>{provider.description}</p></div><Badge tone={connected?'green':'orange'}>{connected?'Vinculado':integration?'Falha na sincronização':'Não configurado'}</Badge></div>
+     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div>{metric&&<div className="integrationMetricPreview"><span><small>Investimento</small><b>{currency(metric.spend)}</b></span><span><small>Conversões</small><b>{metric.conversions.toLocaleString('pt-BR')}</b></span><span><small>ROAS</small><b>{metric.roas.toLocaleString('pt-BR',{maximumFractionDigits:2})}x</b></span></div>}<div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div></>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
+     <footer>{integration?<><button className="integrationTextButton danger" onClick={()=>disconnect(integration)}><Unplug/> Remover vínculo</button><div><button className="integrationIconButton" title="Editar integração" onClick={()=>setEditing({provider:provider.id,integration})}><Settings2/></button><Button secondary disabled={syncingId===integration.id} onClick={()=>void sync(integration)}>{syncingId===integration.id?<LoaderCircle className="spin"/>:<RefreshCw/>} {syncingId===integration.id?'Sincronizando':isAds?'Sincronizar agora':'Verificar'}</Button></div></>:<Button onClick={()=>setEditing({provider:provider.id})}><PlugZap/> Configurar {provider.short}</Button>}</footer>
     </article>})}
    </section>
   </>:<section className="card brandNoClient"><Empty label="cliente ativo"/></section>}
@@ -136,3 +183,4 @@ function LegacyMigrationModal({legacy,clients,pending,onClose,onSubmit}:{legacy:
 
 const initials=(name:string)=>name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase();
 const dateTime=(value?:string)=>value?new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Ainda não sincronizado';
+const currency=(value:number)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});

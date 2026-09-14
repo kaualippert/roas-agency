@@ -15,6 +15,7 @@ type ConnectionDocument={
 };
 type OAuthState={provider:OAuthProvider;uid:string;returnTo:string;nonce:string;expiresAt:number};
 type Resource={id:string;name:string;kind?:string;metadata?:Record<string,unknown>};
+export type MarketingMetrics={impressions:number;reach:number;clicks:number;conversions:number;spend:number;conversionValue:number;roas:number};
 
 const collectionName='marketing_oauth_connections';
 const googleScopes=['openid','email','profile','https://www.googleapis.com/auth/adwords','https://www.googleapis.com/auth/analytics.readonly','https://www.googleapis.com/auth/business.manage'];
@@ -116,17 +117,16 @@ async function accessToken(connection:ConnectionDocument){
 
 const strip=(value:string,prefix:string)=>value.startsWith(prefix)?value.slice(prefix.length):value;
 async function metaResources(connection:ConnectionDocument,primaryId?:string){
- const token=await accessToken(connection),root=`https://graph.facebook.com/${config.metaGraphApiVersion}`;
- if(!primaryId){const result=await requestJson<{data?:Array<{id:string;name:string}>}>(`${root}/me/businesses?fields=id,name&limit=100&access_token=${encodeURIComponent(token)}`);return {primaries:(result.data||[]).map(item=>({id:item.id,name:item.name,kind:'business'})),resources:[] as Resource[]}}
+ const token=await accessToken(connection),root=`https://graph.facebook.com/${config.metaGraphApiVersion}`,headers={authorization:`Bearer ${token}`};
+ if(!primaryId){const result=await requestJson<{data?:Array<{id:string;name:string}>}>(`${root}/me/businesses?fields=id,name&limit=100`,{headers});return {primaries:(result.data||[]).map(item=>({id:item.id,name:item.name,kind:'business'})),resources:[] as Resource[]}}
  const fields='id,name,account_status,currency,timezone_name';
- const [owned,clients]=await Promise.all(['owned_ad_accounts','client_ad_accounts'].map(edge=>requestJson<{data?:Array<{id:string;name?:string;account_status?:number;currency?:string;timezone_name?:string}>}>(`${root}/${encodeURIComponent(primaryId)}/${edge}?fields=${fields}&limit=100&access_token=${encodeURIComponent(token)}`).catch(()=>({data:[]}))));
+ const [owned,clients]=await Promise.all(['owned_ad_accounts','client_ad_accounts'].map(edge=>requestJson<{data?:Array<{id:string;name?:string;account_status?:number;currency?:string;timezone_name?:string}>}>(`${root}/${encodeURIComponent(primaryId)}/${edge}?fields=${fields}&limit=100`,{headers}).catch(()=>({data:[]}))));
  const records=[...(owned.data||[]),...(clients.data||[])],unique=new Map(records.map(item=>[item.id,item]));
  return {primaries:[] as Resource[],resources:[...unique.values()].map(item=>({id:item.id,name:item.name||item.id,kind:'ad_account',metadata:{status:item.account_status,currency:item.currency,timezone:item.timezone_name}}))};
 }
 
 async function googleAdsResources(connection:ConnectionDocument,primaryId?:string){
- if(!config.googleAdsDeveloperToken)throw new HttpError(503,'Configure GOOGLE_ADS_DEVELOPER_TOKEN para consultar contas do Google Ads.');
- const token=await accessToken(connection),root=`https://googleads.googleapis.com/${config.googleAdsApiVersion}`,headers={authorization:`Bearer ${token}`,'developer-token':config.googleAdsDeveloperToken,'content-type':'application/json'};
+ const token=await accessToken(connection),root=`https://googleads.googleapis.com/${config.googleAdsApiVersion}`,headers=googleAdsHeaders(token);
  if(!primaryId){
   const result=await requestJson<{resourceNames?:string[]}>(`${root}/customers:listAccessibleCustomers`,{headers});
   const primaries=await Promise.all((result.resourceNames||[]).map(async name=>{const id=strip(name,'customers/');const detail=await requestJson<{results?:Array<{customer?:{descriptiveName?:string;manager?:boolean}}>}>(`${root}/customers/${id}/googleAds:search`,{method:'POST',headers,body:JSON.stringify({query:'SELECT customer.id, customer.descriptive_name, customer.manager FROM customer LIMIT 1'})}).catch(()=>({results:[]}));const customer=detail.results?.[0]?.customer;return {id,name:customer?.descriptiveName||id,kind:customer?.manager?'manager':'account'}}));
@@ -134,6 +134,44 @@ async function googleAdsResources(connection:ConnectionDocument,primaryId?:strin
  }
  const result=await requestJson<{results?:Array<{customerClient?:{id?:string;descriptiveName?:string;manager?:boolean;level?:string;status?:string;currencyCode?:string;timeZone?:string}}>}>(`${root}/customers/${primaryId}/googleAds:search`,{method:'POST',headers:{...headers,'login-customer-id':primaryId},body:JSON.stringify({query:'SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.level, customer_client.status, customer_client.currency_code, customer_client.time_zone FROM customer_client WHERE customer_client.level <= 1'})});
  return {primaries:[] as Resource[],resources:(result.results||[]).map(({customerClient:item={}})=>({id:String(item.id||''),name:item.descriptiveName||String(item.id||''),kind:item.manager?'manager':'ad_account',metadata:{level:item.level,status:item.status,currency:item.currencyCode,timezone:item.timeZone}})).filter(item=>item.id)};
+}
+
+export function googleAdsHeaders(token:string,loginCustomerId?:string){
+ const headers:Record<string,string>={authorization:`Bearer ${token}`,'content-type':'application/json'};
+ if(config.googleAdsDeveloperToken)headers['developer-token']=config.googleAdsDeveloperToken;
+ if(loginCustomerId)headers['login-customer-id']=loginCustomerId.replace(/\D/g,'');
+ return headers;
+}
+
+const numeric=(value:unknown)=>Math.max(0,Number(value)||0);
+const actionValue=(entries:Array<{action_type?:string;value?:string}>|undefined,types:string[])=>{
+ for(const type of types){const match=entries?.find(item=>item.action_type===type);if(match)return numeric(match.value)}
+ return 0;
+};
+export function normalizeMetaMetrics(row:{impressions?:string;reach?:string;clicks?:string;spend?:string;actions?:Array<{action_type?:string;value?:string}>;action_values?:Array<{action_type?:string;value?:string}>;purchase_roas?:Array<{value?:string}>}={}):MarketingMetrics{
+ const spend=numeric(row.spend),conversions=actionValue(row.actions,['offsite_conversion.fb_pixel_purchase','purchase','lead','offsite_conversion.fb_pixel_lead']),conversionValue=actionValue(row.action_values,['offsite_conversion.fb_pixel_purchase','purchase']);
+ return {impressions:numeric(row.impressions),reach:numeric(row.reach),clicks:numeric(row.clicks),conversions,spend,conversionValue,roas:numeric(row.purchase_roas?.[0]?.value)||(spend?conversionValue/spend:0)};
+}
+export function normalizeGoogleMetrics(row:{impressions?:string;clicks?:string;conversions?:number;costMicros?:string;conversionsValue?:number}={}):MarketingMetrics{
+ const spend=numeric(row.costMicros)/1_000_000,conversionValue=numeric(row.conversionsValue);
+ return {impressions:numeric(row.impressions),reach:0,clicks:numeric(row.clicks),conversions:numeric(row.conversions),spend,conversionValue,roas:spend?conversionValue/spend:0};
+}
+
+async function syncMetaAds(connection:ConnectionDocument,resourceId:string,from:string,to:string){
+ const token=await accessToken(connection),account=resourceId.startsWith('act_')?resourceId:`act_${resourceId}`,params=new URLSearchParams({fields:'impressions,reach,clicks,spend,actions,action_values,purchase_roas',level:'account',time_range:JSON.stringify({since:from,until:to}),limit:'1'});
+ const result=await requestJson<{data?:Parameters<typeof normalizeMetaMetrics>[0][]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${params}`,{headers:{authorization:`Bearer ${token}`}});
+ return normalizeMetaMetrics(result.data?.[0]);
+}
+async function syncGoogleAds(connection:ConnectionDocument,primaryId:string,resourceId:string,from:string,to:string){
+ const token=await accessToken(connection),customerId=resourceId.replace(/\D/g,''),loginId=primaryId.replace(/\D/g,''),query=`SELECT metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros, metrics.conversions_value FROM customer WHERE segments.date BETWEEN '${from}' AND '${to}'`;
+ const result=await requestJson<{results?:Array<{metrics?:Parameters<typeof normalizeGoogleMetrics>[0]}>}>(`https://googleads.googleapis.com/${config.googleAdsApiVersion}/customers/${customerId}/googleAds:search`,{method:'POST',headers:googleAdsHeaders(token,loginId!==customerId?loginId:undefined),body:JSON.stringify({query})});
+ return normalizeGoogleMetrics(result.results?.[0]?.metrics);
+}
+
+function syncPeriod(body:Record<string,unknown>){
+ const today=new Date(),fallbackTo=today.toISOString().slice(0,10),fallbackFrom=new Date(today.getFullYear(),today.getMonth(),1).toISOString().slice(0,10),from=String(body.from||fallbackFrom),to=String(body.to||fallbackTo);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)throw new HttpError(400,'Informe um período de sincronização válido.');
+ return {from,to};
 }
 
 async function analyticsResources(connection:ConnectionDocument,primaryId?:string){
@@ -184,6 +222,16 @@ export function marketingOAuthRouter(){
   if(provider!=='meta_ads'&&connection.provider!=='google')throw new HttpError(400,'Escolha uma conexão Google.');
   const result=provider==='meta_ads'?await metaResources(connection,primaryId):provider==='google_ads'?await googleAdsResources(connection,primaryId):provider==='google_analytics'?await analyticsResources(connection,primaryId):provider==='google_business'?await businessResources(connection,primaryId):null;
   if(!result)throw new HttpError(404,'Plataforma não encontrada.');response.json(result);
+ }));
+ router.post('/sync/:provider',asyncRoute(async(request,response)=>{
+  const provider=request.params.provider as MarketingProvider;
+  if(provider!=='meta_ads'&&provider!=='google_ads')throw new HttpError(400,'A sincronização de métricas está disponível para Meta Ads e Google Ads.');
+  const body=request.body as Record<string,unknown>,connection=await connectionById(String(body.connectionId||'')),primaryId=String(body.primaryId||''),resourceId=String(body.resourceId||''),period=syncPeriod(body);
+  if(!primaryId||!resourceId)throw new HttpError(400,'Selecione a estrutura e a conta de anúncios.');
+  if(provider==='meta_ads'&&connection.provider!=='meta')throw new HttpError(400,'A conexão selecionada não pertence à Meta.');
+  if(provider==='google_ads'&&connection.provider!=='google')throw new HttpError(400,'A conexão selecionada não pertence ao Google.');
+  const metrics=provider==='meta_ads'?await syncMetaAds(connection,resourceId,period.from,period.to):await syncGoogleAds(connection,primaryId,resourceId,period.from,period.to);
+  response.json({provider,period,metrics,syncedAt:new Date().toISOString()});
  }));
  return router;
 }

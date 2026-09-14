@@ -6,6 +6,9 @@ export type CRMGoal={
  metric:CRMGoalMetric;
  target:number;
  updatedAt:string;
+ cycleId?:string;
+ resetAt?:string;
+ excludedWonLeadIds?:string[];
 };
 
 export type CRMGoalProgress={
@@ -21,11 +24,15 @@ export const emptyCRMGoal:CRMGoal={metric:'value',target:0,updatedAt:''};
 export function normalizeCRMGoal(value:unknown):CRMGoal{
  if(!value||typeof value!=='object')return emptyCRMGoal;
  const candidate=value as Partial<CRMGoal>;
- return {
+ const normalized:CRMGoal={
   metric:candidate.metric==='quantity'?'quantity':'value',
   target:Math.max(0,Number(candidate.target)||0),
   updatedAt:String(candidate.updatedAt||''),
  };
+ if(candidate.cycleId)normalized.cycleId=String(candidate.cycleId);
+ if(candidate.resetAt)normalized.resetAt=String(candidate.resetAt);
+ if(Array.isArray(candidate.excludedWonLeadIds))normalized.excludedWonLeadIds=candidate.excludedWonLeadIds.filter(id=>typeof id==='string');
+ return normalized;
 }
 
 export function isDateInMonth(value:string|undefined,reference=new Date()){
@@ -35,12 +42,21 @@ export function isDateInMonth(value:string|undefined,reference=new Date()){
 }
 
 export function calculateCRMGoalProgress(goal:CRMGoal,leads:CRMLead[],reference=new Date()):CRMGoalProgress{
- const won=leads.filter(lead=>lead.stage==='Negócio fechado'&&isDateInMonth(lead.updatedAt||lead.createdAt,reference));
+ const excluded=new Set(goal.excludedWonLeadIds||[]);
+ const won=leads.filter(lead=>lead.stage==='Negócio fechado'&&!excluded.has(lead.id)&&isDateInMonth(lead.updatedAt||lead.createdAt,reference));
  const achieved=goal.metric==='quantity'?won.length:won.reduce((sum,lead)=>sum+Math.max(0,Number(lead.value)||0),0);
  const target=Math.max(0,Number(goal.target)||0);
  const progress=target>0?Math.min(100,Math.round(achieved/target*100)):0;
  return {achieved,target,progress,wonDeals:won.length,remaining:Math.max(0,target-achieved)};
 }
+
+export function resetCRMGoal(goal:CRMGoal,leads:CRMLead[],reference=new Date()):CRMGoal{
+ const resetAt=reference.toISOString();
+ const excludedWonLeadIds=leads.filter(lead=>lead.stage==='Negócio fechado'&&isDateInMonth(lead.updatedAt||lead.createdAt,reference)).map(lead=>lead.id);
+ return {...goal,updatedAt:resetAt,cycleId:resetAt,resetAt,excludedWonLeadIds};
+}
+
+export const crmGoalCycleVersion=(goal:CRMGoal)=>goal.cycleId||goal.updatedAt;
 
 export const formatCRMGoalValue=(value:number,metric:CRMGoalMetric)=>metric==='value'
  ?value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})

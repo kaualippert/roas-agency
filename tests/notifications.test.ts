@@ -20,6 +20,14 @@ test('cria uma notificação mensal estável quando a meta é atingida',()=>{
  assert.equal(notification.targetPath,'/crm');
 });
 
+test('novo ciclo da meta gera outro alerta e permite um novo aviso sonoro',()=>{
+ const date=new Date('2026-08-16T12:00:00.000Z');
+ const first=createGoalAchievementNotification('cycle-1',date);
+ const reset=createGoalAchievementNotification('cycle-2',date);
+ assert.notEqual(first.id,reset.id);
+ assert.equal(reset.id,'crm-goal-achieved-2026-08-cycle-2');
+});
+
 test('notificação de tarefa aponta para a tarefa específica',()=>{
  assert.equal(notificationTarget({taskId:'task/42',targetPath:'/tasks'}),'/tasks?task=task%2F42');
  assert.equal(notificationTarget({targetPath:'/reports'}),'/reports');

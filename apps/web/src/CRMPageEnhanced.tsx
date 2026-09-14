@@ -20,7 +20,7 @@ import {
 } from './crm-leads';
 import CRMServicesAnalytics from './CRMServicesAnalytics';
 import SalesGoalGauge from './SalesGoalGauge';
-import {calculateCRMGoalProgress,emptyCRMGoal,formatCRMGoalValue,normalizeCRMGoal,type CRMGoal,type CRMGoalMetric} from './crm-goal';
+import {calculateCRMGoalProgress,emptyCRMGoal,formatCRMGoalValue,normalizeCRMGoal,resetCRMGoal,type CRMGoal,type CRMGoalMetric} from './crm-goal';
 import './crm-funnel.css';
 import './crm-ux-refresh.css';
 import {useKanbanDensity,usePersistentState} from './persistent-ui';
@@ -101,6 +101,12 @@ export default function CRMPage(){
   pipelineRef.current?.querySelector<HTMLElement>(`[data-crm-stage="${stage}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
  };
  const openGoalModal=()=>{setGoalMetric(goal.metric);setGoalTarget(goal.target);setGoalModal(true)};
+ const resetGoal=()=>{
+  if(!confirm('Redefinir o progresso da meta? Os negócios já contabilizados serão preservados, mas o novo ciclo começará em 0%.'))return;
+  const next=resetCRMGoal(goal,leads);
+  setGoal(next);
+  store.set('crm_goal',next);
+ };
  const saveGoal=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   if(goalTarget<=0)return;
@@ -121,7 +127,7 @@ export default function CRMPage(){
  return <main className="crmPage">
   <div className="crmPageTitle"><div><small className="crmEyebrow">VISÃO COMERCIAL</small><h2>CRM de Prospecção</h2><p>Acompanhe oportunidades, serviços solicitados e a saúde do funil.</p></div><button className="btn crmPrimaryAction" onClick={()=>openModal()}><Plus/> Novo lead</button></div>
   <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((sum,lead)=>sum+Number(lead.value||0),0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((sum,lead)=>sum+Number(lead.value||0),0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão" value={`${conversion}%`} note="Do recorte atual" tone="orange"/></div>
-  <SalesGoalGauge goal={goal} result={goalResult} onConfigure={openGoalModal}/>
+  <SalesGoalGauge goal={goal} result={goalResult} onConfigure={openGoalModal} onReset={resetGoal}/>
 
   <section className="card crmFilterBar" aria-label="Filtros do CRM">
    <div className="crmFilterHeading"><span><Funnel/></span><div><b>Filtrar oportunidades</b><small>{activeFilterCount?`${activeFilterCount} ${activeFilterCount===1?'filtro ativo':'filtros ativos'}`:'Visualizando todo o funil'}</small></div></div>
