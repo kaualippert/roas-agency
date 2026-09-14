@@ -46,6 +46,7 @@ export const testState={
  client_processes:[],
  client_mind_maps:[],
  marketing_metrics:[],
+ marketing_dashboard_preferences:[],
  notifications:[{id:'notification-1',title:'Teste de notificação',description:'Alerta usado na validação da central.',type:'task',read:false,createdAt:now,updatedAt:now}],
  notification_dismissals:[],
  reports:[],

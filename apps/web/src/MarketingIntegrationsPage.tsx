@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {AlertTriangle,Building2,Check,CheckCircle2,KeyRound,LoaderCircle,PlugZap,RefreshCw,Settings2,ShieldCheck,Unplug,Users} from 'lucide-react';
+import {AlertTriangle,Building2,Check,KeyRound,LoaderCircle,PlugZap,RefreshCw,Settings2,ShieldCheck,Unplug} from 'lucide-react';
 import {useStoreData} from './app/useStoreData';
 import {Badge,Button,Empty,Modal,Toast} from './components/ui';
 import {findMarketingResourceConflict,markMarketingIntegrationSynced,marketingProviders,migratableLegacyMarketingIntegrations,migrateLegacyMarketingIntegration,normalizeClientMarketingIntegrations,providerById,removeClientMarketingIntegration,upsertClientMarketingIntegration,type ClientMarketingIntegration,type LegacyMarketingIntegration,type MarketingProvider} from './marketing-integrations';
@@ -10,6 +10,7 @@ import {usePersistentState} from './persistent-ui';
 import './marketing-metrics.css';
 
 type Editing={provider:MarketingProvider;integration?:ClientMarketingIntegration};
+const adProviders=marketingProviders.filter(provider=>provider.id==='meta_ads'||provider.id==='google_ads');
 
 export default function MarketingIntegrationsPage(){
  const [clients]=useStoreData<Client[]>('clients',[]);
@@ -28,12 +29,10 @@ export default function MarketingIntegrationsPage(){
  useEffect(()=>{loadOAuthOverview().then(result=>{setConnections(result.connections);setOauthConfig(result.providers)}).catch(error=>setToast(error instanceof Error?error.message:'Não foi possível carregar as conexões OAuth.')).finally(()=>setOauthLoading(false));const params=new URLSearchParams(location.search);if(params.get('oauth')){setToast(params.get('oauth')==='success'?'Conta conectada com sucesso.':params.get('message')||'Não foi possível conectar a conta.');history.replaceState({},'',location.pathname)}},[]);
  const selectedClient=activeClients.find(client=>client.id===clientId);
  const selectedIntegrations=integrations.filter(item=>item.clientId===clientId);
- const connectedBrands=new Set(integrations.filter(item=>item.status==='connected').map(item=>item.clientId)).size;
- const autoSync=integrations.filter(item=>item.status==='connected'&&item.autoSync).length;
 
  useEffect(()=>{
   if(oauthLoading)return;
-  const candidates=integrations.filter(item=>(item.provider==='meta_ads'||item.provider==='google_ads')&&item.autoSync&&item.agencyConnectionId&&isMarketingSyncDue(item.lastSync)&&!autoSyncAttempts.current.has(item.id));
+  const candidates=integrations.filter((item):item is ClientMarketingIntegration&{provider:'meta_ads'|'google_ads';agencyConnectionId:string}=>(item.provider==='meta_ads'||item.provider==='google_ads')&&item.autoSync&&Boolean(item.agencyConnectionId)&&isMarketingSyncDue(item.lastSync)&&!autoSyncAttempts.current.has(item.id));
   if(!candidates.length)return;
   candidates.forEach(item=>autoSyncAttempts.current.add(item.id));
   let cancelled=false;
@@ -115,31 +114,24 @@ export default function MarketingIntegrationsPage(){
    <div className="agencyConnectionGrid">{(['meta','google'] as AgencyOAuthProvider[]).map(provider=>{const linked=connections.filter(item=>item.provider===provider),configured=oauthConfig?.[provider];return <article key={provider}><div className={`providerLogo ${provider==='meta'?'meta_ads':'google_ads'}`}>{provider==='meta'?'M':'G'}</div><div><b>{provider==='meta'?'Meta Business':'Google'}</b>{oauthLoading?<span><LoaderCircle className="spin"/> Carregando</span>:linked.length?<span className="connectedLabel"><Check/> {linked.map(item=>item.accountEmail||item.accountName).join(', ')}</span>:<span>{configured?.configured?'Nenhuma conta conectada':`Configuração pendente${configured?.missing?.length?`: ${configured.missing.join(', ')}`:''}`}</span>}</div><Button secondary disabled={oauthLoading||configured?.configured===false} onClick={()=>connect(provider)}>{linked.length?'Reconectar':'Conectar'}</Button></article>})}</div>
   </section>
   <section className="integrationHero brandIntegrationHero">
-   <div><span className="integrationEyebrow"><PlugZap/> INTEGRAÇÕES DE MARCA</span><h2>Contas certas para cada cliente</h2><p>Escolha uma marca e vincule as contas de mídia, Analytics e presença local que pertencem a ela.</p></div>
+   <div><span className="integrationEyebrow"><PlugZap/> INTEGRAÇÕES DE MARCA</span><h2>Conectar contas aos clientes</h2><p>Autorize Meta ou Google uma vez e escolha abaixo qual conta de anúncios pertence a cada cliente.</p></div>
    <label className="brandClientSelector"><span>Marca selecionada</span><select value={clientId} onChange={event=>setClientId(event.target.value)}><option value="">Selecione um cliente</option>{activeClients.map(client=><option key={client.id} value={client.id}>{client.companyName}</option>)}</select></label>
-  </section>
-
-  <section className="integrationStats">
-   <article className="card"><span className="integrationStatIcon purple"><Users/></span><div><small>Marcas ativas</small><strong>{activeClients.length}</strong></div></article>
-   <article className="card"><span className="integrationStatIcon green"><CheckCircle2/></span><div><small>Marcas integradas</small><strong>{connectedBrands}</strong></div></article>
-   <article className="card"><span className="integrationStatIcon blue"><PlugZap/></span><div><small>Canais vinculados</small><strong>{integrations.length}</strong></div></article>
-   <article className="card"><span className="integrationStatIcon orange"><RefreshCw/></span><div><small>Sincronização automática</small><strong>{autoSync}</strong></div></article>
   </section>
 
   {legacyCandidates.length>0&&<div className="legacyIntegrationNotice"><AlertTriangle/><div><b>{legacyCandidates.length} {legacyCandidates.length===1?'cadastro manual pendente':'cadastros manuais pendentes'}</b><span>Reaproveite as contas existentes e escolha a marca correta para concluir a migração.</span></div><Button secondary onClick={()=>setMigrating(legacyCandidates[0])}>Migrar cadastros</Button></div>}
 
   {selectedClient?<>
-   <div className="brandSectionTitle"><div><small>CONFIGURAR MARCA</small><h3>{selectedClient.companyName}</h3><p>{selectedIntegrations.length} de {marketingProviders.length} canais configurados</p></div><span className="brandInitial" style={{background:selectedClient.color}}>{initials(selectedClient.companyName)}</span></div>
+   <div className="brandSectionTitle"><div><small>CONTAS DO CLIENTE</small><h3>{selectedClient.companyName}</h3><p>{selectedIntegrations.filter(item=>item.provider==='meta_ads'||item.provider==='google_ads').length} de {adProviders.length} plataformas configuradas</p></div><span className="brandInitial" style={{background:selectedClient.color}}>{initials(selectedClient.companyName)}</span></div>
    <section className="integrationGrid brandIntegrationGrid">
-    {marketingProviders.map(provider=>{const integration=selectedIntegrations.find(item=>item.provider===provider.id),connected=integration?.status==='connected',metric=integration?normalizeMarketingMetricsSnapshots(storedMetrics).find(item=>item.integrationId===integration.id):undefined,isAds=provider.id==='meta_ads'||provider.id==='google_ads';return <article className={`card integrationCard ${connected?'isConnected':''}`} key={provider.id}>
+    {adProviders.map(provider=>{const integration=selectedIntegrations.find(item=>item.provider===provider.id),connected=integration?.status==='connected';return <article className={`card integrationCard ${connected?'isConnected':''}`} key={provider.id}>
      <div className="integrationCardHead"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><h3>{provider.name}</h3><p>{provider.description}</p></div><Badge tone={connected?'green':'orange'}>{connected?'Vinculado':integration?'Falha na sincronização':'Não configurado'}</Badge></div>
-     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div>{metric&&<div className="integrationMetricPreview"><span><small>Investimento</small><b>{currency(metric.spend)}</b></span><span><small>Conversões</small><b>{metric.conversions.toLocaleString('pt-BR')}</b></span><span><small>ROAS</small><b>{metric.roas.toLocaleString('pt-BR',{maximumFractionDigits:2})}x</b></span></div>}<div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div></>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
-     <footer>{integration?<><button className="integrationTextButton danger" onClick={()=>disconnect(integration)}><Unplug/> Remover vínculo</button><div><button className="integrationIconButton" title="Editar integração" onClick={()=>setEditing({provider:provider.id,integration})}><Settings2/></button><Button secondary disabled={syncingId===integration.id} onClick={()=>void sync(integration)}>{syncingId===integration.id?<LoaderCircle className="spin"/>:<RefreshCw/>} {syncingId===integration.id?'Sincronizando':isAds?'Sincronizar agora':'Verificar'}</Button></div></>:<Button onClick={()=>setEditing({provider:provider.id})}><PlugZap/> Configurar {provider.short}</Button>}</footer>
+     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div><div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div></>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
+     <footer>{integration?<><button className="integrationTextButton danger" onClick={()=>disconnect(integration)}><Unplug/> Remover vínculo</button><div><button className="integrationIconButton" title="Editar integração" onClick={()=>setEditing({provider:provider.id,integration})}><Settings2/></button><Button secondary disabled={syncingId===integration.id} onClick={()=>void sync(integration)}>{syncingId===integration.id?<LoaderCircle className="spin"/>:<RefreshCw/>} {syncingId===integration.id?'Sincronizando':'Sincronizar agora'}</Button></div></>:<Button onClick={()=>setEditing({provider:provider.id})}><PlugZap/> Configurar {provider.short}</Button>}</footer>
     </article>})}
    </section>
   </>:<section className="card brandNoClient"><Empty label="cliente ativo"/></section>}
 
-  <section className="card brandCoverage"><div className="brandCoverageHead"><div><h3>Cobertura das marcas</h3><p>Visualize rapidamente quais canais estão configurados em cada cliente.</p></div><Building2/></div><div className="brandCoverageList">{activeClients.map(client=><article key={client.id} onClick={()=>setClientId(client.id)}><div><span className="avatar" style={{background:client.color}}>{initials(client.companyName)}</span><b>{client.companyName}</b></div><div>{marketingProviders.map(provider=>{const active=integrations.some(item=>item.clientId===client.id&&item.provider===provider.id&&item.status==='connected');return <span key={provider.id} className={active?'active':''} title={provider.name}>{provider.mark}</span>})}</div><button>Configurar</button></article>)}</div></section>
+  <section className="card brandCoverage"><div className="brandCoverageHead"><div><h3>Clientes e contas vinculadas</h3><p>Selecione um cliente para configurar ou alterar suas contas de anúncios.</p></div><Building2/></div><div className="brandCoverageList">{activeClients.map(client=><article key={client.id} onClick={()=>setClientId(client.id)}><div><span className="avatar" style={{background:client.color}}>{initials(client.companyName)}</span><b>{client.companyName}</b></div><div>{adProviders.map(provider=>{const active=integrations.some(item=>item.clientId===client.id&&item.provider===provider.id&&item.status==='connected');return <span key={provider.id} className={active?'active':''} title={provider.name}>{provider.mark}</span>})}</div><button>{integrations.some(item=>item.clientId===client.id)?'Gerenciar':'Vincular'}</button></article>)}</div></section>
 
   {editing&&<RealBrandIntegrationModal editing={editing} client={selectedClient} connections={connections} onConnect={connect} onClose={()=>setEditing(null)} onSubmit={save}/>} {migrating&&<LegacyMigrationModal legacy={migrating} clients={activeClients} pending={legacyCandidates.length} onClose={()=>setMigrating(null)} onSubmit={migrate}/>}<Toast text={toast}/>
  </main>;
@@ -183,4 +175,3 @@ function LegacyMigrationModal({legacy,clients,pending,onClose,onSubmit}:{legacy:
 
 const initials=(name:string)=>name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase();
 const dateTime=(value?:string)=>value?new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'Ainda não sincronizado';
-const currency=(value:number)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});

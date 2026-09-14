@@ -53,6 +53,10 @@ test('filters brand integrations by the clients assigned to a marketing member',
   {id:'integration-2',clientId:'client-2',provider:'google_ads'},
  ]);
  assert.deepEqual(value,[{id:'integration-1',clientId:'client-1',provider:'meta_ads'}]);
+ assert.deepEqual(filterStateValue(marketingLimited,'marketing_dashboard_preferences',[
+  {clientId:'client-1',metricIds:['spend']},
+  {clientId:'client-2',metricIds:['roas']},
+ ]),[{clientId:'client-1',metricIds:['spend']}]);
 });
 
 test('preserves hidden records when a limited member writes a collection',()=>{

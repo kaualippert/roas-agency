@@ -293,7 +293,7 @@ test('configura a meta comercial no CRM e compartilha o velocímetro com o dashb
 test('configura uma integração por marca e apresenta a cobertura no dashboard de marketing',async({page})=>{
  await page.goto('/marketing/integrations');
  await expect(page.locator('.headTitle h1')).toHaveText('Integrações de marca');
- await expect(page.getByRole('heading',{name:'Contas certas para cada cliente'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Conectar contas aos clientes'})).toBeVisible();
  await page.getByRole('button',{name:'Configurar Meta'}).click();
  const modal=page.locator('.modal');
  await modal.getByLabel('Portfólio empresarial (BM)').selectOption('bm-123');
@@ -305,11 +305,25 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  const metricsSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_metrics'));
  await page.getByRole('button',{name:'Sincronizar agora'}).click();
  await metricsSaved;
- await expect(page.getByText('R$ 1.234,50')).toBeVisible();
  await page.goto('/marketing/dashboard');
  await expect(page.locator('.headTitle h1')).toHaveText('Marketing');
- await expect(page.getByText('1 de 4 canais')).toBeVisible();
- await expect(page.getByRole('region',{name:'Resultados sincronizados de mídia'})).toContainText('4x');
+ await expect(page.getByLabel('Cliente do dashboard')).toHaveValue('client-1');
+ await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('4x');
+ await page.getByRole('button',{name:'Personalizar métricas'}).click();
+ const metricsDialog=page.getByRole('dialog',{name:'Personalizar métricas'});
+ await metricsDialog.getByText('CPC médio').click();
+ const preferenceSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_dashboard_preferences'));
+ await metricsDialog.getByRole('button',{name:'Salvar dashboard'}).click();
+ await preferenceSaved;
+ await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('CPC médio');
+ await page.getByRole('link',{name:'Criar relatório deste cliente'}).click();
+ const reportDialog=page.locator('.marketingReportModal');
+ await expect(reportDialog.getByLabel('Cliente integrado')).toHaveValue('client-1');
+ await reportDialog.getByLabel('Nome do relatório').fill('Performance Meta — Cliente Teste');
+ const reportSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/reports'));
+ await reportDialog.getByRole('button',{name:'Criar relatório'}).click();
+ await reportSaved;
+ await expect(page.getByText('Performance Meta — Cliente Teste')).toBeVisible();
 });
 
 test('migra um cadastro manual para o vínculo permanente do cliente',async({page})=>{
