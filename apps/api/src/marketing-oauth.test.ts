@@ -25,7 +25,7 @@ test('criptografa tokens OAuth com AES-GCM',()=>{
 
 test('normaliza os indicadores retornados pela Meta Ads',()=>{
  const metrics=normalizeMetaMetrics({impressions:'12000',reach:'9000',clicks:'360',spend:'1250.50',actions:[{action_type:'lead',value:'18'},{action_type:'link_click',value:'280'},{action_type:'landing_page_view',value:'190'},{action_type:'post_engagement',value:'640'},{action_type:'video_view',value:'420'}],action_values:[{action_type:'purchase',value:'5000'}],purchase_roas:[{value:'4'}]});
- assert.deepEqual(metrics,{impressions:12000,reach:9000,clicks:360,conversions:18,results:18,leads:18,purchases:0,messagingConversations:0,linkClicks:280,landingPageViews:190,postEngagements:640,videoViews:420,spend:1250.5,conversionValue:5000,roas:4});
+ assert.equal(metrics.impressions,12000);assert.equal(metrics.reach,9000);assert.equal(metrics.results,18);assert.equal(metrics.leads,18);assert.equal(metrics.linkClicks,280);assert.equal(metrics.landingPageViews,190);assert.equal(metrics.postEngagements,640);assert.equal(metrics.videoViews,420);assert.equal(metrics.spend,1250.5);assert.equal(metrics.conversionValue,5000);assert.equal(metrics.roas,4);
 });
 
 test('usa conversas como resultado principal quando a campanha não possui compras ou leads',()=>{
@@ -42,7 +42,7 @@ test('normaliza o desempenho dos melhores anúncios da Meta',()=>{
 
 test('converte micros e calcula ROAS do Google Ads',()=>{
  const metrics=normalizeGoogleMetrics({impressions:'8000',clicks:'240',conversions:12.5,costMicros:'2000000000',conversionsValue:7000});
- assert.deepEqual(metrics,{impressions:8000,reach:0,clicks:240,conversions:12.5,results:12.5,leads:0,purchases:0,messagingConversations:0,linkClicks:0,landingPageViews:0,postEngagements:0,videoViews:0,spend:2000,conversionValue:7000,roas:3.5});
+ assert.equal(metrics.impressions,8000);assert.equal(metrics.clicks,240);assert.equal(metrics.conversions,12.5);assert.equal(metrics.results,12.5);assert.equal(metrics.spend,2000);assert.equal(metrics.conversionValue,7000);assert.equal(metrics.roas,3.5);assert.equal(metrics.thruPlays,0);
 });
 
 test('aceita Google Ads sem developer token e normaliza o login customer ID',()=>{

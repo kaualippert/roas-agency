@@ -19,3 +19,24 @@
 @media(max-width:900px){.marketingPerformanceGrid{grid-template-columns:1fr}.marketingMetricChoices,.marketingReportMetrics>div{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.marketingAnalysisHero{align-items:stretch}.marketingHeroControls{align-items:stretch!important;flex-direction:column}.marketingHeroControls label{min-width:0}.marketingDashboardToolbar{align-items:stretch;flex-direction:column}.marketingDashboardToolbar>span{margin-left:0}.marketingProviderTabs{overflow:auto}.marketingProviderTabs button{white-space:nowrap}.marketingPeriodFilter{display:grid;grid-template-columns:auto 1fr auto}.marketingPeriodFilter select{width:100%;min-width:0}.marketingPeriodFilter button{height:36px}.marketingSelectableMetrics{grid-template-columns:1fr 1fr}.marketingDashboardActions{flex-direction:column}.marketingDashboardActions .btn{width:100%}.marketingMetricChoices,.marketingReportMetrics>div{grid-template-columns:1fr}}
 @media(max-width:430px){.marketingSelectableMetrics{grid-template-columns:1fr}.marketingEfficiencyGrid{grid-template-columns:1fr}}
+
+.marketingMetricsModal{width:min(920px,calc(100vw - 24px))}
+.marketingMetricTools{display:grid;grid-template-columns:minmax(240px,1fr) auto auto;align-items:center;gap:10px;margin:16px 0 12px}
+.marketingMetricTools>label{height:39px;display:flex;align-items:center;gap:8px;padding:0 11px;border:1px solid var(--border);border-radius:9px;background:var(--card)}
+.marketingMetricTools>label svg{width:15px;color:var(--muted)}
+.marketingMetricTools input{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:10px}
+.marketingMetricTools>span{color:var(--muted);font-size:9px;white-space:nowrap}
+.marketingMetricTools>span b{color:var(--text)}
+.marketingMetricTools>button{height:35px;padding:0 11px;border:1px solid var(--border);border-radius:8px;background:var(--soft);color:var(--purple);font-size:9px;font-weight:750}
+.marketingMetricChoices{display:block;margin:0;max-height:58vh;padding-right:4px}
+.marketingMetricChoices>section{margin-bottom:15px}
+.marketingMetricChoices>section>header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding:0 2px}
+.marketingMetricChoices>section>header>b{font-size:10px}
+.marketingMetricChoices>section>header>small{color:var(--muted);font-size:8px}
+.marketingMetricChoices>section>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.marketingMetricChoices label{min-width:0;padding:10px}
+.marketingMetricChoices label span{min-width:0}
+.marketingMetricChoices label b{line-height:1.3}
+.marketingMetricEmpty{padding:34px;text-align:center;color:var(--muted);font-size:10px}
+@media(max-width:800px){.marketingMetricChoices>section>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.marketingMetricTools{grid-template-columns:1fr auto}.marketingMetricTools>label{grid-column:1/-1}.marketingMetricTools>button{grid-column:1/-1}.marketingMetricChoices>section>div{grid-template-columns:1fr}}
