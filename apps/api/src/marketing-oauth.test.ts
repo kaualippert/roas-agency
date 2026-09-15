@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {config} from './config.js';
-import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
+import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,normalizeMetaTopAd,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
 
 test('assina e valida o estado OAuth sem expor os dados',()=>{
  const previous=config.oauthStateSecret;config.oauthStateSecret='estado-oauth-de-teste-com-entropia';
@@ -33,6 +33,11 @@ test('usa conversas como resultado principal quando a campanha não possui compr
  assert.equal(metrics.messagingConversations,12);
  assert.equal(metrics.results,12);
  assert.equal(metrics.conversions,12);
+});
+
+test('normaliza o desempenho dos melhores anúncios da Meta',()=>{
+ const ad=normalizeMetaTopAd({ad_id:'ad-1',ad_name:'Criativo campeão',campaign_name:'Captação',impressions:'10000',clicks:'250',spend:'600',actions:[{action_type:'lead',value:'20'}]});
+ assert.deepEqual(ad,{id:'ad-1',name:'Criativo campeão',campaignName:'Captação',impressions:10000,clicks:250,results:20,spend:600,costPerResult:30,ctr:2.5});
 });
 
 test('converte micros e calcula ROAS do Google Ads',()=>{

@@ -16,6 +16,8 @@ type ConnectionDocument={
 type OAuthState={provider:OAuthProvider;uid:string;returnTo:string;nonce:string;expiresAt:number};
 type Resource={id:string;name:string;kind?:string;metadata?:Record<string,unknown>};
 export type MarketingMetrics={impressions:number;reach:number;clicks:number;conversions:number;results:number;leads:number;purchases:number;messagingConversations:number;linkClicks:number;landingPageViews:number;postEngagements:number;videoViews:number;spend:number;conversionValue:number;roas:number};
+export type MarketingTopAd={id:string;name:string;campaignName:string;impressions:number;clicks:number;results:number;spend:number;costPerResult:number;ctr:number};
+type MetaInsightsRow={ad_id?:string;ad_name?:string;campaign_name?:string;impressions?:string;reach?:string;clicks?:string;spend?:string;actions?:Array<{action_type?:string;value?:string}>;action_values?:Array<{action_type?:string;value?:string}>;purchase_roas?:Array<{value?:string}>};
 
 const collectionName='marketing_oauth_connections';
 const googleScopes=['openid','email','profile','https://www.googleapis.com/auth/adwords','https://www.googleapis.com/auth/analytics.readonly','https://www.googleapis.com/auth/business.manage'];
@@ -148,9 +150,13 @@ const actionValue=(entries:Array<{action_type?:string;value?:string}>|undefined,
  for(const type of types){const match=entries?.find(item=>item.action_type===type);if(match)return numeric(match.value)}
  return 0;
 };
-export function normalizeMetaMetrics(row:{impressions?:string;reach?:string;clicks?:string;spend?:string;actions?:Array<{action_type?:string;value?:string}>;action_values?:Array<{action_type?:string;value?:string}>;purchase_roas?:Array<{value?:string}>}={}):MarketingMetrics{
+export function normalizeMetaMetrics(row:MetaInsightsRow={}):MarketingMetrics{
  const spend=numeric(row.spend),purchases=actionValue(row.actions,['offsite_conversion.fb_pixel_purchase','purchase']),leads=actionValue(row.actions,['lead','offsite_conversion.fb_pixel_lead']),messagingConversations=actionValue(row.actions,['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.messaging_first_reply']),landingPageViews=actionValue(row.actions,['landing_page_view']),results=purchases||leads||messagingConversations||landingPageViews,conversionValue=actionValue(row.action_values,['offsite_conversion.fb_pixel_purchase','purchase']);
  return {impressions:numeric(row.impressions),reach:numeric(row.reach),clicks:numeric(row.clicks),conversions:results,results,leads,purchases,messagingConversations,linkClicks:actionValue(row.actions,['link_click']),landingPageViews,postEngagements:actionValue(row.actions,['post_engagement']),videoViews:actionValue(row.actions,['video_view']),spend,conversionValue,roas:numeric(row.purchase_roas?.[0]?.value)||(spend?conversionValue/spend:0)};
+}
+export function normalizeMetaTopAd(row:MetaInsightsRow):MarketingTopAd{
+ const metrics=normalizeMetaMetrics(row),results=metrics.results;
+ return {id:String(row.ad_id||row.ad_name||'ad'),name:String(row.ad_name||'Anúncio sem nome'),campaignName:String(row.campaign_name||'Campanha não informada'),impressions:metrics.impressions,clicks:metrics.clicks,results,spend:metrics.spend,costPerResult:results?metrics.spend/results:0,ctr:metrics.impressions?metrics.clicks/metrics.impressions*100:0};
 }
 export function normalizeGoogleMetrics(row:{impressions?:string;clicks?:string;conversions?:number;costMicros?:string;conversionsValue?:number}={}):MarketingMetrics{
  const spend=numeric(row.costMicros)/1_000_000,conversionValue=numeric(row.conversionsValue);
@@ -159,14 +165,20 @@ export function normalizeGoogleMetrics(row:{impressions?:string;clicks?:string;c
 }
 
 async function syncMetaAds(connection:ConnectionDocument,resourceId:string,from:string,to:string){
- const token=await accessToken(connection),account=resourceId.startsWith('act_')?resourceId:`act_${resourceId}`,params=new URLSearchParams({fields:'impressions,reach,clicks,spend,actions,action_values,purchase_roas',level:'account',time_range:JSON.stringify({since:from,until:to}),limit:'1'});
- const result=await requestJson<{data?:Parameters<typeof normalizeMetaMetrics>[0][]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${params}`,{headers:{authorization:`Bearer ${token}`}});
- return normalizeMetaMetrics(result.data?.[0]);
+ const token=await accessToken(connection),account=resourceId.startsWith('act_')?resourceId:`act_${resourceId}`,headers={authorization:`Bearer ${token}`},timeRange=JSON.stringify({since:from,until:to});
+ const accountParams=new URLSearchParams({fields:'impressions,reach,clicks,spend,actions,action_values,purchase_roas',level:'account',time_range:timeRange,limit:'1'});
+ const adsParams=new URLSearchParams({fields:'ad_id,ad_name,campaign_name,impressions,clicks,spend,actions',level:'ad',time_range:timeRange,sort:'spend_descending',limit:'25'});
+ const [accountResult,adsResult]=await Promise.all([
+  requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${accountParams}`,{headers}),
+  requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${adsParams}`,{headers}).catch(()=>({data:[]})),
+ ]);
+ const topAds=(adsResult.data||[]).map(normalizeMetaTopAd).filter(ad=>ad.impressions>0||ad.spend>0).sort((a,b)=>b.results-a.results||a.costPerResult-b.costPerResult||b.spend-a.spend).slice(0,10);
+ return {metrics:normalizeMetaMetrics(accountResult.data?.[0]),topAds};
 }
 async function syncGoogleAds(connection:ConnectionDocument,primaryId:string,resourceId:string,from:string,to:string){
  const token=await accessToken(connection),customerId=resourceId.replace(/\D/g,''),loginId=primaryId.replace(/\D/g,''),query=`SELECT metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros, metrics.conversions_value FROM customer WHERE segments.date BETWEEN '${from}' AND '${to}'`;
  const result=await requestJson<{results?:Array<{metrics?:Parameters<typeof normalizeGoogleMetrics>[0]}>}>(`https://googleads.googleapis.com/${config.googleAdsApiVersion}/customers/${customerId}/googleAds:search`,{method:'POST',headers:googleAdsHeaders(token,loginId!==customerId?loginId:undefined),body:JSON.stringify({query})});
- return normalizeGoogleMetrics(result.results?.[0]?.metrics);
+ return {metrics:normalizeGoogleMetrics(result.results?.[0]?.metrics),topAds:[] as MarketingTopAd[]};
 }
 
 function syncPeriod(body:Record<string,unknown>){
@@ -231,8 +243,8 @@ export function marketingOAuthRouter(){
   if(!primaryId||!resourceId)throw new HttpError(400,'Selecione a estrutura e a conta de anúncios.');
   if(provider==='meta_ads'&&connection.provider!=='meta')throw new HttpError(400,'A conexão selecionada não pertence à Meta.');
   if(provider==='google_ads'&&connection.provider!=='google')throw new HttpError(400,'A conexão selecionada não pertence ao Google.');
-  const metrics=provider==='meta_ads'?await syncMetaAds(connection,resourceId,period.from,period.to):await syncGoogleAds(connection,primaryId,resourceId,period.from,period.to);
-  response.json({provider,period,metrics,syncedAt:new Date().toISOString()});
+  const result=provider==='meta_ads'?await syncMetaAds(connection,resourceId,period.from,period.to):await syncGoogleAds(connection,primaryId,resourceId,period.from,period.to);
+  response.json({provider,period,...result,syncedAt:new Date().toISOString()});
  }));
  return router;
 }

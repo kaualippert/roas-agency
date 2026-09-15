@@ -310,6 +310,14 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await expect(page.locator('.headTitle h1')).toHaveText('Marketing');
  await expect(page.getByLabel('Cliente do dashboard')).toHaveValue('client-1');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('4x');
+ await expect(page.getByRole('heading',{name:'Melhores anúncios'})).toBeVisible();
+ await expect(page.getByText('Criativo campeão')).toBeVisible();
+ await page.getByLabel('Período do dashboard de marketing').selectOption('last_7');
+ const periodRequest=page.waitForRequest(request=>request.method()==='POST'&&request.url().includes('/api/marketing/sync/meta_ads'));
+ await page.getByRole('button',{name:'Aplicar'}).click();
+ const requested=await periodRequest,input=requested.postDataJSON() as {from:string;to:string};
+ expect((new Date(`${input.to}T12:00:00`).getTime()-new Date(`${input.from}T12:00:00`).getTime())/86_400_000).toBe(6);
+ await expect(page.getByText('Criativo campeão')).toBeVisible();
  await page.getByRole('button',{name:'Personalizar métricas'}).click();
  const metricsDialog=page.getByRole('dialog',{name:'Personalizar métricas'});
  await expect(metricsDialog.getByText('Resultados',{exact:true})).toBeVisible();
