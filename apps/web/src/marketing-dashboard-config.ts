@@ -2,10 +2,13 @@ import type {MarketingMetrics} from './marketing-metrics';
 
 export type MarketingMetricKey=keyof MarketingMetrics|'ctr'|'uniqueCtr'|'cpc'|'cpm'|'cpp'|'costPerConversion'|'costPerResult'|'costPerLead'|'costPerPurchase'|'costPerLinkClick'|'costPerOutboundClick'|'costPerLandingPageView'|'costPerMessagingConversation'|'costPerThruPlay'|'frequency';
 export type MarketingMetricCategory='Desempenho'|'Entrega'|'Cliques e tráfego'|'Engajamento'|'Vídeo'|'Leads e conversões';
+export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table';
+export interface MarketingDashboardWidget{id:string;title:string;type:MarketingWidgetType;metricIds:MarketingMetricKey[]}
 
 export interface MarketingDashboardPreference{
  clientId:string;
  metricIds:MarketingMetricKey[];
+ widgets:MarketingDashboardWidget[];
  updatedAt:string;
 }
 
@@ -78,7 +81,19 @@ export function normalizeMarketingDashboardPreferences(value:unknown):MarketingD
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardPreference>;
   if(!item.clientId)return [];
-  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),updatedAt:String(item.updatedAt||'')}];
+  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),updatedAt:String(item.updatedAt||'')}];
+ });
+}
+
+export function normalizeMarketingDashboardWidgets(value:unknown):MarketingDashboardWidget[]{
+ if(!Array.isArray(value))return [];
+ const types=new Set<MarketingWidgetType>(['bar','horizontal_bar','pie','table']);
+ return value.flatMap((raw,index)=>{
+  if(!raw||typeof raw!=='object')return [];
+  const item=raw as Partial<MarketingDashboardWidget>,type=types.has(item.type as MarketingWidgetType)?item.type as MarketingWidgetType:'bar';
+  const selected=Array.isArray(item.metricIds)?[...new Set(item.metricIds.filter((id):id is MarketingMetricKey=>metricIds.has(id as MarketingMetricKey)))].slice(0,6):[];
+  if(!selected.length)return [];
+  return [{id:String(item.id||`widget-${index}`),title:String(item.title||'Visualização personalizada').trim().slice(0,80)||'Visualização personalizada',type,metricIds:selected}];
  });
 }
 

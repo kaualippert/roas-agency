@@ -318,6 +318,14 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  const requested=await periodRequest,input=requested.postDataJSON() as {from:string;to:string};
  expect((new Date(`${input.to}T12:00:00`).getTime()-new Date(`${input.from}T12:00:00`).getTime())/86_400_000).toBe(6);
  await expect(page.getByText('Criativo campeão')).toBeVisible();
+ await page.getByRole('button',{name:'Adicionar gráfico'}).click();
+ const widgetDialog=page.getByRole('dialog',{name:'Adicionar gráfico'});
+ await widgetDialog.getByLabel('Título').fill('Visão de investimento e resultados');
+ await widgetDialog.getByText('Pizza',{exact:true}).click();
+ const widgetSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_dashboard_preferences'));
+ await widgetDialog.getByRole('button',{name:'Salvar visualização'}).click();
+ await widgetSaved;
+ await expect(page.getByRole('heading',{name:'Visão de investimento e resultados'})).toBeVisible();
  await page.getByRole('button',{name:'Personalizar métricas'}).click();
  const metricsDialog=page.getByRole('dialog',{name:'Personalizar métricas'});
  await expect(metricsDialog.getByText('Resultados',{exact:true})).toBeVisible();
@@ -335,6 +343,7 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('Resultados');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('R$ 51,44');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('CPC (todos)');
+ await expect(page.getByRole('heading',{name:'Visão de investimento e resultados'})).toBeVisible();
  await page.getByRole('link',{name:'Criar relatório deste cliente'}).click();
  const reportDialog=page.locator('.marketingReportModal');
  await expect(reportDialog.getByLabel('Cliente integrado')).toHaveValue('client-1');

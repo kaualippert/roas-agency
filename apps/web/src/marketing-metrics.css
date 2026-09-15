@@ -40,3 +40,68 @@
 .marketingMetricEmpty{padding:34px;text-align:center;color:var(--muted);font-size:10px}
 @media(max-width:800px){.marketingMetricChoices>section>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.marketingMetricTools{grid-template-columns:1fr auto}.marketingMetricTools>label{grid-column:1/-1}.marketingMetricTools>button{grid-column:1/-1}.marketingMetricChoices>section>div{grid-template-columns:1fr}}
+
+.marketingCustomVisuals{margin-top:18px}
+.marketingCustomVisualsHead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:11px}
+.marketingCustomVisualsHead small{color:var(--purple);font-size:8px;font-weight:800;letter-spacing:.08em}
+.marketingCustomVisualsHead h3{margin:4px 0;font-size:16px}
+.marketingCustomVisualsHead p{margin:0;color:var(--muted);font-size:9px}
+.marketingCustomVisualsHead .btn{min-height:36px;padding:8px 13px}
+.marketingWidgetGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.marketingWidget{min-width:0;overflow:hidden}
+.marketingWidget>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.marketingWidget h4{margin:0;font-size:12px}
+.marketingWidget header small{display:block;margin-top:3px;color:var(--muted);font-size:8px}
+.marketingWidget header>span{display:flex;gap:4px}
+.marketingWidget header button{width:29px;height:29px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted)}
+.marketingWidget header button:hover{border-color:var(--border);background:var(--soft);color:var(--purple)}
+.marketingWidget header button svg{width:13px}
+.marketingWidgetBody{min-height:270px;padding:10px 13px}
+.marketingWidgetBody .recharts-cartesian-axis-tick-value{fill:var(--muted)}
+.marketingWidgetPie>div:last-child{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:0 6px 8px}
+.marketingWidgetPie>div:last-child>span{display:grid;grid-template-columns:7px minmax(0,1fr) auto;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;background:var(--soft)}
+.marketingWidgetPie i{width:7px;height:7px;border-radius:50%}
+.marketingWidgetPie small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:8px}
+.marketingWidgetPie b{font-size:8px}
+.marketingWidgetTable{padding:5px 2px}
+.marketingWidgetTable>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 9px;border-bottom:1px solid var(--border)}
+.marketingWidgetTable span{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:9px}
+.marketingWidgetTable i{width:7px;height:7px;border-radius:50%}
+.marketingWidgetTable strong{font-size:10px}
+.marketingWidgetNoData{min-height:240px;display:grid;place-items:center;align-content:center;gap:8px;text-align:center;color:var(--muted);font-size:9px}
+.marketingWidgetNoData svg{width:25px;color:var(--purple)}
+.marketingWidgetEmpty{width:100%;min-height:150px;display:grid;place-items:center;align-content:center;gap:5px;border:1px dashed var(--border);border-radius:12px;background:color-mix(in srgb,var(--purple) 2%,var(--card));color:var(--muted)}
+.marketingWidgetEmpty>span{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:color-mix(in srgb,var(--purple) 10%,var(--card));color:var(--purple)}
+.marketingWidgetEmpty svg{width:18px}
+.marketingWidgetEmpty b{margin-top:3px;color:var(--text);font-size:11px}
+.marketingWidgetEmpty small{font-size:9px}
+.marketingWidgetModal{width:min(850px,calc(100vw - 24px))}
+.marketingWidgetModal>form{display:grid;gap:15px;padding:18px 22px 21px}
+.marketingWidgetTitle{display:grid;gap:6px;font-size:10px;font-weight:700}
+.marketingWidgetTitle input{height:40px;padding:0 11px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text)}
+.marketingWidgetTypes{margin:0;padding:0;border:0}
+.marketingWidgetTypes legend{margin-bottom:7px;font-size:10px;font-weight:700}
+.marketingWidgetTypes>div{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.marketingWidgetTypes label{position:relative;display:grid;grid-template-columns:28px 1fr;column-gap:8px;padding:10px;border:1px solid var(--border);border-radius:9px;background:var(--soft);cursor:pointer}
+.marketingWidgetTypes label.selected{border-color:#8b73f5;background:color-mix(in srgb,var(--purple) 8%,var(--card))}
+.marketingWidgetTypes input{position:absolute;opacity:0}
+.marketingWidgetTypes label>span{grid-row:1/3;width:28px;height:28px;display:grid;place-items:center;border-radius:7px;background:var(--card);color:var(--purple)}
+.marketingWidgetTypes svg{width:15px}
+.marketingPieIcon{width:15px!important;height:15px!important;border-radius:50%!important;background:conic-gradient(var(--purple) 0 32%,#37a1f3 32% 66%,#18ad74 66%)!important}
+.marketingWidgetTypes b{font-size:9px}
+.marketingWidgetTypes small{margin-top:3px;color:var(--muted);font-size:7px;line-height:1.3}
+.marketingWidgetMetricHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.marketingWidgetMetricHead>div b,.marketingWidgetMetricHead>div small{display:block}
+.marketingWidgetMetricHead>div b{font-size:10px}.marketingWidgetMetricHead>div small{margin-top:3px;color:var(--muted);font-size:8px}
+.marketingWidgetMetricHead>label{height:36px;display:flex;align-items:center;gap:7px;padding:0 10px;border:1px solid var(--border);border-radius:8px}
+.marketingWidgetMetricHead svg{width:13px;color:var(--muted)}
+.marketingWidgetMetricHead input{border:0;outline:0;background:transparent;color:var(--text);font-size:9px}
+.marketingWidgetMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:260px;overflow:auto;padding-right:3px}
+.marketingWidgetMetrics label{display:flex;align-items:center;gap:7px;min-width:0;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--soft);cursor:pointer}
+.marketingWidgetMetrics label.selected{border-color:#8b73f5;background:color-mix(in srgb,var(--purple) 8%,var(--card))}
+.marketingWidgetMetrics input{accent-color:var(--purple)}
+.marketingWidgetMetrics span{min-width:0}.marketingWidgetMetrics b,.marketingWidgetMetrics small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.marketingWidgetMetrics b{font-size:8px}.marketingWidgetMetrics small{margin-top:2px;color:var(--muted);font-size:7px}
+@media(max-width:850px){.marketingWidgetGrid{grid-template-columns:1fr}.marketingWidgetTypes>div{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.marketingCustomVisualsHead{align-items:stretch;flex-direction:column}.marketingCustomVisualsHead .btn{width:100%}.marketingWidgetTypes>div,.marketingWidgetMetrics{grid-template-columns:1fr 1fr}.marketingWidgetMetricHead{align-items:stretch;flex-direction:column}.marketingWidgetMetricHead>label{width:100%}.marketingWidgetMetricHead input{width:100%}.marketingWidgetPie>div:last-child{grid-template-columns:1fr}}
+@media(max-width:420px){.marketingWidgetTypes>div,.marketingWidgetMetrics{grid-template-columns:1fr}.marketingWidgetModal>form{padding:15px}}
