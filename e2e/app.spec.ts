@@ -64,8 +64,9 @@ test('mantém os últimos filtros ao navegar entre as páginas',async({page})=>{
 
 test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
  await page.goto('/crm');
- await page.getByRole('button',{name:'Cards compactos'}).click();
+ await page.getByRole('button',{name:'Compactar cards'}).click();
  await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
+ await expect(page.getByRole('button',{name:'Expandir cards'})).toBeVisible();
  await page.goto('/tasks');
  await page.getByRole('button',{name:'Minimizar cards'}).click();
  await expect(page.locator('.enhancedTaskCard').first()).toHaveClass(/compact/);
@@ -311,10 +312,16 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('4x');
  await page.getByRole('button',{name:'Personalizar métricas'}).click();
  const metricsDialog=page.getByRole('dialog',{name:'Personalizar métricas'});
+ await expect(metricsDialog.getByText('Resultados',{exact:true})).toBeVisible();
+ await expect(metricsDialog.getByText('Custo por resultado',{exact:true})).toBeVisible();
+ await metricsDialog.getByText('Resultados',{exact:true}).click();
+ await metricsDialog.getByText('Custo por resultado',{exact:true}).click();
  await metricsDialog.getByText('CPC médio').click();
  const preferenceSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_dashboard_preferences'));
  await metricsDialog.getByRole('button',{name:'Salvar dashboard'}).click();
  await preferenceSaved;
+ await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('Resultados');
+ await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('R$ 51,44');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('CPC médio');
  await page.getByRole('link',{name:'Criar relatório deste cliente'}).click();
  const reportDialog=page.locator('.marketingReportModal');

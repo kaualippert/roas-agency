@@ -2,11 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {aggregateMarketingMetrics,currentMonthPeriod,isMarketingSyncDue,normalizeMarketingMetricsSnapshots,upsertMarketingMetricsSnapshot,type MarketingMetricsSnapshot} from '../apps/web/src/marketing-metrics';
 
-const snapshot=(id:string,spend:number,conversionValue:number):MarketingMetricsSnapshot=>({id,integrationId:id,clientId:'client-1',provider:id==='meta'?'meta_ads':'google_ads',periodFrom:'2026-09-01',periodTo:'2026-09-14',syncedAt:'2026-09-14T12:00:00.000Z',impressions:1000,reach:500,clicks:100,conversions:10,spend,conversionValue,roas:spend?conversionValue/spend:0});
+const snapshot=(id:string,spend:number,conversionValue:number):MarketingMetricsSnapshot=>({id,integrationId:id,clientId:'client-1',provider:id==='meta'?'meta_ads':'google_ads',periodFrom:'2026-09-01',periodTo:'2026-09-14',syncedAt:'2026-09-14T12:00:00.000Z',impressions:1000,reach:500,clicks:100,conversions:10,results:10,leads:4,purchases:6,messagingConversations:3,linkClicks:80,landingPageViews:60,postEngagements:120,videoViews:300,spend,conversionValue,roas:spend?conversionValue/spend:0});
 
 test('mantém somente o snapshot mais recente de cada integração',()=>{
  const original=snapshot('meta',100,300),updated={...original,spend:200,conversionValue:800,roas:4};
  assert.deepEqual(upsertMarketingMetricsSnapshot([original,snapshot('google',300,600)],updated).map(item=>[item.id,item.spend]),[['meta',200],['google',300]]);
+});
+
+test('mantém compatibilidade com snapshots anteriores às novas métricas da Meta',()=>{
+ const [normalized]=normalizeMarketingMetricsSnapshots([{id:'legacy',integrationId:'meta',clientId:'client-1',provider:'meta_ads',conversions:7,spend:350}]);
+ assert.equal(normalized.results,7);
+ assert.equal(normalized.leads,0);
+ assert.equal(normalized.messagingConversations,0);
 });
 
 test('consolida as plataformas e recalcula o ROAS ponderado',()=>{

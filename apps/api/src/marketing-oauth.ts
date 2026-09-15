@@ -15,7 +15,7 @@ type ConnectionDocument={
 };
 type OAuthState={provider:OAuthProvider;uid:string;returnTo:string;nonce:string;expiresAt:number};
 type Resource={id:string;name:string;kind?:string;metadata?:Record<string,unknown>};
-export type MarketingMetrics={impressions:number;reach:number;clicks:number;conversions:number;spend:number;conversionValue:number;roas:number};
+export type MarketingMetrics={impressions:number;reach:number;clicks:number;conversions:number;results:number;leads:number;purchases:number;messagingConversations:number;linkClicks:number;landingPageViews:number;postEngagements:number;videoViews:number;spend:number;conversionValue:number;roas:number};
 
 const collectionName='marketing_oauth_connections';
 const googleScopes=['openid','email','profile','https://www.googleapis.com/auth/adwords','https://www.googleapis.com/auth/analytics.readonly','https://www.googleapis.com/auth/business.manage'];
@@ -149,12 +149,13 @@ const actionValue=(entries:Array<{action_type?:string;value?:string}>|undefined,
  return 0;
 };
 export function normalizeMetaMetrics(row:{impressions?:string;reach?:string;clicks?:string;spend?:string;actions?:Array<{action_type?:string;value?:string}>;action_values?:Array<{action_type?:string;value?:string}>;purchase_roas?:Array<{value?:string}>}={}):MarketingMetrics{
- const spend=numeric(row.spend),conversions=actionValue(row.actions,['offsite_conversion.fb_pixel_purchase','purchase','lead','offsite_conversion.fb_pixel_lead']),conversionValue=actionValue(row.action_values,['offsite_conversion.fb_pixel_purchase','purchase']);
- return {impressions:numeric(row.impressions),reach:numeric(row.reach),clicks:numeric(row.clicks),conversions,spend,conversionValue,roas:numeric(row.purchase_roas?.[0]?.value)||(spend?conversionValue/spend:0)};
+ const spend=numeric(row.spend),purchases=actionValue(row.actions,['offsite_conversion.fb_pixel_purchase','purchase']),leads=actionValue(row.actions,['lead','offsite_conversion.fb_pixel_lead']),messagingConversations=actionValue(row.actions,['onsite_conversion.messaging_conversation_started_7d','onsite_conversion.messaging_first_reply']),landingPageViews=actionValue(row.actions,['landing_page_view']),results=purchases||leads||messagingConversations||landingPageViews,conversionValue=actionValue(row.action_values,['offsite_conversion.fb_pixel_purchase','purchase']);
+ return {impressions:numeric(row.impressions),reach:numeric(row.reach),clicks:numeric(row.clicks),conversions:results,results,leads,purchases,messagingConversations,linkClicks:actionValue(row.actions,['link_click']),landingPageViews,postEngagements:actionValue(row.actions,['post_engagement']),videoViews:actionValue(row.actions,['video_view']),spend,conversionValue,roas:numeric(row.purchase_roas?.[0]?.value)||(spend?conversionValue/spend:0)};
 }
 export function normalizeGoogleMetrics(row:{impressions?:string;clicks?:string;conversions?:number;costMicros?:string;conversionsValue?:number}={}):MarketingMetrics{
  const spend=numeric(row.costMicros)/1_000_000,conversionValue=numeric(row.conversionsValue);
- return {impressions:numeric(row.impressions),reach:0,clicks:numeric(row.clicks),conversions:numeric(row.conversions),spend,conversionValue,roas:spend?conversionValue/spend:0};
+ const conversions=numeric(row.conversions);
+ return {impressions:numeric(row.impressions),reach:0,clicks:numeric(row.clicks),conversions,results:conversions,leads:0,purchases:0,messagingConversations:0,linkClicks:0,landingPageViews:0,postEngagements:0,videoViews:0,spend,conversionValue,roas:spend?conversionValue/spend:0};
 }
 
 async function syncMetaAds(connection:ConnectionDocument,resourceId:string,from:string,to:string){

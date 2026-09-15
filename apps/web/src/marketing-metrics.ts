@@ -5,6 +5,14 @@ export interface MarketingMetrics{
  reach:number;
  clicks:number;
  conversions:number;
+ results:number;
+ leads:number;
+ purchases:number;
+ messagingConversations:number;
+ linkClicks:number;
+ landingPageViews:number;
+ postEngagements:number;
+ videoViews:number;
  spend:number;
  conversionValue:number;
  roas:number;
@@ -20,7 +28,7 @@ export interface MarketingMetricsSnapshot extends MarketingMetrics{
  syncedAt:string;
 }
 
-export const emptyMarketingMetrics:MarketingMetrics={impressions:0,reach:0,clicks:0,conversions:0,spend:0,conversionValue:0,roas:0};
+export const emptyMarketingMetrics:MarketingMetrics={impressions:0,reach:0,clicks:0,conversions:0,results:0,leads:0,purchases:0,messagingConversations:0,linkClicks:0,landingPageViews:0,postEngagements:0,videoViews:0,spend:0,conversionValue:0,roas:0};
 
 const number=(value:unknown)=>Math.max(0,Number(value)||0);
 
@@ -30,7 +38,8 @@ export function normalizeMarketingMetricsSnapshots(value:unknown):MarketingMetri
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingMetricsSnapshot>;
   if(!item.integrationId||!item.clientId||!['meta_ads','google_ads'].includes(String(item.provider)))return [];
-  return [{id:String(item.id||item.integrationId),integrationId:String(item.integrationId),clientId:String(item.clientId),provider:item.provider as MarketingMetricsSnapshot['provider'],periodFrom:String(item.periodFrom||''),periodTo:String(item.periodTo||''),syncedAt:String(item.syncedAt||''),impressions:number(item.impressions),reach:number(item.reach),clicks:number(item.clicks),conversions:number(item.conversions),spend:number(item.spend),conversionValue:number(item.conversionValue),roas:number(item.roas)}];
+  const conversions=number(item.conversions),results=number(item.results)||conversions;
+  return [{id:String(item.id||item.integrationId),integrationId:String(item.integrationId),clientId:String(item.clientId),provider:item.provider as MarketingMetricsSnapshot['provider'],periodFrom:String(item.periodFrom||''),periodTo:String(item.periodTo||''),syncedAt:String(item.syncedAt||''),impressions:number(item.impressions),reach:number(item.reach),clicks:number(item.clicks),conversions,results,leads:number(item.leads),purchases:number(item.purchases),messagingConversations:number(item.messagingConversations),linkClicks:number(item.linkClicks),landingPageViews:number(item.landingPageViews),postEngagements:number(item.postEngagements),videoViews:number(item.videoViews),spend:number(item.spend),conversionValue:number(item.conversionValue),roas:number(item.roas)}];
  });
 }
 
@@ -39,7 +48,7 @@ export function upsertMarketingMetricsSnapshot(items:MarketingMetricsSnapshot[],
 }
 
 export function aggregateMarketingMetrics(items:MarketingMetricsSnapshot[]):MarketingMetrics{
- const total=items.reduce((sum,item)=>({impressions:sum.impressions+item.impressions,reach:sum.reach+item.reach,clicks:sum.clicks+item.clicks,conversions:sum.conversions+item.conversions,spend:sum.spend+item.spend,conversionValue:sum.conversionValue+item.conversionValue,roas:0}),{...emptyMarketingMetrics});
+ const total=items.reduce((sum,item)=>({impressions:sum.impressions+item.impressions,reach:sum.reach+item.reach,clicks:sum.clicks+item.clicks,conversions:sum.conversions+item.conversions,results:sum.results+item.results,leads:sum.leads+item.leads,purchases:sum.purchases+item.purchases,messagingConversations:sum.messagingConversations+item.messagingConversations,linkClicks:sum.linkClicks+item.linkClicks,landingPageViews:sum.landingPageViews+item.landingPageViews,postEngagements:sum.postEngagements+item.postEngagements,videoViews:sum.videoViews+item.videoViews,spend:sum.spend+item.spend,conversionValue:sum.conversionValue+item.conversionValue,roas:0}),{...emptyMarketingMetrics});
  return {...total,roas:total.spend?total.conversionValue/total.spend:0};
 }
 

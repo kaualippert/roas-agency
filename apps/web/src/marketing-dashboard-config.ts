@@ -1,6 +1,6 @@
 import type {MarketingMetrics} from './marketing-metrics';
 
-export type MarketingMetricKey='spend'|'impressions'|'reach'|'clicks'|'conversions'|'conversionValue'|'roas'|'ctr'|'cpc'|'cpm'|'costPerConversion'|'frequency';
+export type MarketingMetricKey='spend'|'impressions'|'reach'|'clicks'|'conversions'|'results'|'leads'|'purchases'|'messagingConversations'|'linkClicks'|'landingPageViews'|'postEngagements'|'videoViews'|'conversionValue'|'roas'|'ctr'|'cpc'|'cpm'|'costPerConversion'|'costPerResult'|'frequency';
 
 export interface MarketingDashboardPreference{
  clientId:string;
@@ -14,6 +14,15 @@ export const marketingMetricCatalog:Array<{id:MarketingMetricKey;label:string;de
  {id:'reach',label:'Alcance',description:'Pessoas alcançadas',format:'integer'},
  {id:'clicks',label:'Cliques',description:'Cliques registrados nos anúncios',format:'integer'},
  {id:'conversions',label:'Conversões',description:'Resultados atribuídos às campanhas',format:'decimal'},
+ {id:'results',label:'Resultados',description:'Resultado principal atribuído pela Meta',format:'decimal'},
+ {id:'costPerResult',label:'Custo por resultado',description:'Investimento médio por resultado principal',format:'currency'},
+ {id:'leads',label:'Leads',description:'Leads atribuídos aos anúncios',format:'integer'},
+ {id:'purchases',label:'Compras',description:'Compras atribuídas aos anúncios',format:'integer'},
+ {id:'messagingConversations',label:'Conversas iniciadas',description:'Conversas iniciadas pelos anúncios da Meta',format:'integer'},
+ {id:'linkClicks',label:'Cliques no link',description:'Cliques que abriram um destino',format:'integer'},
+ {id:'landingPageViews',label:'Visualizações da página',description:'Carregamentos da página de destino',format:'integer'},
+ {id:'postEngagements',label:'Engajamentos',description:'Interações com publicações e anúncios',format:'integer'},
+ {id:'videoViews',label:'Visualizações de vídeo',description:'Reproduções atribuídas aos anúncios',format:'integer'},
  {id:'conversionValue',label:'Valor de conversão',description:'Receita atribuída às conversões',format:'currency'},
  {id:'roas',label:'ROAS',description:'Retorno sobre o investimento em anúncios',format:'ratio'},
  {id:'ctr',label:'CTR',description:'Percentual de cliques por impressão',format:'percent'},
@@ -48,6 +57,7 @@ export function metricValue(metrics:MarketingMetrics,id:MarketingMetricKey){
   case 'cpc':return metrics.clicks?metrics.spend/metrics.clicks:0;
   case 'cpm':return metrics.impressions?metrics.spend/metrics.impressions*1000:0;
   case 'costPerConversion':return metrics.conversions?metrics.spend/metrics.conversions:0;
+  case 'costPerResult':return metrics.results?metrics.spend/metrics.results:0;
   case 'frequency':return metrics.reach?metrics.impressions/metrics.reach:0;
   default:return metrics[id];
  }

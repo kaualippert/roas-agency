@@ -3,13 +3,14 @@ import test from 'node:test';
 import {defaultMarketingMetricIds,formatMarketingMetric,metricValue,normalizeMarketingDashboardPreferences,normalizeMarketingMetricIds} from '../apps/web/src/marketing-dashboard-config';
 import type {MarketingMetrics} from '../apps/web/src/marketing-metrics';
 
-const metrics:MarketingMetrics={impressions:10000,reach:5000,clicks:200,conversions:10,spend:1000,conversionValue:4000,roas:4};
+const metrics:MarketingMetrics={impressions:10000,reach:5000,clicks:200,conversions:10,results:10,leads:8,purchases:2,messagingConversations:5,linkClicks:170,landingPageViews:120,postEngagements:350,videoViews:600,spend:1000,conversionValue:4000,roas:4};
 
 test('calcula métricas derivadas usando os dados sincronizados',()=>{
  assert.equal(metricValue(metrics,'ctr'),2);
  assert.equal(metricValue(metrics,'cpc'),5);
  assert.equal(metricValue(metrics,'cpm'),100);
  assert.equal(metricValue(metrics,'costPerConversion'),100);
+ assert.equal(metricValue(metrics,'costPerResult'),100);
  assert.equal(metricValue(metrics,'frequency'),2);
  assert.equal(formatMarketingMetric('roas',4),'4x');
 });

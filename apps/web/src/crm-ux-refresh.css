@@ -123,3 +123,30 @@ html[data-theme-variant="all-black"] .crmPageBoard .crmColumn,html[data-theme-va
  .crmFilteredEmpty>div{width:100%;flex-direction:column}
  .crmFilteredEmpty .btn{width:100%}
 }
+
+/* Cards menores e com leitura mais direta: identidade, valor e ação em poucos blocos. */
+.crmPageBoard .leadCard{padding:9px;border-radius:10px}
+.crmPageBoard .leadTop{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:start;gap:8px}
+.crmPageBoard .leadTop>i{width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:8px;font-size:8px}
+.crmPageBoard .leadIdentity{min-width:0}
+.crmPageBoard .leadIdentity h3{margin:0;font-size:11px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crmPageBoard .leadIdentity p{display:flex;align-items:center;gap:4px;min-width:0;margin:3px 0 0;color:var(--muted);font-size:8px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crmPageBoard .leadIdentity p svg{width:10px;height:10px;flex:none}
+.crmPageBoard .leadActions{display:flex;align-items:center;gap:2px;margin:-2px -2px 0 0}
+.crmPageBoard .leadActions>svg{width:12px;color:var(--muted);cursor:grab}
+.crmPageBoard .leadResponsible,.crmPageBoard .leadNoService{margin-top:6px;font-size:8px}
+.crmPageBoard .leadServices{margin-top:7px}
+.crmPageBoard .leadValue{align-items:center;margin:7px 0 6px;padding:6px 0}
+.crmPageBoard .leadCard footer{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}
+.crmPageBoard .leadCard footer>small{grid-template-columns:12px minmax(0,1fr);gap:4px;font-size:8px;line-height:1.3}
+.crmPageBoard .crmQuickMove{gap:3px;margin-top:7px;padding-top:6px}
+.crmPageBoard .crmQuickMove>span{font-size:8px}
+.crmPageBoard .crmQuickMove select{height:29px;font-size:9px}
+
+@media(max-width:700px){
+ .crmPageBoard .leadCard{padding:11px}
+ .crmPageBoard .leadTop{grid-template-columns:32px minmax(0,1fr) auto}
+ .crmPageBoard .leadTop>i{width:32px;height:32px}
+ .crmPageBoard .leadIdentity h3{font-size:13px}
+ .crmPageBoard .leadIdentity p,.crmPageBoard .crmQuickMove select{font-size:10px}
+}

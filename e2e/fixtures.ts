@@ -77,7 +77,7 @@ async function handleApi(route:Route,member:typeof admin,areas:AccessArea[],stat
  }
  if(request.method()==='POST'&&path.startsWith('/api/marketing/sync/')){
   const provider=path.endsWith('google_ads')?'google_ads':'meta_ads';
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({provider,period:{from:'2026-09-01',to:'2026-09-14'},metrics:{impressions:12500,reach:9000,clicks:480,conversions:24,spend:1234.5,conversionValue:4938,roas:4},syncedAt:'2026-09-14T12:00:00.000Z'})});return;
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({provider,period:{from:'2026-09-01',to:'2026-09-14'},metrics:{impressions:12500,reach:9000,clicks:480,conversions:24,results:24,leads:18,purchases:6,messagingConversations:9,linkClicks:410,landingPageViews:290,postEngagements:760,videoViews:1800,spend:1234.5,conversionValue:4938,roas:4},syncedAt:'2026-09-14T12:00:00.000Z'})});return;
  }
  if(request.method()==='GET'&&path==='/api/state'){
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({state})});

@@ -24,13 +24,20 @@ test('criptografa tokens OAuth com AES-GCM',()=>{
 });
 
 test('normaliza os indicadores retornados pela Meta Ads',()=>{
- const metrics=normalizeMetaMetrics({impressions:'12000',reach:'9000',clicks:'360',spend:'1250.50',actions:[{action_type:'lead',value:'18'}],action_values:[{action_type:'purchase',value:'5000'}],purchase_roas:[{value:'4'}]});
- assert.deepEqual(metrics,{impressions:12000,reach:9000,clicks:360,conversions:18,spend:1250.5,conversionValue:5000,roas:4});
+ const metrics=normalizeMetaMetrics({impressions:'12000',reach:'9000',clicks:'360',spend:'1250.50',actions:[{action_type:'lead',value:'18'},{action_type:'link_click',value:'280'},{action_type:'landing_page_view',value:'190'},{action_type:'post_engagement',value:'640'},{action_type:'video_view',value:'420'}],action_values:[{action_type:'purchase',value:'5000'}],purchase_roas:[{value:'4'}]});
+ assert.deepEqual(metrics,{impressions:12000,reach:9000,clicks:360,conversions:18,results:18,leads:18,purchases:0,messagingConversations:0,linkClicks:280,landingPageViews:190,postEngagements:640,videoViews:420,spend:1250.5,conversionValue:5000,roas:4});
+});
+
+test('usa conversas como resultado principal quando a campanha não possui compras ou leads',()=>{
+ const metrics=normalizeMetaMetrics({spend:'300',actions:[{action_type:'onsite_conversion.messaging_conversation_started_7d',value:'12'},{action_type:'landing_page_view',value:'90'}]});
+ assert.equal(metrics.messagingConversations,12);
+ assert.equal(metrics.results,12);
+ assert.equal(metrics.conversions,12);
 });
 
 test('converte micros e calcula ROAS do Google Ads',()=>{
  const metrics=normalizeGoogleMetrics({impressions:'8000',clicks:'240',conversions:12.5,costMicros:'2000000000',conversionsValue:7000});
- assert.deepEqual(metrics,{impressions:8000,reach:0,clicks:240,conversions:12.5,spend:2000,conversionValue:7000,roas:3.5});
+ assert.deepEqual(metrics,{impressions:8000,reach:0,clicks:240,conversions:12.5,results:12.5,leads:0,purchases:0,messagingConversations:0,linkClicks:0,landingPageViews:0,postEngagements:0,videoViews:0,spend:2000,conversionValue:7000,roas:3.5});
 });
 
 test('aceita Google Ads sem developer token e normaliza o login customer ID',()=>{
