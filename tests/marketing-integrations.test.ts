@@ -33,11 +33,12 @@ test('impede a mesma conta externa de ser vinculada a clientes diferentes',()=>{
 });
 
 test('registra sincronização sem recriar o vínculo',()=>{
- const synced=markMarketingIntegrationSynced([integration({status:'error'})],'link-1','2026-08-15T12:00:00.000Z');
+ const synced=markMarketingIntegrationSynced([integration({status:'error',syncError:'Limite temporário'})],'link-1','2026-08-15T12:00:00.000Z');
  assert.equal(synced[0].id,'link-1');
  assert.equal(synced[0].status,'connected');
  assert.equal(synced[0].lastSync,'2026-08-15T12:00:00.000Z');
  assert.equal(synced[0].updatedAt,'2026-08-15T12:00:00.000Z');
+ assert.equal(synced[0].syncError,undefined);
 });
 
 test('identifica apenas cadastros manuais que possuem uma conta aproveitável',()=>{

@@ -9,8 +9,8 @@ test('assina e valida o estado OAuth sem expor os dados',()=>{
   const token=signOAuthState({provider:'google',uid:'user-1',returnTo:'/marketing/integrations',nonce:'nonce-1',expiresAt:Date.now()+60_000});
   assert.equal(token.includes('user-1'),false);
   assert.equal(verifyOAuthState(token).uid,'user-1');
-  const replacement=token.endsWith('x')?'y':'x';
-  assert.throws(()=>verifyOAuthState(`${token.slice(0,-1)}${replacement}`),/inválido/);
+  const [payload,signature]=token.split('.'),replacement=signature.startsWith('A')?'B':'A';
+  assert.throws(()=>verifyOAuthState(`${payload}.${replacement}${signature.slice(1)}`),/inválido/);
  }finally{config.oauthStateSecret=previous}
 });
 

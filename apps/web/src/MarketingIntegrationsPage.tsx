@@ -44,9 +44,10 @@ export default function MarketingIntegrationsPage(){
      const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,topAds:result.topAds||[],performanceRows:result.performanceRows||[],...result.metrics};
      nextMetrics=upsertMarketingMetricsSnapshot(nextMetrics,snapshot);
      nextIntegrations=markMarketingIntegrationSynced(nextIntegrations,integration.id,result.syncedAt);successes++;
-    }catch{
+    }catch(error){
      const failedAt=new Date().toISOString();
-     nextIntegrations=nextIntegrations.map(item=>item.id===integration.id?{...item,status:'error' as const,updatedAt:failedAt}:item);failures++;
+     const message=error instanceof Error?error.message:'Não foi possível sincronizar a conta.';
+     nextIntegrations=nextIntegrations.map(item=>item.id===integration.id?{...item,status:'error' as const,syncError:message,updatedAt:failedAt}:item);failures++;
     }
    }
    if(cancelled)return;
@@ -89,8 +90,9 @@ export default function MarketingIntegrationsPage(){
    setIntegrations(markMarketingIntegrationSynced(integrations,integration.id,result.syncedAt));
    setToast(`${providerById(integration.provider).name} sincronizado com dados reais.`);
   }catch(error){
-   setIntegrations(integrations.map(item=>item.id===integration.id?{...item,status:'error' as const,updatedAt:new Date().toISOString()}:item));
-   setToast(error instanceof Error?error.message:'Não foi possível sincronizar a conta.');
+   const message=error instanceof Error?error.message:'Não foi possível sincronizar a conta.';
+   setIntegrations(integrations.map(item=>item.id===integration.id?{...item,status:'error' as const,syncError:message,updatedAt:new Date().toISOString()}:item));
+   setToast(message);
   }finally{setSyncingId('')}
  };
  const migrate=(event:React.FormEvent<HTMLFormElement>)=>{
@@ -125,7 +127,7 @@ export default function MarketingIntegrationsPage(){
    <section className="integrationGrid brandIntegrationGrid">
     {adProviders.map(provider=>{const integration=selectedIntegrations.find(item=>item.provider===provider.id),connected=integration?.status==='connected';return <article className={`card integrationCard ${connected?'isConnected':''}`} key={provider.id}>
      <div className="integrationCardHead"><div className={`providerLogo ${provider.id}`}>{provider.mark}</div><div><h3>{provider.name}</h3><p>{provider.description}</p></div><Badge tone={connected?'green':'orange'}>{connected?'Vinculado':integration?'Falha na sincronização':'Não configurado'}</Badge></div>
-     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div><div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div></>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
+     {integration?<><div className="brandAccountSummary"><div><small>{provider.primaryLabel}</small><b>{integration.primaryName}</b><span>{integration.primaryId}</span></div><div><small>{provider.resourceLabel}</small><b>{integration.resourceName}</b><span>{integration.resourceId}</span></div></div>{integration.status==='error'?<div className="brandSyncError" role="alert"><AlertTriangle/><span>{integration.syncError||'A sincronização falhou. Tente novamente para obter os detalhes.'}</span></div>:<div className="brandSyncStatus"><Check/><span>Última sincronização: {dateTime(integration.lastSync)}</span></div>}</>:<div className="integrationEmpty"><ShieldCheck/><div><b>Pronta para configurar</b><span>Selecione a estrutura e a conta específicas desta marca.</span></div></div>}
      <footer>{integration?<><button className="integrationTextButton danger" onClick={()=>disconnect(integration)}><Unplug/> Remover vínculo</button><div><button className="integrationIconButton" title="Editar integração" onClick={()=>setEditing({provider:provider.id,integration})}><Settings2/></button><Button secondary disabled={syncingId===integration.id} onClick={()=>void sync(integration)}>{syncingId===integration.id?<LoaderCircle className="spin"/>:<RefreshCw/>} {syncingId===integration.id?'Sincronizando':'Sincronizar agora'}</Button></div></>:<Button onClick={()=>setEditing({provider:provider.id})}><PlugZap/> Configurar {provider.short}</Button>}</footer>
     </article>})}
    </section>

@@ -177,8 +177,8 @@ async function syncMetaAds(connection:ConnectionDocument,resourceId:string,from:
  const metricFields='impressions,reach,clicks,unique_clicks,outbound_clicks,spend,actions,action_values,video_play_actions,video_thruplay_watched_actions,video_p25_watched_actions,video_p50_watched_actions,video_p75_watched_actions,video_p95_watched_actions,video_p100_watched_actions,purchase_roas';
  const accountParams=new URLSearchParams({fields:metricFields,level:'account',time_range:timeRange,limit:'1'});
  const breakdownRequest=(level:MarketingPerformanceLevel,identityFields:string)=>{const params=new URLSearchParams({fields:`${identityFields},${metricFields}`,level,time_range:timeRange,sort:'spend_descending',limit:'100'});return requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${params}`,{headers}).catch(()=>({data:[]}))};
- const [accountResult,campaignResult,adSetResult,adsResult]=await Promise.all([
-  requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${accountParams}`,{headers}),
+ const accountResult=await requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${accountParams}`,{headers});
+ const [campaignResult,adSetResult,adsResult]=await Promise.all([
   breakdownRequest('campaign','campaign_id,campaign_name'),
   breakdownRequest('adset','adset_id,adset_name,campaign_id,campaign_name'),
   breakdownRequest('ad','ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name'),

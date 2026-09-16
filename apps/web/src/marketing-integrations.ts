@@ -16,6 +16,7 @@ export interface ClientMarketingIntegration{
  autoSync:boolean;
  connectedAt:string;
  lastSync?:string;
+ syncError?:string;
  createdAt:string;
  updatedAt:string;
 }
@@ -59,7 +60,7 @@ export function normalizeClientMarketingIntegrations(value:unknown):ClientMarket
    schemaVersion:1,id:text(item.id)||key,clientId,provider,agencyConnectionId:text(item.agencyConnectionId)||undefined,legacySourceId:text(item.legacySourceId)||undefined,
    status:item.status==='error'?'error':'connected',primaryName:text(item.primaryName),primaryId:text(item.primaryId),
    resourceName:text(item.resourceName),resourceId:text(item.resourceId),accessEmail:text(item.accessEmail),
-   autoSync:item.autoSync!==false,connectedAt,lastSync:text(item.lastSync)||undefined,
+   autoSync:item.autoSync!==false,connectedAt,lastSync:text(item.lastSync)||undefined,syncError:text(item.syncError)||undefined,
    createdAt:text(item.createdAt)||connectedAt,updatedAt:text(item.updatedAt)||text(item.lastSync)||connectedAt,
   });
   seen.add(key);
@@ -82,7 +83,7 @@ export function findMarketingResourceConflict(items:ClientMarketingIntegration[]
 }
 
 export function markMarketingIntegrationSynced(items:ClientMarketingIntegration[],id:string,at=new Date().toISOString()){
- return items.map(item=>item.id===id?{...item,status:'connected' as const,lastSync:at,updatedAt:at}:item);
+ return items.map(item=>item.id===id?{...item,status:'connected' as const,lastSync:at,syncError:undefined,updatedAt:at}:item);
 }
 
 export function migratableLegacyMarketingIntegrations(value:unknown):LegacyMarketingIntegration[]{
