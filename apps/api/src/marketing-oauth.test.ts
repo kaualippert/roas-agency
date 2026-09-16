@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {config} from './config.js';
-import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,normalizeMetaTopAd,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
+import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,normalizeMetaPerformanceRow,normalizeMetaTopAd,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
 
 test('assina e valida o estado OAuth sem expor os dados',()=>{
  const previous=config.oauthStateSecret;config.oauthStateSecret='estado-oauth-de-teste-com-entropia';
@@ -38,6 +38,11 @@ test('usa conversas como resultado principal quando a campanha não possui compr
 test('normaliza o desempenho dos melhores anúncios da Meta',()=>{
  const ad=normalizeMetaTopAd({ad_id:'ad-1',ad_name:'Criativo campeão',campaign_name:'Captação',impressions:'10000',clicks:'250',spend:'600',actions:[{action_type:'lead',value:'20'}]});
  assert.deepEqual(ad,{id:'ad-1',name:'Criativo campeão',campaignName:'Captação',impressions:10000,clicks:250,results:20,spend:600,costPerResult:30,ctr:2.5});
+});
+
+test('normaliza campanhas, conjuntos e anúncios para a tabela detalhada',()=>{
+ const row=normalizeMetaPerformanceRow({campaign_id:'campaign-1',campaign_name:'Captação',adset_id:'set-1',adset_name:'Público semelhante',impressions:'4000',clicks:'120',spend:'300',actions:[{action_type:'lead',value:'15'}]},'adset');
+ assert.equal(row.id,'set-1');assert.equal(row.name,'Público semelhante');assert.equal(row.campaignName,'Captação');assert.equal(row.level,'adset');assert.equal(row.results,15);assert.equal(row.spend,300);
 });
 
 test('converte micros e calcula ROAS do Google Ads',()=>{

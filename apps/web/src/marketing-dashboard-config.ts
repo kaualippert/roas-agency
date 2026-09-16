@@ -1,14 +1,16 @@
-import type {MarketingMetrics} from './marketing-metrics';
+import type {MarketingMetrics,MarketingPerformanceLevel} from './marketing-metrics';
 
 export type MarketingMetricKey=keyof MarketingMetrics|'ctr'|'uniqueCtr'|'cpc'|'cpm'|'cpp'|'costPerConversion'|'costPerResult'|'costPerLead'|'costPerPurchase'|'costPerLinkClick'|'costPerOutboundClick'|'costPerLandingPageView'|'costPerMessagingConversation'|'costPerThruPlay'|'frequency';
 export type MarketingMetricCategory='Desempenho'|'Entrega'|'Cliques e tráfego'|'Engajamento'|'Vídeo'|'Leads e conversões';
-export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table';
+export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table'|'funnel';
 export interface MarketingDashboardWidget{id:string;title:string;type:MarketingWidgetType;metricIds:MarketingMetricKey[]}
+export interface MarketingPerformanceTablePreference{level:MarketingPerformanceLevel;metricIds:MarketingMetricKey[]}
 
 export interface MarketingDashboardPreference{
  clientId:string;
  metricIds:MarketingMetricKey[];
  widgets:MarketingDashboardWidget[];
+ performanceTable:MarketingPerformanceTablePreference;
  updatedAt:string;
 }
 
@@ -68,6 +70,7 @@ export const marketingMetricCatalog:Array<{id:MarketingMetricKey;label:string;de
 
 const metricIds=new Set(marketingMetricCatalog.map(metric=>metric.id));
 export const defaultMarketingMetricIds:MarketingMetricKey[]=['spend','impressions','reach','clicks','conversions','roas'];
+export const defaultMarketingPerformanceTable:MarketingPerformanceTablePreference={level:'ad',metricIds:['results','costPerResult','spend','ctr']};
 
 export function normalizeMarketingMetricIds(value:unknown){
  if(!Array.isArray(value))return [...defaultMarketingMetricIds];
@@ -81,13 +84,20 @@ export function normalizeMarketingDashboardPreferences(value:unknown):MarketingD
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardPreference>;
   if(!item.clientId)return [];
-  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),updatedAt:String(item.updatedAt||'')}];
+  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),updatedAt:String(item.updatedAt||'')}];
  });
+}
+
+export function normalizeMarketingPerformanceTable(value:unknown):MarketingPerformanceTablePreference{
+ if(!value||typeof value!=='object')return {...defaultMarketingPerformanceTable,metricIds:[...defaultMarketingPerformanceTable.metricIds]};
+ const item=value as Partial<MarketingPerformanceTablePreference>,level=['campaign','adset','ad'].includes(String(item.level))?item.level as MarketingPerformanceLevel:'ad';
+ const ids=Array.isArray(item.metricIds)?[...new Set(item.metricIds.filter((id):id is MarketingMetricKey=>metricIds.has(id as MarketingMetricKey)))].slice(0,6):[];
+ return {level,metricIds:ids.length?ids:[...defaultMarketingPerformanceTable.metricIds]};
 }
 
 export function normalizeMarketingDashboardWidgets(value:unknown):MarketingDashboardWidget[]{
  if(!Array.isArray(value))return [];
- const types=new Set<MarketingWidgetType>(['bar','horizontal_bar','pie','table']);
+ const types=new Set<MarketingWidgetType>(['bar','horizontal_bar','pie','table','funnel']);
  return value.flatMap((raw,index)=>{
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardWidget>,type=types.has(item.type as MarketingWidgetType)?item.type as MarketingWidgetType:'bar';

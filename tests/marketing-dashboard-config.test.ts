@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {defaultMarketingMetricIds,formatMarketingMetric,metricValue,normalizeMarketingDashboardPreferences,normalizeMarketingDashboardWidgets,normalizeMarketingMetricIds} from '../apps/web/src/marketing-dashboard-config';
+import {defaultMarketingMetricIds,formatMarketingMetric,metricValue,normalizeMarketingDashboardPreferences,normalizeMarketingDashboardWidgets,normalizeMarketingMetricIds,normalizeMarketingPerformanceTable} from '../apps/web/src/marketing-dashboard-config';
 import {emptyMarketingMetrics,type MarketingMetrics} from '../apps/web/src/marketing-metrics';
 
 const metrics:MarketingMetrics={...emptyMarketingMetrics,impressions:10000,reach:5000,clicks:200,uniqueClicks:150,outboundClicks:100,conversions:10,results:10,leads:8,purchases:2,messagingConversations:5,linkClicks:170,landingPageViews:120,postEngagements:350,videoViews:600,thruPlays:300,spend:1000,conversionValue:4000,roas:4};
@@ -23,5 +23,7 @@ test('normaliza seleção e preferências do dashboard por cliente',()=>{
  assert.deepEqual(normalizeMarketingMetricIds([]),defaultMarketingMetricIds);
  assert.deepEqual(normalizeMarketingDashboardPreferences([{clientId:'client-1',metricIds:['cpc']}])[0]?.metricIds,['cpc']);
  assert.deepEqual(normalizeMarketingDashboardWidgets([{id:'w1',title:'Meu gráfico',type:'pie',metricIds:['spend','results','inválida']}]),[{id:'w1',title:'Meu gráfico',type:'pie',metricIds:['spend','results']}]);
+ assert.equal(normalizeMarketingDashboardWidgets([{id:'w2',title:'Meu funil',type:'funnel',metricIds:['impressions','clicks']}])[0]?.type,'funnel');
+ assert.deepEqual(normalizeMarketingPerformanceTable({level:'adset',metricIds:['spend','ctr','inválida']}),{level:'adset',metricIds:['spend','ctr']});
  assert.deepEqual(normalizeMarketingDashboardPreferences([{clientId:'client-1',metricIds:['cpc']}])[0]?.widgets,[]);
 });

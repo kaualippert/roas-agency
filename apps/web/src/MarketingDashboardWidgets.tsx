@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {BarChart3,ChartBarBig,ChartNoAxesColumnIncreasing,Pencil,Plus,Search,Table2,Trash2,X} from 'lucide-react';
+import {BarChart3,ChartBarBig,ChartNoAxesColumnIncreasing,Filter,Pencil,Plus,Search,Table2,Trash2,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Cell,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {formatMarketingMetric,marketingMetricCatalog,metricValue,type MarketingDashboardWidget,type MarketingMetricKey,type MarketingWidgetType} from './marketing-dashboard-config';
 import type {MarketingMetrics} from './marketing-metrics';
@@ -10,6 +10,7 @@ const widgetTypes:Array<{id:MarketingWidgetType;label:string;description:string;
  {id:'horizontal_bar',label:'Barras',description:'Comparação horizontal',icon:<ChartBarBig/>},
  {id:'pie',label:'Pizza',description:'Participação proporcional',icon:<PieIcon/>},
  {id:'table',label:'Tabela',description:'Leitura direta dos valores',icon:<Table2/>},
+ {id:'funnel',label:'Funil',description:'Queda entre etapas da jornada',icon:<Filter/>},
 ];
 
 export default function MarketingDashboardWidgets({metrics,widgets,onChange}:{metrics:MarketingMetrics;widgets:MarketingDashboardWidget[];onChange:(widgets:MarketingDashboardWidget[])=>void}){
@@ -26,13 +27,14 @@ export default function MarketingDashboardWidgets({metrics,widgets,onChange}:{me
 
 function Widget({widget,metrics,onEdit,onRemove}:{widget:MarketingDashboardWidget;metrics:MarketingMetrics;onEdit:()=>void;onRemove:()=>void}){
  const data=widget.metricIds.map((id,index)=>{const definition=marketingMetricCatalog.find(metric=>metric.id===id)!;return{id,label:definition.label,value:metricValue(metrics,id),formatted:formatMarketingMetric(id,metricValue(metrics,id)),fill:colors[index%colors.length]}});
- return <article className="card marketingWidget"><header><div><h4>{widget.title}</h4><small>{widgetTypes.find(type=>type.id===widget.type)?.label} · {data.length} métricas</small></div><span><button type="button" aria-label={`Editar ${widget.title}`} onClick={onEdit}><Pencil/></button><button type="button" aria-label={`Excluir ${widget.title}`} onClick={onRemove}><Trash2/></button></span></header><div className="marketingWidgetBody">{widget.type==='table'?<WidgetTable data={data}/>:widget.type==='pie'?<WidgetPie data={data}/>:<WidgetBars data={data} horizontal={widget.type==='horizontal_bar'}/>}</div></article>;
+ return <article className="card marketingWidget"><header><div><h4>{widget.title}</h4><small>{widgetTypes.find(type=>type.id===widget.type)?.label} · {data.length} métricas</small></div><span><button type="button" aria-label={`Editar ${widget.title}`} onClick={onEdit}><Pencil/></button><button type="button" aria-label={`Excluir ${widget.title}`} onClick={onRemove}><Trash2/></button></span></header><div className="marketingWidgetBody">{widget.type==='table'?<WidgetTable data={data}/>:widget.type==='pie'?<WidgetPie data={data}/>:widget.type==='funnel'?<WidgetFunnel data={data}/>:<WidgetBars data={data} horizontal={widget.type==='horizontal_bar'}/>}</div></article>;
 }
 
 type WidgetDatum={id:MarketingMetricKey;label:string;value:number;formatted:string;fill:string};
 function WidgetBars({data,horizontal}:{data:WidgetDatum[];horizontal:boolean}){return <ResponsiveContainer width="100%" height={260}><BarChart data={data} layout={horizontal?'vertical':'horizontal'} margin={{top:8,right:12,bottom:horizontal?4:34,left:horizontal?34:0}}><CartesianGrid strokeDasharray="3 3" vertical={!horizontal}/>{horizontal?<><XAxis type="number"/><YAxis dataKey="label" type="category" width={105} tick={{fontSize:9}}/></>:<><XAxis dataKey="label" tick={{fontSize:8}} angle={-24} textAnchor="end" interval={0}/><YAxis tick={{fontSize:9}}/></>}<Tooltip formatter={(value)=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}/><Bar dataKey="value" radius={horizontal?[0,6,6,0]:[6,6,0,0]}>{data.map(item=><Cell key={item.id} fill={item.fill}/>)}</Bar></BarChart></ResponsiveContainer>}
 function WidgetPie({data}:{data:WidgetDatum[]}){const positive=data.filter(item=>item.value>0);if(!positive.length)return <WidgetNoData/>;return <div className="marketingWidgetPie"><ResponsiveContainer width="100%" height={220}><PieChart><Pie data={positive} dataKey="value" nameKey="label" innerRadius={48} outerRadius={82} paddingAngle={2}>{positive.map(item=><Cell key={item.id} fill={item.fill}/>)}</Pie><Tooltip formatter={(value)=>Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}/></PieChart></ResponsiveContainer><div>{positive.map(item=><span key={item.id}><i style={{background:item.fill}}/><small>{item.label}</small><b>{item.formatted}</b></span>)}</div></div>}
 function WidgetTable({data}:{data:WidgetDatum[]}){return <div className="marketingWidgetTable">{data.map(item=><div key={item.id}><span><i style={{background:item.fill}}/>{item.label}</span><strong>{item.formatted}</strong></div>)}</div>}
+function WidgetFunnel({data}:{data:WidgetDatum[]}){const max=Math.max(...data.map(item=>item.value),0);if(!max)return <WidgetNoData/>;return <div className="marketingWidgetFunnel">{data.map((item,index)=>{const percentage=Math.max(18,item.value/max*100);return <div key={item.id}><span><b>{item.label}</b><strong>{item.formatted}</strong></span><i style={{width:`${percentage}%`,background:`linear-gradient(90deg,${item.fill},${colors[(index+1)%colors.length]})`}}/></div>})}</div>}
 function WidgetNoData(){return <div className="marketingWidgetNoData"><BarChart3/><span>As métricas selecionadas ainda não possuem dados neste período.</span></div>}
 
 function WidgetModal({initial,onClose,onSave}:{initial:MarketingDashboardWidget|null;onClose:()=>void;onSave:(widget:MarketingDashboardWidget)=>void}){

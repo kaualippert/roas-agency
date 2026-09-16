@@ -51,6 +51,15 @@ export interface MarketingTopAd{
  ctr:number;
 }
 
+export type MarketingPerformanceLevel='campaign'|'adset'|'ad';
+export interface MarketingPerformanceRow extends MarketingMetrics{
+ id:string;
+ name:string;
+ level:MarketingPerformanceLevel;
+ campaignName:string;
+ adSetName:string;
+}
+
 export interface MarketingMetricsSnapshot extends MarketingMetrics{
  id:string;
  integrationId:string;
@@ -60,6 +69,7 @@ export interface MarketingMetricsSnapshot extends MarketingMetrics{
  periodTo:string;
  syncedAt:string;
  topAds:MarketingTopAd[];
+ performanceRows:MarketingPerformanceRow[];
 }
 
 export const emptyMarketingMetrics:MarketingMetrics={impressions:0,reach:0,clicks:0,uniqueClicks:0,outboundClicks:0,conversions:0,results:0,leads:0,purchases:0,messagingConversations:0,linkClicks:0,landingPageViews:0,pageEngagements:0,postEngagements:0,postReactions:0,comments:0,shares:0,saves:0,photoViews:0,videoViews:0,thruPlays:0,video25:0,video50:0,video75:0,video95:0,video100:0,addsToCart:0,checkoutsInitiated:0,registrationsCompleted:0,contacts:0,appointmentsScheduled:0,applicationsSubmitted:0,subscriptions:0,spend:0,conversionValue:0,roas:0};
@@ -72,6 +82,18 @@ const normalizeTopAds=(value:unknown):MarketingTopAd[]=>Array.isArray(value)?val
  return [{id,name:String(item.name||'Anúncio sem nome'),campaignName:String(item.campaignName||'Campanha não informada'),impressions:number(item.impressions),clicks:number(item.clicks),results:number(item.results),spend:number(item.spend),costPerResult:number(item.costPerResult),ctr:number(item.ctr)}];
 }):[];
 
+const normalizePerformanceRows=(value:unknown):MarketingPerformanceRow[]=>Array.isArray(value)?value.flatMap(raw=>{
+ if(!raw||typeof raw!=='object')return [];
+ const item=raw as Partial<MarketingPerformanceRow>,id=String(item.id||'').trim(),level=['campaign','adset','ad'].includes(String(item.level))?item.level as MarketingPerformanceLevel:undefined;
+ if(!id||!level)return [];
+ const metrics=Object.fromEntries(Object.keys(emptyMarketingMetrics).map(key=>[key,number(item[key as keyof MarketingMetrics])])) as unknown as MarketingMetrics;
+ return [{...metrics,id,name:String(item.name||'Item sem nome'),level,campaignName:String(item.campaignName||''),adSetName:String(item.adSetName||'')}];
+}):[];
+
+function legacyAdRows(ads:MarketingTopAd[]):MarketingPerformanceRow[]{
+ return ads.map(ad=>({...emptyMarketingMetrics,id:ad.id,name:ad.name,level:'ad',campaignName:ad.campaignName,adSetName:'',impressions:ad.impressions,clicks:ad.clicks,results:ad.results,conversions:ad.results,spend:ad.spend}));
+}
+
 export function normalizeMarketingMetricsSnapshots(value:unknown):MarketingMetricsSnapshot[]{
  if(!Array.isArray(value))return [];
  return value.flatMap(raw=>{
@@ -79,7 +101,8 @@ export function normalizeMarketingMetricsSnapshots(value:unknown):MarketingMetri
   const item=raw as Partial<MarketingMetricsSnapshot>;
   if(!item.integrationId||!item.clientId||!['meta_ads','google_ads'].includes(String(item.provider)))return [];
   const conversions=number(item.conversions),results=number(item.results)||conversions;
-  return [{id:String(item.id||item.integrationId),integrationId:String(item.integrationId),clientId:String(item.clientId),provider:item.provider as MarketingMetricsSnapshot['provider'],periodFrom:String(item.periodFrom||''),periodTo:String(item.periodTo||''),syncedAt:String(item.syncedAt||''),topAds:normalizeTopAds(item.topAds),impressions:number(item.impressions),reach:number(item.reach),clicks:number(item.clicks),uniqueClicks:number(item.uniqueClicks),outboundClicks:number(item.outboundClicks),conversions,results,leads:number(item.leads),purchases:number(item.purchases),messagingConversations:number(item.messagingConversations),linkClicks:number(item.linkClicks),landingPageViews:number(item.landingPageViews),pageEngagements:number(item.pageEngagements),postEngagements:number(item.postEngagements),postReactions:number(item.postReactions),comments:number(item.comments),shares:number(item.shares),saves:number(item.saves),photoViews:number(item.photoViews),videoViews:number(item.videoViews),thruPlays:number(item.thruPlays),video25:number(item.video25),video50:number(item.video50),video75:number(item.video75),video95:number(item.video95),video100:number(item.video100),addsToCart:number(item.addsToCart),checkoutsInitiated:number(item.checkoutsInitiated),registrationsCompleted:number(item.registrationsCompleted),contacts:number(item.contacts),appointmentsScheduled:number(item.appointmentsScheduled),applicationsSubmitted:number(item.applicationsSubmitted),subscriptions:number(item.subscriptions),spend:number(item.spend),conversionValue:number(item.conversionValue),roas:number(item.roas)}];
+  const topAds=normalizeTopAds(item.topAds),performanceRows=normalizePerformanceRows(item.performanceRows);
+  return [{id:String(item.id||item.integrationId),integrationId:String(item.integrationId),clientId:String(item.clientId),provider:item.provider as MarketingMetricsSnapshot['provider'],periodFrom:String(item.periodFrom||''),periodTo:String(item.periodTo||''),syncedAt:String(item.syncedAt||''),topAds,performanceRows:performanceRows.length?performanceRows:legacyAdRows(topAds),impressions:number(item.impressions),reach:number(item.reach),clicks:number(item.clicks),uniqueClicks:number(item.uniqueClicks),outboundClicks:number(item.outboundClicks),conversions,results,leads:number(item.leads),purchases:number(item.purchases),messagingConversations:number(item.messagingConversations),linkClicks:number(item.linkClicks),landingPageViews:number(item.landingPageViews),pageEngagements:number(item.pageEngagements),postEngagements:number(item.postEngagements),postReactions:number(item.postReactions),comments:number(item.comments),shares:number(item.shares),saves:number(item.saves),photoViews:number(item.photoViews),videoViews:number(item.videoViews),thruPlays:number(item.thruPlays),video25:number(item.video25),video50:number(item.video50),video75:number(item.video75),video95:number(item.video95),video100:number(item.video100),addsToCart:number(item.addsToCart),checkoutsInitiated:number(item.checkoutsInitiated),registrationsCompleted:number(item.registrationsCompleted),contacts:number(item.contacts),appointmentsScheduled:number(item.appointmentsScheduled),applicationsSubmitted:number(item.applicationsSubmitted),subscriptions:number(item.subscriptions),spend:number(item.spend),conversionValue:number(item.conversionValue),roas:number(item.roas)}];
  });
 }
 

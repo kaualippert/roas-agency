@@ -17,8 +17,10 @@ type OAuthState={provider:OAuthProvider;uid:string;returnTo:string;nonce:string;
 type Resource={id:string;name:string;kind?:string;metadata?:Record<string,unknown>};
 export type MarketingMetrics={impressions:number;reach:number;clicks:number;uniqueClicks:number;outboundClicks:number;conversions:number;results:number;leads:number;purchases:number;messagingConversations:number;linkClicks:number;landingPageViews:number;pageEngagements:number;postEngagements:number;postReactions:number;comments:number;shares:number;saves:number;photoViews:number;videoViews:number;thruPlays:number;video25:number;video50:number;video75:number;video95:number;video100:number;addsToCart:number;checkoutsInitiated:number;registrationsCompleted:number;contacts:number;appointmentsScheduled:number;applicationsSubmitted:number;subscriptions:number;spend:number;conversionValue:number;roas:number};
 export type MarketingTopAd={id:string;name:string;campaignName:string;impressions:number;clicks:number;results:number;spend:number;costPerResult:number;ctr:number};
+export type MarketingPerformanceLevel='campaign'|'adset'|'ad';
+export type MarketingPerformanceRow=MarketingMetrics&{id:string;name:string;level:MarketingPerformanceLevel;campaignName:string;adSetName:string};
 type MetaAction={action_type?:string;value?:string};
-type MetaInsightsRow={ad_id?:string;ad_name?:string;campaign_name?:string;impressions?:string;reach?:string;clicks?:string;unique_clicks?:string;spend?:string;actions?:MetaAction[];action_values?:MetaAction[];outbound_clicks?:MetaAction[];video_play_actions?:MetaAction[];video_thruplay_watched_actions?:MetaAction[];video_p25_watched_actions?:MetaAction[];video_p50_watched_actions?:MetaAction[];video_p75_watched_actions?:MetaAction[];video_p95_watched_actions?:MetaAction[];video_p100_watched_actions?:MetaAction[];purchase_roas?:Array<{value?:string}>};
+type MetaInsightsRow={campaign_id?:string;campaign_name?:string;adset_id?:string;adset_name?:string;ad_id?:string;ad_name?:string;impressions?:string;reach?:string;clicks?:string;unique_clicks?:string;spend?:string;actions?:MetaAction[];action_values?:MetaAction[];outbound_clicks?:MetaAction[];video_play_actions?:MetaAction[];video_thruplay_watched_actions?:MetaAction[];video_p25_watched_actions?:MetaAction[];video_p50_watched_actions?:MetaAction[];video_p75_watched_actions?:MetaAction[];video_p95_watched_actions?:MetaAction[];video_p100_watched_actions?:MetaAction[];purchase_roas?:Array<{value?:string}>};
 
 const collectionName='marketing_oauth_connections';
 const googleScopes=['openid','email','profile','https://www.googleapis.com/auth/adwords','https://www.googleapis.com/auth/analytics.readonly','https://www.googleapis.com/auth/business.manage'];
@@ -160,6 +162,10 @@ export function normalizeMetaTopAd(row:MetaInsightsRow):MarketingTopAd{
  const metrics=normalizeMetaMetrics(row),results=metrics.results;
  return {id:String(row.ad_id||row.ad_name||'ad'),name:String(row.ad_name||'Anúncio sem nome'),campaignName:String(row.campaign_name||'Campanha não informada'),impressions:metrics.impressions,clicks:metrics.clicks,results,spend:metrics.spend,costPerResult:results?metrics.spend/results:0,ctr:metrics.impressions?metrics.clicks/metrics.impressions*100:0};
 }
+export function normalizeMetaPerformanceRow(row:MetaInsightsRow,level:MarketingPerformanceLevel):MarketingPerformanceRow{
+ const metrics=normalizeMetaMetrics(row),identity=level==='campaign'?{id:row.campaign_id,name:row.campaign_name}:level==='adset'?{id:row.adset_id,name:row.adset_name}:{id:row.ad_id,name:row.ad_name};
+ return {...metrics,id:String(identity.id||identity.name||level),name:String(identity.name||`${level} sem nome`),level,campaignName:String(row.campaign_name||''),adSetName:String(row.adset_name||'')};
+}
 export function normalizeGoogleMetrics(row:{impressions?:string;clicks?:string;conversions?:number;costMicros?:string;conversionsValue?:number}={}):MarketingMetrics{
  const spend=numeric(row.costMicros)/1_000_000,conversionValue=numeric(row.conversionsValue);
  const conversions=numeric(row.conversions);
@@ -168,19 +174,23 @@ export function normalizeGoogleMetrics(row:{impressions?:string;clicks?:string;c
 
 async function syncMetaAds(connection:ConnectionDocument,resourceId:string,from:string,to:string){
  const token=await accessToken(connection),account=resourceId.startsWith('act_')?resourceId:`act_${resourceId}`,headers={authorization:`Bearer ${token}`},timeRange=JSON.stringify({since:from,until:to});
- const accountParams=new URLSearchParams({fields:'impressions,reach,clicks,unique_clicks,outbound_clicks,spend,actions,action_values,video_play_actions,video_thruplay_watched_actions,video_p25_watched_actions,video_p50_watched_actions,video_p75_watched_actions,video_p95_watched_actions,video_p100_watched_actions,purchase_roas',level:'account',time_range:timeRange,limit:'1'});
- const adsParams=new URLSearchParams({fields:'ad_id,ad_name,campaign_name,impressions,clicks,spend,actions',level:'ad',time_range:timeRange,sort:'spend_descending',limit:'25'});
- const [accountResult,adsResult]=await Promise.all([
+ const metricFields='impressions,reach,clicks,unique_clicks,outbound_clicks,spend,actions,action_values,video_play_actions,video_thruplay_watched_actions,video_p25_watched_actions,video_p50_watched_actions,video_p75_watched_actions,video_p95_watched_actions,video_p100_watched_actions,purchase_roas';
+ const accountParams=new URLSearchParams({fields:metricFields,level:'account',time_range:timeRange,limit:'1'});
+ const breakdownRequest=(level:MarketingPerformanceLevel,identityFields:string)=>{const params=new URLSearchParams({fields:`${identityFields},${metricFields}`,level,time_range:timeRange,sort:'spend_descending',limit:'100'});return requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${params}`,{headers}).catch(()=>({data:[]}))};
+ const [accountResult,campaignResult,adSetResult,adsResult]=await Promise.all([
   requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${accountParams}`,{headers}),
-  requestJson<{data?:MetaInsightsRow[]}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights?${adsParams}`,{headers}).catch(()=>({data:[]})),
+  breakdownRequest('campaign','campaign_id,campaign_name'),
+  breakdownRequest('adset','adset_id,adset_name,campaign_id,campaign_name'),
+  breakdownRequest('ad','ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name'),
  ]);
  const topAds=(adsResult.data||[]).map(normalizeMetaTopAd).filter(ad=>ad.impressions>0||ad.spend>0).sort((a,b)=>b.results-a.results||a.costPerResult-b.costPerResult||b.spend-a.spend).slice(0,10);
- return {metrics:normalizeMetaMetrics(accountResult.data?.[0]),topAds};
+ const performanceRows=([['campaign',campaignResult],['adset',adSetResult],['ad',adsResult]] as const).flatMap(([level,result])=>(result.data||[]).map(row=>normalizeMetaPerformanceRow(row,level)).filter(row=>row.impressions>0||row.spend>0));
+ return {metrics:normalizeMetaMetrics(accountResult.data?.[0]),topAds,performanceRows};
 }
 async function syncGoogleAds(connection:ConnectionDocument,primaryId:string,resourceId:string,from:string,to:string){
  const token=await accessToken(connection),customerId=resourceId.replace(/\D/g,''),loginId=primaryId.replace(/\D/g,''),query=`SELECT metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros, metrics.conversions_value FROM customer WHERE segments.date BETWEEN '${from}' AND '${to}'`;
  const result=await requestJson<{results?:Array<{metrics?:Parameters<typeof normalizeGoogleMetrics>[0]}>}>(`https://googleads.googleapis.com/${config.googleAdsApiVersion}/customers/${customerId}/googleAds:search`,{method:'POST',headers:googleAdsHeaders(token,loginId!==customerId?loginId:undefined),body:JSON.stringify({query})});
- return {metrics:normalizeGoogleMetrics(result.results?.[0]?.metrics),topAds:[] as MarketingTopAd[]};
+ return {metrics:normalizeGoogleMetrics(result.results?.[0]?.metrics),topAds:[] as MarketingTopAd[],performanceRows:[] as MarketingPerformanceRow[]};
 }
 
 function syncPeriod(body:Record<string,unknown>){

@@ -22,3 +22,18 @@ html[data-theme="dark"] .mindMapCanvas path{stroke:#5d557d}
 html[data-theme-variant="all-black"] .mindMapQuickEditor{background:#080808}
 @media(max-width:800px){.mindMapCanvasHint{max-width:360px}.mindMapNode.selected .mindMapHandle{opacity:1;pointer-events:auto}}
 @media(max-width:520px){.mindMapToolbar>div:last-child{grid-template-columns:1fr}.mindMapQuickEditor{grid-template-columns:160px 34px 34px}}
+
+.mindMapCanvasFrame{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--card) 88%,var(--purple) 12%),var(--card) 65%)}
+.mindMapCanvasScroll{height:min(620px,calc(100vh - 260px));min-height:430px;overflow:auto;overscroll-behavior:contain;background:transparent}
+.mindMapCanvasStage{position:relative;min-width:100%;min-height:100%;transition:width .12s ease,height .12s ease}
+.mindMapCanvas{transform-origin:top left}
+.mindMapViewportControls{position:absolute;z-index:20;right:14px;bottom:14px;display:flex;align-items:center;gap:4px;padding:5px;border:1px solid var(--border);border-radius:10px;background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:0 8px 24px #1118271f;backdrop-filter:blur(8px)}
+.mindMapViewportControls button{height:31px;min-width:31px;padding:0 8px;border:0;border-radius:7px;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;gap:5px;font-size:8px}
+.mindMapViewportControls button:hover{background:color-mix(in srgb,var(--card) 82%,var(--purple) 18%);color:var(--purple)}
+.mindMapViewportControls button:disabled{opacity:.35}
+.mindMapViewportControls button svg{width:14px;height:14px}
+.mindMapViewportControls .mindMapZoomValue{min-width:48px;font-variant-numeric:tabular-nums;font-weight:700}
+.mindMapViewportControls>span{width:1px;height:20px;background:var(--border);margin:0 2px}
+html[data-theme-variant="all-black"] .mindMapCanvasFrame{background:#080808;border-color:#242424}
+@media(max-width:800px){.mindMapCanvasFrame{max-width:calc(100vw - 28px)}.mindMapCanvasScroll{min-height:390px}.mindMapFocusButton{display:none}}
+@media(max-width:520px){.mindMapViewportControls{right:8px;bottom:8px}}

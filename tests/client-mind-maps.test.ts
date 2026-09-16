@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {clampMindMapPosition,layoutMindMapNodes,mindMapDescendantIds,removeMindMapBranch,type ClientMindMapNode} from '../apps/web/src/client-mind-maps';
+import {clampMindMapPosition,clampMindMapZoom,fitMindMapZoom,layoutMindMapNodes,mindMapDescendantIds,mindMapZoomScroll,removeMindMapBranch,type ClientMindMapNode} from '../apps/web/src/client-mind-maps';
 
 const nodes:ClientMindMapNode[]=[
  {id:'root',parentId:null,text:'Campanha',color:'#5b36f2'},
@@ -27,4 +27,16 @@ test('preserva posições livres e limita nós às bordas da grade',()=>{
  const positioned=layoutMindMapNodes([...nodes,free],1000,600);
  assert.deepEqual(positioned.find(node=>node.id==='free'),{...free,x:820,y:510});
  assert.deepEqual(clampMindMapPosition(-20,900,1000,600),{x:90,y:552});
+});
+
+test('limita o zoom e mantém o ponto do cursor estável',()=>{
+ assert.equal(clampMindMapZoom(.1),.45);
+ assert.equal(clampMindMapZoom(3),2);
+ assert.deepEqual(mindMapZoomScroll(1,1.5,200,120,300,80),{zoom:1.5,scrollLeft:550,scrollTop:180});
+});
+
+test('calcula a melhor escala para enquadrar o mapa na área disponível',()=>{
+ assert.equal(fitMindMapZoom(1152,692),1);
+ assert.equal(fitMindMapZoom(612,382),.5);
+ assert.equal(fitMindMapZoom(200,100),.45);
 });

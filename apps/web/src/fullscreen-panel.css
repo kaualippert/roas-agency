@@ -7,6 +7,7 @@
 .fullscreenSurface.fullscreenSurfaceActive::backdrop{background:var(--bg)}
 body:has(.fullscreenSurface.fullscreenSurfaceActive){overflow:hidden}
 .mindMapMain.fullscreenSurfaceActive,.mindMapMain:fullscreen{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px}
+.mindMapMain.fullscreenSurfaceActive .mindMapCanvasFrame,.mindMapMain:fullscreen .mindMapCanvasFrame{height:100%;min-height:0}
 .mindMapMain.fullscreenSurfaceActive .mindMapCanvasScroll,.mindMapMain:fullscreen .mindMapCanvasScroll{height:100%;min-height:0;display:flex;justify-content:center;align-items:flex-start}
 .mindMapMain.fullscreenSurfaceActive .mindMapCanvas,.mindMapMain:fullscreen .mindMapCanvas{flex:none}
 .taskWorkspace.fullscreenSurfaceActive,.taskWorkspace:fullscreen,.crmPageBoard.fullscreenSurfaceActive,.crmPageBoard:fullscreen,.editorialSection.fullscreenSurfaceActive,.editorialSection:fullscreen{display:block}

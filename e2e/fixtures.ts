@@ -78,7 +78,9 @@ async function handleApi(route:Route,member:typeof admin,areas:AccessArea[],stat
  if(request.method()==='POST'&&path.startsWith('/api/marketing/sync/')){
   const provider=path.endsWith('google_ads')?'google_ads':'meta_ads';
   const input=request.postDataJSON() as {from?:string;to?:string};
-  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({provider,period:{from:input.from||'2026-09-01',to:input.to||'2026-09-14'},metrics:{impressions:12500,reach:9000,clicks:480,conversions:24,results:24,leads:18,purchases:6,messagingConversations:9,linkClicks:410,landingPageViews:290,postEngagements:760,videoViews:1800,spend:1234.5,conversionValue:4938,roas:4},topAds:provider==='meta_ads'?[{id:'ad-1',name:'Criativo campeão',campaignName:'Captação Setembro',impressions:6400,clicks:310,results:18,spend:720,costPerResult:40,ctr:4.84}]:[],syncedAt:'2026-09-14T12:00:00.000Z'})});return;
+  const baseMetrics={impressions:12500,reach:9000,clicks:480,conversions:24,results:24,leads:18,purchases:6,messagingConversations:9,linkClicks:410,landingPageViews:290,postEngagements:760,videoViews:1800,spend:1234.5,conversionValue:4938,roas:4};
+  const performanceRows=provider==='meta_ads'?[{...baseMetrics,id:'campaign-1',name:'Captação Setembro',level:'campaign',campaignName:'Captação Setembro',adSetName:''},{...baseMetrics,id:'adset-1',name:'Público semelhante',level:'adset',campaignName:'Captação Setembro',adSetName:'Público semelhante'},{...baseMetrics,id:'ad-1',name:'Criativo campeão',level:'ad',campaignName:'Captação Setembro',adSetName:'Público semelhante'}]:[];
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({provider,period:{from:input.from||'2026-09-01',to:input.to||'2026-09-14'},metrics:baseMetrics,topAds:provider==='meta_ads'?[{id:'ad-1',name:'Criativo campeão',campaignName:'Captação Setembro',impressions:6400,clicks:310,results:18,spend:720,costPerResult:40,ctr:4.84}]:[],performanceRows,syncedAt:'2026-09-14T12:00:00.000Z'})});return;
  }
  if(request.method()==='GET'&&path==='/api/state'){
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({state})});

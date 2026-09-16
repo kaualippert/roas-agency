@@ -19,6 +19,23 @@ export type ClientMindMap={
 
 export type PositionedMindMapNode=ClientMindMapNode&{x:number;y:number};
 
+export const mindMapMinZoom=.45;
+export const mindMapMaxZoom=2;
+
+export function clampMindMapZoom(zoom:number){
+ return Math.max(mindMapMinZoom,Math.min(mindMapMaxZoom,zoom));
+}
+
+export function mindMapZoomScroll(previousZoom:number,nextZoom:number,pointerX:number,pointerY:number,scrollLeft:number,scrollTop:number){
+ const zoom=clampMindMapZoom(nextZoom),ratio=zoom/previousZoom;
+ return {zoom,scrollLeft:(scrollLeft+pointerX)*ratio-pointerX,scrollTop:(scrollTop+pointerY)*ratio-pointerY};
+}
+
+export function fitMindMapZoom(viewportWidth:number,viewportHeight:number,width=1080,height=620,padding=36){
+ if(viewportWidth<=0||viewportHeight<=0)return 1;
+ return clampMindMapZoom(Math.min((viewportWidth-padding*2)/width,(viewportHeight-padding*2)/height,1));
+}
+
 export function clampMindMapPosition(x:number,y:number,width=1080,height=620){
  return {x:Math.max(90,Math.min(width-90,x)),y:Math.max(48,Math.min(height-48,y))};
 }

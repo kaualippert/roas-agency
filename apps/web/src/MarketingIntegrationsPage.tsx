@@ -41,7 +41,7 @@ export default function MarketingIntegrationsPage(){
    for(const integration of candidates){
     try{
      const period=currentMonthPeriod(),result=await syncMarketingMetrics(integration.provider,{connectionId:integration.agencyConnectionId,primaryId:integration.primaryId,resourceId:integration.resourceId,...period});
-     const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,topAds:result.topAds||[],...result.metrics};
+     const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,topAds:result.topAds||[],performanceRows:result.performanceRows||[],...result.metrics};
      nextMetrics=upsertMarketingMetricsSnapshot(nextMetrics,snapshot);
      nextIntegrations=markMarketingIntegrationSynced(nextIntegrations,integration.id,result.syncedAt);successes++;
     }catch{
@@ -84,7 +84,7 @@ export default function MarketingIntegrationsPage(){
   setSyncingId(integration.id);
   try{
    const period=currentMonthPeriod(),result=await syncMarketingMetrics(integration.provider,{connectionId:integration.agencyConnectionId,primaryId:integration.primaryId,resourceId:integration.resourceId,...period});
-   const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,topAds:result.topAds||[],...result.metrics};
+   const snapshot:MarketingMetricsSnapshot={id:integration.id,integrationId:integration.id,clientId:integration.clientId,provider:integration.provider,periodFrom:result.period.from,periodTo:result.period.to,syncedAt:result.syncedAt,topAds:result.topAds||[],performanceRows:result.performanceRows||[],...result.metrics};
    setMetrics(upsertMarketingMetricsSnapshot(normalizeMarketingMetricsSnapshots(storedMetrics),snapshot));
    setIntegrations(markMarketingIntegrationSynced(integrations,integration.id,result.syncedAt));
    setToast(`${providerById(integration.provider).name} sincronizado com dados reais.`);
