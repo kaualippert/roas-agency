@@ -363,10 +363,22 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  const reportDialog=page.locator('.marketingReportModal');
  await expect(reportDialog.getByLabel('Cliente integrado')).toHaveValue('client-1');
  await reportDialog.getByLabel('Nome do relatório').fill('Performance Meta — Cliente Teste');
+ await reportDialog.getByLabel('Resumo executivo').fill('O investimento gerou resultados consistentes no período.');
+ await reportDialog.getByLabel('Próximos passos').fill('Escalar os melhores criativos e acompanhar o custo por resultado.');
  const reportSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/reports'));
  await reportDialog.getByRole('button',{name:'Criar relatório'}).click();
  await reportSaved;
  await expect(page.getByText('Performance Meta — Cliente Teste')).toBeVisible();
+ await page.getByTitle('Visualizar').first().click();
+ const reportPreview=page.locator('.reportClientDocument');
+ await expect(reportPreview.getByRole('heading',{name:'Performance Meta — Cliente Teste'})).toBeVisible();
+ await expect(reportPreview.getByText('O investimento gerou resultados consistentes no período.')).toBeVisible();
+ await expect(reportPreview.getByText('Escalar os melhores criativos e acompanhar o custo por resultado.')).toBeVisible();
+ await page.locator('.reportPreviewToolbar').getByRole('button',{name:'Compartilhar'}).click();
+ const shareDialog=page.getByRole('dialog',{name:'Compartilhar relatório'});
+ await expect(shareDialog.getByRole('button',{name:/Enviar pelo WhatsApp/})).toBeVisible();
+ await expect(shareDialog.getByRole('button',{name:/Enviar por e-mail/})).toBeVisible();
+ await expect(shareDialog.getByRole('button',{name:/Salvar ou imprimir PDF/})).toBeVisible();
 });
 
 test('migra um cadastro manual para o vínculo permanente do cliente',async({page})=>{
