@@ -1,0 +1,86 @@
+/* Flow ROAS Design System — fonte única para cores, medidas e componentes base. */
+:root{
+ --ds-brand-50:#f4f1ff;--ds-brand-100:#ebe5ff;--ds-brand-200:#d8ccff;--ds-brand-300:#bda8ff;--ds-brand-400:#9878ff;--ds-brand-500:#7550f5;--ds-brand-600:#5b36f2;--ds-brand-700:#4825cf;--ds-brand-800:#3c22a8;--ds-brand-900:#321f82;
+ --ds-canvas:#f7f8fb;--ds-surface:#fff;--ds-surface-subtle:#f8f9fc;--ds-surface-raised:#fff;--ds-surface-hover:#faf9ff;
+ --ds-text:#182033;--ds-text-secondary:#4f5b70;--ds-text-muted:#748095;--ds-border:#e3e7ee;--ds-border-strong:#cfd5df;
+ --ds-success:#16875a;--ds-success-soft:#e8f7ef;--ds-warning:#c77809;--ds-warning-soft:#fff3df;--ds-danger:#d64550;--ds-danger-soft:#fdebed;--ds-info:#2878e8;--ds-info-soft:#e9f2ff;
+ --ds-radius-xs:6px;--ds-radius-sm:8px;--ds-radius-md:12px;--ds-radius-lg:16px;--ds-radius-xl:20px;--ds-radius-pill:999px;
+ --ds-space-1:4px;--ds-space-2:8px;--ds-space-3:12px;--ds-space-4:16px;--ds-space-5:20px;--ds-space-6:24px;--ds-space-8:32px;
+ --ds-shadow-xs:0 1px 2px rgba(15,23,42,.04);--ds-shadow-sm:0 4px 14px rgba(15,23,42,.06);--ds-shadow-md:0 14px 38px rgba(15,23,42,.12);--ds-shadow-lg:0 28px 80px rgba(15,23,42,.22);
+ --ds-focus:0 0 0 3px rgba(91,54,242,.18);--ds-control-height:42px;--ds-transition:160ms ease;
+ --purple:var(--ds-brand-600);--border:var(--ds-border);--muted:var(--ds-text-muted);--card:var(--ds-surface);--text:var(--ds-text);
+}
+
+html[data-theme="dark"]{
+ --ds-canvas:#101522;--ds-surface:#171f30;--ds-surface-subtle:#141c2b;--ds-surface-raised:#1c2639;--ds-surface-hover:#202a3d;
+ --ds-text:#f3f6fb;--ds-text-secondary:#c7d0df;--ds-text-muted:#9da9be;--ds-border:#2d384e;--ds-border-strong:#40506c;
+ --ds-success:#43c78c;--ds-success-soft:#17362c;--ds-warning:#f1aa42;--ds-warning-soft:#392d1c;--ds-danger:#f0747d;--ds-danger-soft:#3d2229;--ds-info:#63a5ff;--ds-info-soft:#1c304c;
+ --ds-shadow-xs:0 1px 2px rgba(0,0,0,.18);--ds-shadow-sm:0 5px 18px rgba(0,0,0,.2);--ds-shadow-md:0 16px 42px rgba(0,0,0,.32);--ds-shadow-lg:0 30px 90px rgba(0,0,0,.5);
+}
+
+html[data-theme-variant="all-black"]{
+ --ds-canvas:#000;--ds-surface:#080808;--ds-surface-subtle:#050505;--ds-surface-raised:#0d0d0d;--ds-surface-hover:#131313;
+ --ds-text:#f7f7f8;--ds-text-secondary:#d2d2d6;--ds-text-muted:#96969f;--ds-border:#242424;--ds-border-strong:#383838;
+}
+
+body{background:var(--ds-canvas);color:var(--ds-text);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{color:#fff;background:var(--ds-brand-600)}
+::placeholder{color:var(--ds-text-muted);opacity:.76}
+
+/* Tipografia e ritmo */
+main h1,main h2,main h3,main h4,.modal h2{color:var(--ds-text);letter-spacing:-.015em}
+main h2{margin-top:0;font-weight:750}main h3,main h4{font-weight:700}
+.headTitle h1{color:var(--ds-text);font-weight:750}.headTitle p{color:var(--ds-text-muted)}
+.tasksPageTop,.teamPageHeader,.reportsHeader,.financialOpsIntro,.servicesHeading{gap:var(--ds-space-5)}
+.tasksPageTop p,.teamPageHeader p,.reportsHeader p,.financialOpsIntro p,.servicesHeading p{color:var(--ds-text-muted)}
+
+/* Superfícies */
+.card{background:var(--ds-surface);border-color:var(--ds-border);border-radius:var(--ds-radius-md);box-shadow:var(--ds-shadow-xs)}
+.card:hover{border-color:var(--ds-border-strong)}
+.modal{color:var(--ds-text);background:var(--ds-surface);border:1px solid var(--ds-border);border-radius:var(--ds-radius-lg);box-shadow:var(--ds-shadow-lg)}
+.overlay{background:rgba(7,12,24,.58);backdrop-filter:blur(5px)}
+.modalHead{align-items:flex-start;padding:var(--ds-space-5) var(--ds-space-6);border-color:var(--ds-border)}
+.modalHead small{color:var(--ds-brand-600);font-size:10px;font-weight:800;letter-spacing:.08em}.modalHead h2{font-size:20px}.modalHead p{color:var(--ds-text-muted)}
+
+/* Botões */
+.btn{min-height:var(--ds-control-height);padding:10px 16px;border:1px solid transparent;border-radius:var(--ds-radius-sm);background:linear-gradient(110deg,var(--ds-brand-700),var(--ds-brand-500));color:#fff;font-size:12px;font-weight:700;line-height:1;box-shadow:0 5px 14px rgba(91,54,242,.2);transition:transform var(--ds-transition),box-shadow var(--ds-transition),filter var(--ds-transition),background var(--ds-transition),border-color var(--ds-transition)}
+.btn:hover:not(:disabled){filter:brightness(1.05);box-shadow:0 8px 20px rgba(91,54,242,.26);transform:translateY(-1px)}
+.btn:active:not(:disabled){filter:brightness(.96);box-shadow:0 3px 8px rgba(91,54,242,.18);transform:translateY(0)}
+.btn.secondary{color:var(--ds-text-secondary);background:var(--ds-surface);border-color:var(--ds-border);box-shadow:var(--ds-shadow-xs)}
+.btn.secondary:hover:not(:disabled){color:var(--ds-brand-700);background:var(--ds-brand-50);border-color:var(--ds-brand-300);box-shadow:var(--ds-shadow-sm)}
+html[data-theme="dark"] .btn.secondary,html[data-theme-variant="all-black"] .btn.secondary{color:var(--ds-text-secondary);background:var(--ds-surface-raised);border-color:var(--ds-border)}
+html[data-theme="dark"] .btn.secondary:hover:not(:disabled),html[data-theme-variant="all-black"] .btn.secondary:hover:not(:disabled){color:#fff;background:color-mix(in srgb,var(--ds-brand-600) 18%,var(--ds-surface));border-color:var(--ds-brand-500)}
+.btn.danger{color:#fff;background:var(--ds-danger);border-color:var(--ds-danger);box-shadow:0 5px 14px color-mix(in srgb,var(--ds-danger) 28%,transparent)}
+.btn.ghost{color:var(--ds-text-secondary);background:transparent;border-color:transparent;box-shadow:none}.btn.ghost:hover:not(:disabled){color:var(--ds-brand-600);background:var(--ds-brand-50);box-shadow:none}
+.btn.btnSm{min-height:34px;padding:7px 11px;font-size:11px}.btn:disabled{cursor:not-allowed;opacity:.48;filter:saturate(.6);box-shadow:none;transform:none}
+.iconBtn{min-width:36px;min-height:36px;border-radius:var(--ds-radius-sm);color:var(--ds-text-secondary);transition:color var(--ds-transition),background var(--ds-transition),transform var(--ds-transition)}
+.iconBtn:hover:not(:disabled){color:var(--ds-brand-600);background:var(--ds-brand-50)}html[data-theme="dark"] .iconBtn:hover,html[data-theme-variant="all-black"] .iconBtn:hover{background:color-mix(in srgb,var(--ds-brand-600) 18%,transparent)}
+.iconBtn:active:not(:disabled){transform:scale(.96)}
+
+/* Foco e campos */
+:where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:0;box-shadow:var(--ds-focus)}
+.form{gap:var(--ds-space-4);padding:var(--ds-space-6)}.form label{gap:7px;color:var(--ds-text-secondary);font-weight:650}
+.form input,.form select,.form textarea{min-height:var(--ds-control-height);color:var(--ds-text);background:var(--ds-surface);border:1px solid var(--ds-border);border-radius:var(--ds-radius-sm);transition:border-color var(--ds-transition),box-shadow var(--ds-transition),background var(--ds-transition)}
+.form textarea{min-height:104px;line-height:1.55}.form input:hover,.form select:hover,.form textarea:hover{border-color:var(--ds-border-strong)}
+.form input:focus,.form select:focus,.form textarea:focus{border-color:var(--ds-brand-500);box-shadow:var(--ds-focus)}
+html[data-theme="dark"] .form input,html[data-theme="dark"] .form select,html[data-theme="dark"] .form textarea,html[data-theme-variant="all-black"] .form input,html[data-theme-variant="all-black"] .form select,html[data-theme-variant="all-black"] .form textarea{color:var(--ds-text);background:var(--ds-surface-subtle);border-color:var(--ds-border)}
+.filter,.memberSearch,.taskSearch,.financialOpsSearch{color:var(--ds-text);background:var(--ds-surface);border-color:var(--ds-border);border-radius:var(--ds-radius-sm);transition:border-color var(--ds-transition),box-shadow var(--ds-transition)}
+.filter:focus-within,.memberSearch:focus-within,.taskSearch:focus-within,.financialOpsSearch:focus-within{border-color:var(--ds-brand-500);box-shadow:var(--ds-focus)}
+
+/* Navegação contextual, tabelas e status */
+.tabs button,.viewTabs button,.taskViewTabs button{font-weight:600;transition:color var(--ds-transition),background var(--ds-transition),border-color var(--ds-transition)}
+.tabs button:hover,.viewTabs button:hover,.taskViewTabs button:hover{color:var(--ds-brand-600);background:color-mix(in srgb,var(--ds-brand-50) 70%,transparent)}
+.tabs button.active,.viewTabs button.active,.taskViewTabs button.active{color:var(--ds-brand-600);border-color:var(--ds-brand-600)}
+th{color:var(--ds-text-muted);background:var(--ds-surface-subtle);border-color:var(--ds-border);font-weight:700;text-transform:none;letter-spacing:.01em}td{color:var(--ds-text-secondary);border-color:var(--ds-border)}td b,td strong{color:var(--ds-text)}tbody tr:hover{background:var(--ds-surface-hover)}
+.badge{border-radius:var(--ds-radius-pill);font-weight:700}.badge.green{color:var(--ds-success);background:var(--ds-success-soft)}.badge.orange{color:var(--ds-warning);background:var(--ds-warning-soft)}.badge.red{color:var(--ds-danger);background:var(--ds-danger-soft)}.badge.blue{color:var(--ds-info);background:var(--ds-info-soft)}
+.tag{color:var(--ds-text-secondary);background:var(--ds-surface-subtle);border-color:var(--ds-border);border-radius:var(--ds-radius-xs)}
+
+/* Cartões de indicadores */
+.stat,.teamStats article,.reportStats article,.tasksStats>article,.projectStats>article,.clientStats>article,.dashboardKpis>article,.financeStats>article,.financialOpsStats>article,.crmKpis>article,.onboardingStats>article{color:var(--ds-text);background:var(--ds-surface);border-color:var(--ds-border);border-radius:var(--ds-radius-md);box-shadow:var(--ds-shadow-xs);transition:border-color var(--ds-transition),box-shadow var(--ds-transition),transform var(--ds-transition)}
+.stat:hover,.teamStats article:hover,.reportStats article:hover,.tasksStats>article:hover,.projectStats>article:hover,.clientStats>article:hover,.dashboardKpis>article:hover,.financeStats>article:hover,.financialOpsStats>article:hover,.crmKpis>article:hover,.onboardingStats>article:hover{border-color:var(--ds-border-strong);box-shadow:var(--ds-shadow-sm);transform:translateY(-1px)}
+
+/* Feedback e movimento */
+.toast{border:1px solid color-mix(in srgb,var(--ds-success) 35%,transparent);border-radius:var(--ds-radius-md);background:var(--ds-text);box-shadow:var(--ds-shadow-md)}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+@media(max-width:700px){.modalHead{padding:18px}.form{padding:18px}.btn{min-height:44px}.iconBtn{min-width:40px;min-height:40px}.tasksPageTop,.teamPageHeader,.reportsHeader,.financialOpsIntro,.servicesHeading{align-items:flex-start}}

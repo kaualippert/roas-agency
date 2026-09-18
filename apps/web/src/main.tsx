@@ -47,6 +47,7 @@ import './notification-center-enhanced.css';
 import './sales-goal.css';
 import './client-processes.css';
 import './kanban-density.css';
+import './design-system.css';
 
 applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')));
 

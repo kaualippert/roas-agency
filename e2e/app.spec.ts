@@ -19,9 +19,8 @@ test('cobertura de marketing considera somente clientes ativos',async({page})=>{
   client_marketing_integrations:[{id:'old',clientId:'inactive',provider:'meta_ads',status:'connected'},{id:'deleted',clientId:'deleted',provider:'google_ads',status:'connected'}],
  }}}));
  await page.goto('/marketing/dashboard');
- const stats=page.locator('.marketingDashboardStats');
- await expect(stats.locator('article').filter({hasText:'Marcas integradas'}).locator('strong')).toHaveText('0');
- await expect(stats.locator('article').filter({hasText:'Aguardando configuração'}).locator('strong')).toHaveText('1');
+ await expect(page.getByRole('heading',{name:'Conecte a primeira marca'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Abrir integrações'})).toBeVisible();
 });
 
 test.beforeEach(async({page})=>{

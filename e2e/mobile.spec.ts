@@ -92,7 +92,7 @@ test('processos do cliente e checklist permanecem utilizáveis no telefone',asyn
 
 test('integrações de marca permanecem legíveis e configuráveis no telefone',async({page})=>{
  await page.goto('/marketing/integrations');
- await expect(page.getByRole('heading',{name:'Contas certas para cada cliente'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Conectar contas aos clientes'})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.getByRole('button',{name:'Configurar Meta'}).click();
  await expect(page.locator('.modal').getByText('Cliente Teste',{exact:true})).toBeVisible();
