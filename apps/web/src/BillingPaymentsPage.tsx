@@ -6,7 +6,7 @@ import type {Client} from './types';
 import type {AgencyService} from './ServicesManager';
 import {linkedServices} from './service-links';
 import type {EffectiveFinancialStatus} from './finance-helpers';
-import {effectiveFinancialStatus,financialKindLabel,financialStatusLabel,formatMoney,monthKey,paymentMethodLabel,seedFinancialEntries} from './finance-helpers';
+import {effectiveFinancialStatus,financialKindLabel,financialStatusLabel,formatMoney,monthKey,paymentMethodLabel} from './finance-helpers';
 import type {EntryKind,FinancialEntry,PaymentMethod} from './financial-entries';
 import {usePersistentState} from './persistent-ui';
 
@@ -23,7 +23,6 @@ function FinancialOperationsPage({mode}:{mode:Mode}){
  const [clients]=useStoreData<Client[]>('clients',[]),[services]=useStoreData<AgencyService[]>('services',[]),[entries,setEntries]=useStoreData<FinancialEntry[]>('financial_entries',[]);
  const [month,setMonth]=usePersistentState(`roas_filter_${mode}_month`,monthKey()),[query,setQuery]=usePersistentState(`roas_filter_${mode}_query`,''),[clientFilter,setClientFilter]=usePersistentState(`roas_filter_${mode}_client`,'all'),[statusFilter,setStatusFilter]=usePersistentState<StatusFilter>(`roas_filter_${mode}_status`,mode==='payments'?'received':'all');
  const [chargeOpen,setChargeOpen]=useState(false),[paymentTarget,setPaymentTarget]=useState<FinancialEntry|null>(null),[selectedClientId,setSelectedClientId]=useState('');
- useEffect(()=>{if(!localStorage.getItem('roas_financial_entries'))setEntries(seedFinancialEntries(clients))},[clients]);
  const activeClients=clients.filter(client=>client.status==='active');
  const monthEntries=useMemo(()=>entries.filter(entry=>entry.dueDate.startsWith(month)),[entries,month]);
  const totals=useMemo(()=>monthEntries.reduce((summary,entry)=>{const status=effectiveFinancialStatus(entry);summary.total+=entry.value;summary[status]+=entry.value;return summary},{total:0,pending:0,received:0,overdue:0}),[monthEntries]);

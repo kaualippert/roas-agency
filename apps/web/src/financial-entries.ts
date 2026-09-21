@@ -22,8 +22,8 @@ export type FinancialEntry={
 };
 
 const today=()=>new Date().toISOString().slice(0,10);
-const currentBillingDate=(paymentDay?:number)=>{
-  const now=new Date(),day=Math.min(28,Math.max(1,paymentDay||10));
+export const currentBillingDate=(paymentDay?:number,reference=new Date())=>{
+  const now=reference,lastDay=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),day=Math.min(lastDay,Math.max(1,paymentDay||10));
   return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
 };
 const pricingType=(project:Project)=>project.pricingType||'monthly';

@@ -15,11 +15,17 @@ export default function AppLayout({children}:{children:React.ReactNode}){
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
  const [access,setAccess]=useState<CurrentAccess|null>(()=>store.access());
  const [notifications,setNotifications]=useState<LayoutNotification[]>(()=>store.get('notifications',[]));
+ const [syncConflict,setSyncConflict]=useState('');
  useEffect(()=>{
   const update=()=>{setTeam(store.get('team',[]));setAccess(store.access());setNotifications(store.get('notifications',[]))};
   window.addEventListener('roas-change',update);
   update();
   return()=>window.removeEventListener('roas-change',update);
+ },[]);
+ useEffect(()=>{
+  const show=(event:Event)=>{const detail=(event as CustomEvent<{message?:string}>).detail;setSyncConflict(detail?.message||'Outra pessoa alterou este registro. Os dados mais recentes foram carregados.')};
+  window.addEventListener('roas-state-conflict',show);
+  return()=>window.removeEventListener('roas-state-conflict',show);
  },[]);
  useEffect(()=>{
   const desktop=window.matchMedia('(min-width: 801px)');
@@ -53,6 +59,7 @@ export default function AppLayout({children}:{children:React.ReactNode}){
   {sidebarOpen&&<button className="sidebarBackdrop" type="button" aria-label="Fechar menu" onClick={()=>setSidebarOpen(false)}/>}
   <div className={`shell ${sidebarOpen?'wide':'narrow'}`}>
    <AppHeader onMenu={()=>setSidebarOpen(value=>!value)} member={member||undefined} accessAreas={verifiedAreas} notifications={notifications}/>
+   {syncConflict&&<div className="syncConflictNotice" role="alert"><span><b>Alteração concorrente</b>{syncConflict}</span><button type="button" onClick={()=>setSyncConflict('')} aria-label="Fechar aviso">×</button></div>}
    {allowed?children:<AccessDenied member={member||undefined} accessAreas={verifiedAreas}/>}
   </div>
  </>

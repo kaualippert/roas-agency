@@ -21,9 +21,12 @@ const stateDocumentId='current';
 interface StateCollectionDocument{
  _id:string;
  value:unknown;
+ revision?:number;
  createdAt:Date;
  updatedAt:Date;
 }
+
+export interface StateSnapshot{value:unknown;revision:number|null;exists:boolean}
 
 export function isAllowedKey(key:string){return allowedKeys.has(key)||/^editorial_[A-Za-z0-9-]+$/.test(key)}
 
@@ -42,7 +45,7 @@ async function writeCollectionValue(key:string,value:unknown){
  const now=new Date();
  const result=await collectionFor(key).findOneAndUpdate(
   {_id:stateDocumentId},
-  {$set:{value,updatedAt:now},$setOnInsert:{createdAt:now}},
+  {$set:{value,updatedAt:now},$setOnInsert:{createdAt:now},$inc:{revision:1}},
   {upsert:true,returnDocument:'after'},
  );
  return result?.value;
@@ -83,6 +86,29 @@ export async function getState(key:string){
  await migrateLegacyState();
  const document=await collectionFor(key).findOne({_id:stateDocumentId});
  return document?.value;
+}
+
+export async function getStateSnapshot(key:string):Promise<StateSnapshot>{
+ await migrateLegacyState();
+ const document=await collectionFor(key).findOne({_id:stateDocumentId});
+ return document?{value:document.value,revision:typeof document.revision==='number'?document.revision:null,exists:true}:{value:undefined,revision:null,exists:false};
+}
+
+export async function replaceStateAtRevision(key:string,value:unknown,snapshot:StateSnapshot){
+ await migrateLegacyState();
+ const collection=collectionFor(key),now=new Date();
+ if(!snapshot.exists){
+  try{
+   const result=await collection.updateOne({_id:stateDocumentId},{$setOnInsert:{value,createdAt:now,updatedAt:now,revision:1}},{upsert:true});
+   return result.upsertedCount===1?value:undefined;
+  }catch(error){
+   if((error as {code?:number}).code===11000)return undefined;
+   throw error;
+  }
+ }
+ const revisionFilter=snapshot.revision===null?{revision:{$exists:false}}:{revision:snapshot.revision};
+ const result=await collection.findOneAndUpdate({_id:stateDocumentId,...revisionFilter},{$set:{value,updatedAt:now},$inc:{revision:1}},{returnDocument:'after'});
+ return result?.value;
 }
 
 export async function replaceState(key:string,value:unknown){

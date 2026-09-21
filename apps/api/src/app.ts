@@ -6,13 +6,14 @@ import mongoose from 'mongoose';
 import {GridFSBucket,ObjectId} from 'mongodb';
 import {z} from 'zod';
 import {config} from './config.js';
-import {allState,deleteState,getState,isAllowedKey,replaceAllState,replaceState} from './state.js';
+import {allState,deleteState,getState,getStateSnapshot,isAllowedKey,replaceAllState,replaceState,replaceStateAtRevision} from './state.js';
+import {mergeConcurrentState,StateConflictError} from './state-merge.js';
 import {requireFirebaseAuth} from './auth.js';
 import {canAccessClient,canAccessStateKey,filterState,filterStateValue,requireAgencyAccess,scopeStateWrite,type AccessContext} from './access.js';
 import {invitationRouter} from './invitations.js';
 import {marketingOAuthRouter} from './marketing-oauth.js';
 
-const valueSchema=z.object({value:z.unknown()});
+const valueSchema=z.object({value:z.unknown(),baseValue:z.unknown().optional(),baseMissing:z.boolean().optional()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
 
 export function createApp(){
@@ -151,10 +152,22 @@ export function createApp(){
       if(!isAllowedKey(request.params.key))return response.status(404).json({error:'Unknown state key'});
       const access=response.locals.access as AccessContext;
       if(!canAccessStateKey(access,request.params.key,true))return response.status(403).json({error:'Você não possui permissão para alterar esta área.'});
-      const {value}=valueSchema.parse(request.body);
-      const current=await getState(request.params.key);
-      const saved=await replaceState(request.params.key,scopeStateWrite(access,request.params.key,value,current));
-      response.json({value:filterStateValue(access,request.params.key,saved)});
+      const parsed=valueSchema.parse(request.body);
+      if(!Object.prototype.hasOwnProperty.call(parsed,'baseValue')){
+        const current=await getState(request.params.key);
+        const saved=await replaceState(request.params.key,scopeStateWrite(access,request.params.key,parsed.value,current));
+        return response.json({value:filterStateValue(access,request.params.key,saved)});
+      }
+      for(let attempt=0;attempt<5;attempt++){
+        const snapshot=await getStateSnapshot(request.params.key);
+        const currentVisible=filterStateValue(access,request.params.key,snapshot.value);
+        const missingBase=Array.isArray(currentVisible)&&Array.isArray(parsed.value)?[]:currentVisible&&parsed.value&&typeof currentVisible==='object'&&typeof parsed.value==='object'?{}:undefined;
+        const mergedVisible=mergeConcurrentState(parsed.baseMissing?missingBase:parsed.baseValue,currentVisible,parsed.value,request.params.key);
+        const next=scopeStateWrite(access,request.params.key,mergedVisible,snapshot.value);
+        const saved=await replaceStateAtRevision(request.params.key,next,snapshot);
+        if(saved!==undefined)return response.json({value:filterStateValue(access,request.params.key,saved)});
+      }
+      throw new StateConflictError(request.params.key);
     }catch(error){next(error)}
   });
 
