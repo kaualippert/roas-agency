@@ -8,7 +8,12 @@ export type AppNotification={
  taskId?:string;
  targetPath?:string;
  version?:string;
+ recipientUserId?:string;
 };
+
+export function notificationForUser(item:AppNotification,userId:string):AppNotification{
+ return {...item,id:`${userId}:${item.id}`,recipientUserId:userId};
+}
 
 export function currentAppVersion(){
  return typeof __APP_VERSION__==='string'?__APP_VERSION__.trim():'';

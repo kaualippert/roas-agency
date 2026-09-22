@@ -9,6 +9,8 @@ export const notificationPreferenceOptions:{key:NotificationPreferenceKey;label:
  {key:'reportPending',label:'Relatório pendente',description:'Alertar sobre relatórios que ainda precisam ser enviados.'},
 ];
 const defaults:NotificationPreferences={goalAchievedSound:true,taskDueSoon:true,taskOverdue:true,paymentReceived:true,billingOverdue:true,reportPending:false};
-export function getNotificationPreferences():NotificationPreferences{return{...defaults,...store.get<Partial<NotificationPreferences>>('notification_preferences',{})}}
-export function setNotificationPreferences(value:NotificationPreferences){store.set('notification_preferences',value);window.dispatchEvent(new CustomEvent('roas-notification-preferences',{detail:value}))}
+type StoredNotificationPreferences=NotificationPreferences&{id:string;userId:string};
+const currentUserId=()=>store.access()?.uid||'';
+export function getNotificationPreferences():NotificationPreferences{const userId=currentUserId(),items=store.get<StoredNotificationPreferences[]>('notification_preferences',[]),saved=Array.isArray(items)?items.find(item=>item.userId===userId):undefined;return{...defaults,...saved}}
+export function setNotificationPreferences(value:NotificationPreferences){const userId=currentUserId();if(!userId)return;const items=store.get<StoredNotificationPreferences[]>('notification_preferences',[]),record:StoredNotificationPreferences={id:`notification-preferences-${userId}`,userId,...value};store.set('notification_preferences',[record,...items.filter(item=>item.userId!==userId)]);window.dispatchEvent(new CustomEvent('roas-notification-preferences',{detail:value}))}
 import {store} from './storage';

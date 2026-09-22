@@ -14,10 +14,9 @@ const accessOptions:{id:AccessArea;label:string;description:string}[]=[
  {id:'finance',label:'Financeiro',description:'Visão financeira, faturamento e pagamentos'},
  {id:'settings',label:'Configurações',description:'Equipe e configurações da agência'},
 ];
-const allAreas=accessOptions.map(option=>option.id);
 const memberRoles=(member?:TeamMember|null)=>member?.roles?.length?member.roles:member?.role?[member.role]:[];
 const memberClients=(member?:TeamMember|null)=>member?.clientIds||[];
-const memberAreas=(member?:TeamMember|null)=>member?.accessAreas?.length?member.accessAreas:member?allAreas:[];
+const memberAreas=(member?:TeamMember|null)=>member?member.accessAreas===undefined?['general' as AccessArea]:member.accessAreas:[];
 const isAdministrator=(member:TeamMember)=>memberRoles(member).some(role=>/administrador|proprietário/i.test(role));
 const statusLabels={pending:'Pendente',accepted:'Aceito',expired:'Expirado',revoked:'Cancelado'} as const;
 

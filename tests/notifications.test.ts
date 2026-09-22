@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createGoalAchievementNotification,createVersionNotification,mergeNotificationAlerts,notificationTarget,type AppNotification} from '../apps/web/src/notifications';
+import {createGoalAchievementNotification,createVersionNotification,mergeNotificationAlerts,notificationForUser,notificationTarget,type AppNotification} from '../apps/web/src/notifications';
 
 const now='2026-08-04T12:00:00.000Z';
 
@@ -40,4 +40,10 @@ test('alertas antigos recebem o identificador e itens descartados não reaparece
  assert.equal(enriched[0].read,true);
  assert.equal(enriched[0].taskId,'task-1');
  assert.deepEqual(mergeNotificationAlerts([], [alert], ['task-alert']),[]);
+});
+
+test('personaliza a notificação e seu identificador para cada membro',()=>{
+ const notification=createVersionNotification('v2','2026-09-22T10:00:00.000Z')!;
+ assert.deepEqual(notificationForUser(notification,'user-1'),{...notification,id:'user-1:app-version-v2',recipientUserId:'user-1'});
+ assert.notEqual(notificationForUser(notification,'user-1').id,notificationForUser(notification,'user-2').id);
 });

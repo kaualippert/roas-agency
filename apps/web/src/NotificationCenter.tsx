@@ -3,7 +3,7 @@ import {Bell,CheckCheck,Clock3,CreditCard,FileClock,Flag,FolderKanban,Sparkles,T
 import {useNavigate} from 'react-router-dom';
 import {getNotificationPreferences} from './notification-preferences';
 import {playNotificationSound} from './notification-sound';
-import {createGoalAchievementNotification,createVersionNotification,currentAppVersion,mergeNotificationAlerts,notificationTarget,type AppNotification as Notification} from './notifications';
+import {createGoalAchievementNotification,createVersionNotification,currentAppVersion,mergeNotificationAlerts,notificationForUser,notificationTarget,type AppNotification as Notification} from './notifications';
 import {store} from './storage';
 import type {GenericItem,Task} from './types';
 import {usePersistentState} from './persistent-ui';
@@ -12,8 +12,11 @@ import type {CRMLead} from './crm-leads';
 
 type ConvertedLead={id:string;name:string;convertedClientId?:string};
 type FinancialEntry={id:string;description:string;dueDate:string;status:'pending'|'received';receivedAt?:string;updatedAt?:string};
-const initialNotifications=()=>store.get<Notification[]>('notifications',[]);
-const dismissedNotifications=()=>store.get<string[]>('notification_dismissals',[]);
+type NotificationDismissal={id:string;userId:string;notificationId:string;createdAt:string};
+const notificationUserId=()=>store.access()?.uid||'';
+const initialNotifications=()=>{const userId=notificationUserId();return store.get<Notification[]>('notifications',[]).filter(item=>item.recipientUserId===userId)};
+const dismissalRecords=()=>store.get<NotificationDismissal[]>('notification_dismissals',[]);
+const dismissedNotifications=()=>{const userId=notificationUserId();return dismissalRecords().filter(item=>item.userId===userId).map(item=>item.notificationId)};
 const relative=(date:string)=>{const timestamp=new Date(date).getTime();if(Number.isNaN(timestamp))return'Agora';const minutes=Math.max(1,Math.round((Date.now()-timestamp)/60000));return minutes<60?`${minutes} min atrás`:minutes<1440?`${Math.floor(minutes/60)} h atrás`:`${Math.floor(minutes/1440)} d atrás`};
 const startOfDay=(value=new Date())=>new Date(value.getFullYear(),value.getMonth(),value.getDate());
 const currentGoalState=(reference=new Date())=>{
@@ -33,8 +36,8 @@ export default function NotificationCenter(){
 
  useEffect(()=>{
   const appendAlerts=(alerts:Notification[])=>{
-   if(!alerts.length)return;
-   const current=store.get<Notification[]>('notifications',[]),next=mergeNotificationAlerts(current,alerts,dismissedNotifications());
+   const userId=notificationUserId();if(!alerts.length||!userId)return;
+   const current=initialNotifications(),personalized=alerts.map(alert=>notificationForUser(alert,userId)),next=mergeNotificationAlerts(current,personalized,dismissedNotifications());
    if(next!==current)store.set('notifications',next);
   };
   const scanGoalAchievement=()=>{
@@ -106,7 +109,8 @@ export default function NotificationCenter(){
  useEffect(()=>{const badge=document.querySelector('.notification i');if(badge){badge.textContent=String(unread);(badge as HTMLElement).style.display=unread?'block':'none'}},[unread]);
  const save=(next:Notification[])=>{setItems(next);knownNotificationIds.current=new Set(next.map(item=>item.id));store.set('notifications',next)};
  const dismiss=(ids:string[])=>{
-  const dismissed=Array.from(new Set([...dismissedNotifications(),...ids]));
+  const userId=notificationUserId(),now=new Date().toISOString(),existing=dismissalRecords(),known=new Set(existing.filter(item=>item.userId===userId).map(item=>item.notificationId));
+  const dismissed=[...existing,...ids.filter(id=>!known.has(id)).map(notificationId=>({id:`${userId}:${notificationId}`,userId,notificationId,createdAt:now}))];
   store.set('notification_dismissals',dismissed);
   save(items.filter(item=>!ids.includes(item.id)));
  };

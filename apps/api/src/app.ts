@@ -12,6 +12,7 @@ import {requireFirebaseAuth} from './auth.js';
 import {canAccessClient,canAccessStateKey,filterState,filterStateValue,requireAgencyAccess,scopeStateWrite,type AccessContext} from './access.js';
 import {invitationRouter} from './invitations.js';
 import {marketingOAuthRouter} from './marketing-oauth.js';
+import {deleteClientData} from './client-deletion.js';
 
 const valueSchema=z.object({value:z.unknown(),baseValue:z.unknown().optional(),baseMissing:z.boolean().optional()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
@@ -101,6 +102,23 @@ export function createApp(){
   });
 
   app.use(express.json({limit:'5mb'}));
+
+  app.delete('/api/clients/:clientId',requireFirebaseAuth,(request,response,next)=>{
+   if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
+   next();
+  },requireAgencyAccess,async(request,response,next)=>{
+   try{
+    const access=response.locals.access as AccessContext;
+    if(!access.isAdministrator)return response.status(403).json({error:'Somente administradores podem excluir clientes definitivamente.'});
+    const clientId=String(request.params.clientId),clients=await getState('clients'),exists=Array.isArray(clients)&&clients.some(client=>client&&typeof client==='object'&&String((client as {id?:unknown}).id||'')===clientId);
+    if(!exists)return response.status(404).json({error:'Cliente não encontrado.'});
+    const result=await deleteClientData(clientId);
+    const files=await mongoose.connection.db!.collection('client_files.files').find({'metadata.clientId':clientId}).project({_id:1}).toArray();
+    const bucket=new GridFSBucket(mongoose.connection.db!,{bucketName:'client_files'});
+    await Promise.all(files.map(file=>bucket.delete(file._id as ObjectId).catch(()=>undefined)));
+    response.json({deleted:true,projects:result.projectIds.length,files:files.length});
+   }catch(error){next(error)}
+  });
 
   app.use('/api/marketing',marketingOAuthRouter());
 

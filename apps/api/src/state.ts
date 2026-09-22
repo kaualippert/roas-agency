@@ -111,6 +111,17 @@ export async function replaceStateAtRevision(key:string,value:unknown,snapshot:S
  return result?.value;
 }
 
+export async function updateStateAtomically(key:string,update:(value:unknown)=>unknown){
+ for(let attempt=0;attempt<8;attempt++){
+  const snapshot=await getStateSnapshot(key),next=update(snapshot.value);
+  const saved=await replaceStateAtRevision(key,next,snapshot);
+  if(saved!==undefined)return saved;
+ }
+ const error=new Error(`Não foi possível atualizar ${key} porque os dados continuam sendo alterados.`) as Error&{status:number};
+ error.status=409;
+ throw error;
+}
+
 export async function replaceState(key:string,value:unknown){
  await migrateLegacyState();
  return writeCollectionValue(key,value);

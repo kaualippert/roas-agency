@@ -27,14 +27,15 @@ export interface AccessContext{
 
 const allAreas:AccessArea[]=['general','marketing','finance','settings'];
 const keyAreas:Record<string,AccessArea|AccessArea[]>={
- activities:'general',clients:['general','marketing','finance'],notifications:'general',notification_dismissals:'general',notification_preferences:'general',
- notification_sound_enabled:'general',onboarding:'general',projects:'general',prospects:'general',tasks:'general',crm_goal:'general',client_processes:'general',client_mind_maps:'general',
+ activities:'general',app_version:'general',clients:['general','marketing','finance'],documents:'general',notifications:allAreas,notification_dismissals:allAreas,notification_preferences:allAreas,
+ notification_sound_enabled:allAreas,onboarding:'general',projects:'general',prospects:'general',tasks:'general',crm_goal:'general',client_processes:'general',client_mind_maps:'general',
  campaigns:'marketing',ads:'marketing',creatives:'marketing',integrations:'marketing',marketing_integrations:'marketing',client_marketing_integrations:'marketing',marketing_metrics:'marketing',marketing_dashboard_preferences:'marketing',reports:'marketing',
  financial_entries:'finance',invoices:'finance',payments:'finance',
  agency_profile:'settings',general_settings:'settings',permissions:'settings',services:'settings',settings:'settings',team:'settings',team_invitations:'settings',
 };
 const administratorOnly=new Set(['agency_profile','general_settings','permissions','services','settings','team','team_invitations']);
-const clientScopedKeys=new Set(['clients','client_processes','client_mind_maps','client_marketing_integrations','marketing_metrics','marketing_dashboard_preferences','documents','financial_entries','invoices','onboarding','payments','projects','reports','tasks']);
+const clientScopedKeys=new Set(['activities','clients','client_processes','client_mind_maps','client_marketing_integrations','marketing_metrics','marketing_dashboard_preferences','documents','financial_entries','invoices','onboarding','payments','projects','reports','tasks']);
+const userScopedKeys=new Set(['notifications','notification_dismissals','notification_preferences','notification_sound_enabled']);
 
 const normalizeEmail=(value:unknown)=>String(value||'').trim().toLowerCase();
 const roles=(member:StoredMember)=>member.roles?.length?member.roles:member.role?[member.role]:[];
@@ -53,7 +54,7 @@ export async function resolveAccessContext(user:DecodedIdToken):Promise<AccessCo
   email,
   member,
   isAdministrator:administrator,
-  accessAreas:administrator?allAreas:member.accessAreas?.length?member.accessAreas:allAreas,
+  accessAreas:administrator?allAreas:member.accessAreas===undefined?['general']:member.accessAreas.filter(area=>allAreas.includes(area)),
   clientIds:administrator||member.clientIds===undefined?null:new Set(member.clientIds),
  };
 }
@@ -69,7 +70,13 @@ export function canAccessStateKey(context:AccessContext,key:string,write=false){
  if(context.isAdministrator)return true;
  if(write&&administratorOnly.has(key))return false;
  const area=key.startsWith('editorial_')?'general':keyAreas[key];
- return !area||(Array.isArray(area)?area.some(item=>context.accessAreas.includes(item)):context.accessAreas.includes(area));
+ return Boolean(area)&&(Array.isArray(area)?area.some(item=>context.accessAreas.includes(item)):context.accessAreas.includes(area));
+}
+
+function canAccessUserRecord(context:AccessContext,record:unknown){
+ if(!record||typeof record!=='object')return false;
+ const value=record as Record<string,unknown>;
+ return String(value.recipientUserId||value.userId||'')===context.uid;
 }
 
 function recordClientId(key:string,record:unknown){
@@ -86,6 +93,7 @@ function canAccessRecord(context:AccessContext,key:string,record:unknown){
 
 export function filterStateValue(context:AccessContext,key:string,value:unknown){
  if(!canAccessStateKey(context,key))return undefined;
+ if(userScopedKeys.has(key))return Array.isArray(value)?value.filter(record=>canAccessUserRecord(context,record)):[];
  return Array.isArray(value)?value.filter(record=>canAccessRecord(context,key,record)):value;
 }
 
@@ -97,6 +105,11 @@ export function filterState(context:AccessContext,state:Record<string,unknown>){
 }
 
 export function scopeStateWrite(context:AccessContext,key:string,incoming:unknown,current:unknown){
+ if(userScopedKeys.has(key)&&Array.isArray(incoming)){
+  const visible=incoming.filter(record=>canAccessUserRecord(context,record));
+  const hidden=Array.isArray(current)?current.filter(record=>!canAccessUserRecord(context,record)):[];
+  return [...hidden,...visible];
+ }
  if(context.clientIds===null||!clientScopedKeys.has(key)||!Array.isArray(incoming))return incoming;
  const visible=incoming.filter(record=>canAccessRecord(context,key,record));
  const hidden=Array.isArray(current)?current.filter(record=>!canAccessRecord(context,key,record)):[];

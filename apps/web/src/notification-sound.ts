@@ -1,6 +1,8 @@
 import {store} from './storage';
 
-export const notificationSoundEnabled=()=>store.get('notification_sound_enabled',true);
+type StoredSoundPreference={id:string;userId:string;enabled:boolean};
+export const notificationSoundEnabled=()=>{const userId=store.access()?.uid||'',items=store.get<StoredSoundPreference[]>('notification_sound_enabled',[]);return Array.isArray(items)?items.find(item=>item.userId===userId)?.enabled??true:true};
+export const setNotificationSoundEnabled=(enabled:boolean)=>{const userId=store.access()?.uid||'';if(!userId)return;const items=store.get<StoredSoundPreference[]>('notification_sound_enabled',[]),record:StoredSoundPreference={id:`notification-sound-${userId}`,userId,enabled};store.set('notification_sound_enabled',[record,...items.filter(item=>item.userId!==userId)])};
 
 export function playNotificationSound(kind:'notification'|'conversion'|'goal'='notification'){
  if(!notificationSoundEnabled())return;

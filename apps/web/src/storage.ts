@@ -62,6 +62,7 @@ export const store={
  set<T>(key:string,value:T){if(!hydrated)throw new Error('A API ainda não foi carregada.');state[key]=value;if(key==='general_settings')cacheLoadingBrand(value);emit(key);queueSync(key,value)},
  async remove(key:string){if(!hydrated)throw new Error('A API ainda não foi carregada.');pending.delete(key);await apiRequest(`/state/${key}`,{method:'DELETE'});delete state[key];emit(key)},
  async init(){if(hydrated)return;const [result,accessResult]=await Promise.all([apiRequest('/state'),apiRequest('/access/me')]);state=result.state||{};syncedState=structuredClone(state);if(state.general_settings)cacheLoadingBrand(state.general_settings);currentAccess=accessResult.access||null;hydrated=true;emit('hydrate')},
+ async reload(){clearPending();const result=await apiRequest('/state');state=result.state||{};syncedState=structuredClone(state);if(state.general_settings)cacheLoadingBrand(state.general_settings);emit('hydrate')},
  clearSession(){hydrated=false;state={};syncedState={};currentAccess=null;clearPending();emit('hydrate')},
  snapshot(){return structuredClone(state)},
  async replaceAll(next:Record<string,unknown>){clearPending();const result=await apiRequest('/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({state:next})});state=result.state||{};syncedState=structuredClone(state);if(state.general_settings)cacheLoadingBrand(state.general_settings);hydrated=true;emit('hydrate')},

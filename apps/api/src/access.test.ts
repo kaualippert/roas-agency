@@ -70,3 +70,22 @@ test('preserves hidden records when a limited member writes a collection',()=>{
   {id:'task-1',clientId:'client-1',title:'Depois'},
  ]);
 });
+
+test('does not grant every area when a member has no selected areas',()=>{
+ const withoutAreas:AccessContext={...limited,accessAreas:[]};
+ assert.equal(canAccessStateKey(withoutAreas,'tasks'),false);
+ assert.equal(canAccessStateKey(withoutAreas,'financial_entries'),false);
+ assert.equal(canAccessStateKey(withoutAreas,'settings'),false);
+});
+
+test('documents and activities respect area and assigned clients',()=>{
+ const financeOnly:AccessContext={...limited,accessAreas:['finance']};
+ assert.equal(canAccessStateKey(financeOnly,'documents'),false);
+ assert.deepEqual(filterStateValue(limited,'activities',[{id:'a',clientId:'client-1'},{id:'b',clientId:'client-2'}]),[{id:'a',clientId:'client-1'}]);
+});
+
+test('keeps notifications and preferences private to the authenticated member',()=>{
+ const current=[{id:'n1',recipientUserId:'firebase-1'},{id:'n2',recipientUserId:'firebase-2'}];
+ assert.deepEqual(filterStateValue(limited,'notifications',current),[current[0]]);
+ assert.deepEqual(scopeStateWrite(limited,'notifications',[{id:'n3',recipientUserId:'firebase-1'}],current),[current[1],{id:'n3',recipientUserId:'firebase-1'}]);
+});
