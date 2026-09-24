@@ -1,6 +1,5 @@
-import {useEffect,useMemo,useState} from 'react';
+import {lazy,Suspense,useEffect,useMemo,useRef,useState} from 'react';
 import {AlertTriangle,ArrowRight,BriefcaseBusiness,CheckCircle2,CircleDollarSign,Clock3,Funnel,Target,TrendingUp,Users,WalletCards} from 'lucide-react';
-import {Area,AreaChart,Bar,BarChart,CartesianGrid,Cell,Line,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
 import {effectiveTaskStatus,isTaskOverdue} from './task-rules';
 import type {Client,Project,Task} from './types';
@@ -12,6 +11,7 @@ import SalesGoalGauge from './SalesGoalGauge';
 import {dueEntriesInRange,receivedEntriesInRange} from './dashboard-metrics';
 
 type FinancialEntry={id:string;clientId:string;kind:'recurring'|'variable'|'one_off';value:number;dueDate:string;status:'pending'|'received';receivedAt?:string;createdAt?:string;updatedAt?:string};
+const DashboardCharts=lazy(()=>import('./DashboardCharts'));
 const stages=['Leads captados','Primeiro contato','Em andamento','Reunião','Ciclo de acompanhamento','Em espera','Negócio fechado','Negócio perdido'];
 const stageColors=['#6d4bf2','#3b82f6','#16a269','#e99a18','#e8547c','#7c8aa2','#17a66a','#e04a52'];
 const money=(value=0)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -70,19 +70,28 @@ export default function DashboardPage(){
   </div>
   <SalesGoalGauge goal={goal} result={goalResult} dashboard/>
   <div className="dashboardMainGrid">
-   <section className="card dashboardRevenue"><DashboardTitle title="Receita e previsão" subtitle={`Movimentações financeiras — ${periods[period].label.toLowerCase()}`} action={<a href="/finance">Abrir financeiro <ArrowRight/></a>}/><div className="revenueHighlights"><span><i className="received"/><small>Recebido no período</small><b>{money(received)}</b></span><span><i className="forecast"/><small>Previsão recorrente atual</small><b>{money(mrr)}</b></span><span><i className="variable"/><small>Variáveis previstas no período</small><b>{money(variable)}</b></span></div><ResponsiveContainer width="100%" height={270}><AreaChart data={revenueData}><defs><linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#6541ee" stopOpacity={.24}/><stop offset="1" stopColor="#6541ee" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="label"/><YAxis tickFormatter={value=>`${Math.round(value/1000)}k`}/><Tooltip formatter={(value:any)=>money(Number(value))}/><Area type="monotone" dataKey="previsto" stroke="#6541ee" fill="url(#dashboardRevenueGradient)" strokeWidth={2}/><Line type="monotone" dataKey="recebido" stroke="#18a267" strokeWidth={3}/></AreaChart></ResponsiveContainer></section>
+   <section className="card dashboardRevenue"><DashboardTitle title="Receita e previsão" subtitle={`Movimentações financeiras — ${periods[period].label.toLowerCase()}`} action={<a href="/finance">Abrir financeiro <ArrowRight/></a>}/><div className="revenueHighlights"><span><i className="received"/><small>Recebido no período</small><b>{money(received)}</b></span><span><i className="forecast"/><small>Previsão recorrente atual</small><b>{money(mrr)}</b></span><span><i className="variable"/><small>Variáveis previstas no período</small><b>{money(variable)}</b></span></div><DeferredChart kind="revenue" data={revenueData}/></section>
    <section className="card agencyPulse"><DashboardTitle title="Saúde da operação" subtitle="Tarefas no período · projetos e conversão no estado atual"/><Pulse label="Conclusão de tarefas no período" value={taskRate} icon={<CheckCircle2/>} tone="green"/><Pulse label="Progresso atual dos projetos" value={projectAverage} icon={<Target/>} tone="blue"/><Pulse label="Conversão comercial acumulada" value={conversion} icon={<Funnel/>} tone="purple"/><div className="attentionBox"><AlertTriangle/><div><b>{overdueTasks.length} tarefas atrasadas agora</b><span>Revise responsáveis e prazos prioritários.</span></div><a href="/tasks">Ver tarefas</a></div></section>
   </div>
   <div className="dashboardCharts">
-   <section className="card funnelChart"><DashboardTitle title="Funil comercial" subtitle="Oportunidades por etapa no período" action={<a href="/crm">Abrir CRM <ArrowRight/></a>}/><ResponsiveContainer width="100%" height={245}><BarChart data={funnelData}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="stage" tick={{fontSize:9}}/><YAxis allowDecimals={false}/><Tooltip/><Bar dataKey="total" radius={[5,5,0,0]}>{funnelData.map(item=><Cell key={item.stage} fill={item.color}/>)}</Bar></BarChart></ResponsiveContainer></section>
+   <section className="card funnelChart"><DashboardTitle title="Funil comercial" subtitle="Oportunidades por etapa no período" action={<a href="/crm">Abrir CRM <ArrowRight/></a>}/><DeferredChart kind="funnel" data={funnelData}/></section>
    <section className="card taskDistribution"><DashboardTitle title="Distribuição de tarefas" subtitle={`${periodTasks.length} tarefas consideradas no período`}/><div className="taskBars">{taskData.map(item=><div key={item.name}><span><b>{item.name}</b><em>{item.value}</em></span><i><strong style={{width:`${periodTasks.length?item.value/periodTasks.length*100:0}%`,background:item.color}}/></i></div>)}</div><a className="dashboardTextLink" href="/tasks">Gerenciar tarefas <ArrowRight/></a></section>
-   <section className="card projectProgress"><DashboardTitle title="Progresso dos projetos" subtitle="Projetos ativos por evolução"/><ResponsiveContainer width="100%" height={245}><BarChart data={projectData} layout="vertical"><CartesianGrid strokeDasharray="3 3" horizontal={false}/><XAxis type="number" domain={[0,100]} tickFormatter={value=>`${value}%`}/><YAxis type="category" dataKey="name" width={95} tick={{fontSize:9}}/><Tooltip formatter={(value:any)=>`${value}%`}/><Bar dataKey="progresso" fill="#3b82f6" radius={[0,5,5,0]}/></BarChart></ResponsiveContainer></section>
+   <section className="card projectProgress"><DashboardTitle title="Progresso dos projetos" subtitle="Projetos ativos por evolução"/><DeferredChart kind="projects" data={projectData}/></section>
   </div>
   <div className="dashboardBottom">
    <section className="card priorityTasks"><DashboardTitle title="Prioridades da equipe" subtitle="Tarefas abertas com maior urgência" action={<a href="/tasks">Ver todas <ArrowRight/></a>}/>{priorities.map(task=><PriorityTask key={task.id} task={task} client={clients.find(client=>client.id===task.clientId)}/>)}</section>
    <section className="card dashboardActivity"><DashboardTitle title="Atividade recente" subtitle={`Atualizações encontradas — ${periods[period].label.toLowerCase()}`}/>{activity.map((item,index)=><Activity key={`${item.type}-${index}`} item={item}/>)}{!activity.length&&<div className="dashboardEmpty"><Clock3/><span>Nenhuma atividade registrada neste período.</span></div>}</section>
   </div>
  </main>
+}
+
+function DeferredChart({kind,data}:{kind:'revenue'|'funnel'|'projects';data:any[]}){
+ const host=useRef<HTMLDivElement>(null),[nearViewport,setNearViewport]=useState(false);
+ useEffect(()=>{const element=host.current;if(!element)return;const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setNearViewport(true);observer.disconnect()}},{rootMargin:'160px'});observer.observe(element);return()=>observer.disconnect()},[]);
+ const className=`dashboardChartPlaceholder ${nearViewport?'loading':''}`;
+ return <div ref={host} className={className} aria-label="Gráfico">
+  {nearViewport?<Suspense fallback={<div className="chartLoadingLines"/>}><DashboardCharts kind={kind} data={data}/></Suspense>:<div className="chartLoadingLines"/>}
+ </div>
 }
 
 function PriorityTask({task,client}:{task:Task;client?:Client}){return <article><span className={`priorityDot ${task.priority}`}/><div><b>{task.title}</b><small>{client?.companyName||'Todos os clientes'}</small></div><span className={`dueDate ${isTaskOverdue(task)?'late':''}`}>{new Date(`${task.dueDate}T12:00:00`).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></article>}
