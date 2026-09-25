@@ -13,6 +13,7 @@ import './mobile.css';
 import './appearance-themes.css';
 import './agency-branding.css';
 import './sidebar-preference.css';
+import './app-shell.css';
 
 applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')));
 
