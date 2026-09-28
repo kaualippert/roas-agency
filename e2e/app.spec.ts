@@ -274,6 +274,8 @@ test('cria um processo do cliente e acompanha o checklist',async({page})=>{
 test('configura a meta comercial no CRM e compartilha o velocímetro com o dashboard',async({page})=>{
  await page.goto('/crm');
  const crmGoal=page.locator('.salesGoalCard');
+ await expect(crmGoal).toHaveCSS('display','grid');
+ await expect(crmGoal.locator('.salesGoalGauge')).toHaveCSS('max-width','320px');
  await crmGoal.getByRole('button',{name:'Configurar meta'}).click();
  const dialog=page.getByRole('dialog',{name:'Configurar meta mensal'});
  await dialog.getByRole('radio',{name:/Quantidade/}).check();

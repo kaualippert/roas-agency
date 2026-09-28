@@ -5,7 +5,7 @@ import {genericPageKeys} from './navigation';
 type StyleLoader=()=>Promise<unknown>;
 const page=(styles:StyleLoader[],load:()=>Promise<{default:ComponentType<any>}>)=>lazy(async()=>{await Promise.all(styles.map(style=>style()));return load()});
 const css={
- dashboard:()=>import('../dashboard-connected.css'),dashboardCharts:()=>import('../dashboard-chart-loading.css'),salesGoal:()=>import('../sales-goal.css'),
+ dashboard:()=>import('../dashboard-connected.css'),dashboardCharts:()=>import('../dashboard-chart-loading.css'),
  clients:()=>import('../clients-enhanced.css'),clientHub:()=>import('../client-hub.css'),clientFiles:()=>import('../client-files.css'),clientHubActions:()=>import('../client-hub-actions.css'),clientProcesses:()=>import('../client-processes.css'),clientMindMaps:()=>import('../client-mind-maps.css'),clientMindMapsFreeform:()=>import('../client-mind-maps-freeform.css'),
  onboarding:()=>import('../onboarding.css'),projects:()=>import('../projects-enhanced.css'),projectResponsibles:()=>import('../projects-responsibles.css'),projectBilling:()=>import('../project-billing.css'),projectsSocial:()=>import('../projects-social-link.css'),
  editorial:()=>import('../editorial.css'),editorialDescription:()=>import('../editorial-description.css'),editorialEditing:()=>import('../editorial-editing.css'),
@@ -16,7 +16,7 @@ const css={
  marketingIntegrations:()=>import('../marketing-integrations.css'),marketingModule:()=>import('../marketing-module.css'),marketingMetrics:()=>import('../marketing-metrics.css'),
 };
 
-const DashboardPage=page([css.dashboard,css.dashboardCharts,css.salesGoal],()=>import('../DashboardPage'));
+const DashboardPage=page([css.dashboard,css.dashboardCharts],()=>import('../DashboardPage'));
 const ClientsPage=page([css.clients],()=>import('../ClientsPageEnhanced'));
 const ClientHubPage=page([css.clientHub,css.clientFiles,css.clientHubActions,css.clientProcesses,css.clientMindMaps,css.clientMindMapsFreeform],()=>import('../ClientHubPage'));
 const OnboardingPage=page([css.onboarding],()=>import('../OnboardingPage'));

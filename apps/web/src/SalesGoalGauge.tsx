@@ -2,6 +2,7 @@ import {ArrowRight,Flag,RotateCcw,Settings2,Trophy} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import type {CRMGoal,CRMGoalProgress} from './crm-goal';
 import {formatCRMGoalValue} from './crm-goal';
+import './sales-goal.css';
 
 type Props={
  goal:CRMGoal;
