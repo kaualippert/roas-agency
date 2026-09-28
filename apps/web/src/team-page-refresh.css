@@ -1,0 +1,115 @@
+.teamPage{padding-bottom:48px}
+.teamPageHeader{gap:24px;margin-bottom:22px}
+.teamEyebrow{display:block;margin-bottom:7px;color:var(--ds-brand-700);font-size:10px;font-weight:800;letter-spacing:.12em}
+.teamPageHeader h2{font-size:clamp(24px,2vw,30px);letter-spacing:-.025em}
+.teamPageHeader p{max-width:610px;margin-top:7px;font-size:13px;line-height:1.55}
+.teamInviteButton{min-height:42px;flex:none;padding-inline:17px;box-shadow:0 8px 20px color-mix(in srgb,var(--purple) 20%,transparent)}
+.teamInviteButton svg{width:17px}
+
+.teamPage .teamStats{gap:14px;margin-bottom:20px}
+.teamPage .teamStats article{position:relative;min-width:0;min-height:108px;padding:19px 20px;gap:15px;border-radius:15px;background:var(--ds-surface);border-color:var(--ds-border)}
+.teamPage .teamStats article::before{content:"";position:absolute;inset:0 0 auto;height:3px;border-radius:15px 15px 0 0;background:var(--purple)}
+.teamPage .teamStats article:nth-child(2)::before{background:var(--ds-success)}
+.teamPage .teamStats article:nth-child(3)::before{background:var(--ds-info)}
+.teamPage .teamStatIcon{width:46px;height:46px;flex:none;border-radius:13px}
+.teamPage .teamStats article>div{min-width:0}
+.teamPage .teamStats small{font-size:11px;color:var(--ds-text-muted)}
+.teamPage .teamStats strong{margin-top:5px;font-size:26px;line-height:1.1;color:var(--ds-text)}
+.teamPage .teamStats em{margin-top:5px;color:var(--ds-text-secondary);font-size:11px}
+
+.teamPage .teamDirectory{overflow:hidden;border:1px solid var(--ds-border);border-radius:18px;background:var(--ds-surface);box-shadow:var(--ds-shadow-sm)}
+.teamDirectoryHead{padding:22px 24px 14px}
+.teamDirectoryHead h3{margin:0;color:var(--ds-text);font-size:19px;letter-spacing:-.02em}
+.teamDirectoryHead p{margin:5px 0 0;color:var(--ds-text-muted);font-size:12px;line-height:1.45}
+.teamPage .teamAccessTabs{gap:4px;padding:0 20px;border-color:var(--ds-border)}
+.teamPage .teamAccessTabs button{min-height:48px;padding:12px 14px;font-size:12px;color:var(--ds-text-muted)}
+.teamPage .teamAccessTabs button.active{color:var(--ds-brand-700);border-color:var(--purple)}
+.teamPage .teamAccessTabs span{min-width:20px;height:20px;padding:0 5px;background:var(--ds-brand-100);color:var(--ds-brand-700)}
+.teamPage .directoryTools{justify-content:flex-start;flex-wrap:wrap;gap:12px;min-height:72px;padding:14px 22px;border-color:var(--ds-border)}
+.teamPage .memberSearch{flex:0 1 250px;min-width:180px;height:40px;background:var(--ds-surface-subtle);border-color:var(--ds-border);border-radius:10px}
+.teamPage .memberSearch input{min-width:0;background:transparent;color:var(--ds-text);font-size:12px}
+.teamPage .memberSearch input::placeholder{color:var(--ds-text-muted)}
+.teamPage .departmentTabs{gap:5px;flex-wrap:wrap;overflow:visible}
+.teamPage .departmentTabs button{padding:8px 11px;border:1px solid transparent;border-radius:8px;color:var(--ds-text-secondary);font-size:11px}
+.teamPage .departmentTabs button:hover{background:var(--ds-surface-hover)}
+.teamPage .departmentTabs button.active{border-color:var(--ds-brand-200);background:var(--ds-brand-50);color:var(--ds-brand-700)}
+.teamResultCount{padding:17px 22px 0;color:var(--ds-text-muted);font-size:11px;font-weight:700}
+
+.teamPage .memberGrid{grid-template-columns:repeat(auto-fill,minmax(min(310px,100%),1fr));gap:15px;padding:15px 22px 22px}
+.teamPage .memberCard{display:flex;flex-direction:column;min-width:0;min-height:338px;padding:19px;border:1px solid var(--ds-border);border-radius:14px;background:var(--ds-surface);box-shadow:var(--ds-shadow-xs);transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.teamPage .memberCard:hover{border-color:var(--ds-border-strong);box-shadow:var(--ds-shadow-sm);transform:translateY(-2px)}
+.teamPage .memberTop{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:11px}
+.teamPage .teamAvatar{width:48px;height:48px;flex:none;border-radius:13px;font-size:15px;text-transform:uppercase}
+.memberIdentity{min-width:0}
+.teamPage .memberIdentity h3{margin:0;color:var(--ds-text);font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+.teamPage .memberDepartment{margin:4px 0 0;padding:0;background:transparent;color:var(--ds-text-muted);font-size:11px}
+.teamPage .memberTop .badge{align-self:start;margin-top:2px;white-space:nowrap}
+.teamPage .memberEmail{min-width:0;margin:14px 0 11px;color:var(--ds-text-secondary);font-size:11px;overflow-wrap:anywhere}
+.teamPage .memberEmail svg{flex:none;width:14px}
+.teamPage .roleTags{gap:6px;margin:0 0 13px;min-height:24px}
+.teamPage .roleTags span{padding:5px 8px;border-radius:6px;background:var(--ds-brand-50);color:var(--ds-brand-700);font-size:10px;font-weight:700}
+.teamPage .memberAccess{margin:0;padding:12px;border-color:var(--ds-border);border-radius:10px;background:var(--ds-surface-subtle)}
+.teamPage .memberAccess>b{gap:7px;color:var(--ds-text-secondary);font-size:11px}
+.teamPage .memberAccess>div{gap:6px;margin-top:9px}
+.teamPage .memberAccess>div span{padding:5px 8px;border-radius:6px;background:var(--ds-brand-100);color:var(--ds-brand-700);font-size:10px;font-weight:700}
+.teamPage .memberAccess>div small{color:var(--ds-text-muted);font-size:10px}
+.teamPage .managedClients{min-width:0;margin:12px 0 0;padding:11px 12px;border-color:var(--ds-border);border-radius:10px;background:var(--ds-surface-subtle)}
+.teamPage .managedClients b{color:var(--ds-text-secondary);font-size:11px}
+.teamPage .managedClients p{margin-top:5px;color:var(--ds-text-muted);font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+.teamPage .memberCard footer{display:grid;grid-template-columns:minmax(0,1fr) 36px 36px;gap:7px;margin-top:auto;padding-top:16px}
+.teamPage .memberCard footer .btn{justify-content:center;min-width:0;min-height:36px;padding:7px 10px;font-size:11px}
+.teamPage .memberCard footer .btn svg{width:14px}
+.teamPage .memberCard footer .iconBtn{width:36px;min-width:36px;height:36px;min-height:36px;padding:8px}
+.teamPage .memberCard footer .iconBtn svg{width:16px}
+
+.teamPage .invitationList{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(390px,100%),1fr));gap:14px;padding:21px}
+.teamPage .invitationRow{display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:14px;padding:19px;border:1px solid var(--ds-border);border-radius:14px;background:var(--ds-surface);box-shadow:var(--ds-shadow-xs)}
+.teamPage .invitationRow:last-child{border-bottom:1px solid var(--ds-border)}
+.teamPage .invitationRow>div.invitationMain{display:flex;align-items:center;gap:11px;min-width:0}
+.teamPage .invitationMain .teamAvatar{width:43px;height:43px;border-radius:11px}
+.teamPage .invitationPerson{flex:1;min-width:0;gap:3px}
+.teamPage .invitationPerson b{overflow-wrap:anywhere;color:var(--ds-text);font-size:13px}
+.teamPage .invitationPerson span{min-width:0;overflow-wrap:anywhere;color:var(--ds-text-muted);font-size:11px}
+.teamPage .invitationStatus{flex:none}
+.teamPage .invitationRow>div.invitationSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px;border:1px solid var(--ds-border);border-radius:10px;background:var(--ds-surface-subtle)}
+.teamPage .invitationSummary>div{min-width:0}
+.teamPage .invitationSummary small{color:var(--ds-text-muted);font-size:10px}
+.teamPage .invitationSummary p{margin:4px 0 0;color:var(--ds-text-secondary);font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+.teamPage .invitationRow>div.invitationActions{display:flex;justify-content:flex-end;grid-column:auto;margin-top:auto}
+.teamPage .invitationActions .btn{min-height:35px}
+.teamPage .emptyTeam{padding:56px 20px;color:var(--ds-text-muted)}
+.teamPage .emptyTeam>svg{width:30px;height:30px;margin-bottom:8px;color:var(--purple)}
+.teamPage .emptyTeam h3{margin:0;color:var(--ds-text);font-size:16px}
+.teamPage .emptyTeam p{margin:6px 0 0;font-size:12px}
+
+.teamPage .teamAccessTabs button:focus-visible,.teamPage .departmentTabs button:focus-visible,.teamPage .memberCard button:focus-visible,.teamPage .memberSearch:focus-within{outline:2px solid var(--purple);outline-offset:2px}
+html[data-theme="dark"] .teamPage .teamEyebrow,html[data-theme-variant="all-black"] .teamPage .teamEyebrow{color:var(--ds-brand-300)}
+html[data-theme="dark"] .teamPage .teamAccessTabs button.active,html[data-theme="dark"] .teamPage .roleTags span,html[data-theme="dark"] .teamPage .memberAccess>div span,html[data-theme="dark"] .teamPage .departmentTabs button.active,html[data-theme-variant="all-black"] .teamPage .teamAccessTabs button.active,html[data-theme-variant="all-black"] .teamPage .roleTags span,html[data-theme-variant="all-black"] .teamPage .memberAccess>div span,html[data-theme-variant="all-black"] .teamPage .departmentTabs button.active{color:var(--ds-brand-300)}
+
+@media(max-width:900px){
+ .teamPage .teamStats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .teamPage .directoryTools{align-items:stretch}
+ .teamPage .memberSearch{flex:1 1 220px}
+}
+@media(max-width:650px){
+ .teamPageHeader{align-items:stretch}
+ .teamPage .teamStats{grid-template-columns:1fr;gap:10px}
+ .teamPage .teamStats article{min-height:89px;padding:15px}
+ .teamDirectoryHead{padding:18px 16px 12px}
+ .teamPage .teamAccessTabs{padding:0 12px}
+ .teamPage .directoryTools{padding:13px 15px}
+ .teamPage .memberSearch{flex-basis:100%;min-width:0}
+ .teamPage .departmentTabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}
+ .teamResultCount{padding:15px 16px 0}
+ .teamPage .memberGrid,.teamPage .invitationList{padding:12px 15px 18px}
+ .teamPage .memberCard{min-height:0}
+ .teamPage .invitationRow>div.invitationSummary{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+ .teamPage .memberTop{grid-template-columns:43px minmax(0,1fr) auto;gap:8px}
+ .teamPage .teamAvatar{width:43px;height:43px}
+ .teamPage .memberTop .badge{font-size:9px}
+ .teamPage .invitationRow>div.invitationMain{flex-wrap:wrap}
+ .teamPage .invitationStatus{margin-left:54px}
+ .teamPage .invitationRow>div.invitationSummary{grid-template-columns:1fr}
+}
