@@ -61,6 +61,41 @@ html[data-theme-variant="all-black"] .navGroup a:hover{background:#121212}
 html[data-theme-variant="all-black"] .agencyLogoFrame{background:#000;border:1px solid #222}
 html[data-theme-variant="all-black"] .themeChoices button.active{background:#121212;border-color:#7657ff}
 
+/* Paleta institucional: coral, rosa, laranja e violeta sobre a interface escura. */
+html[data-theme-variant="agency-gradient"]{
+ color-scheme:dark;
+ --agency-gradient:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%);
+ --ds-brand-50:#321723;--ds-brand-100:#492034;--ds-brand-200:#6f2b50;--ds-brand-300:#a64072;--ds-brand-400:#d8448a;--ds-brand-500:#ed4a79;--ds-brand-600:#f04d70;--ds-brand-700:#d83a68;--ds-brand-800:#af2b63;--ds-brand-900:#7c2055;
+ --ds-canvas:#100f12;--ds-surface:#19171b;--ds-surface-subtle:#141216;--ds-surface-raised:#201d22;--ds-surface-hover:#29242c;
+ --ds-text:#f7f3f6;--ds-text-secondary:#d7cfd7;--ds-text-muted:#aa9eaa;--ds-border:#352f38;--ds-border-strong:#514552;
+ --ds-focus:0 0 0 3px rgba(245,47,148,.25);--purple:var(--ds-brand-600);--card:var(--ds-surface);--text:var(--ds-text);--border:var(--ds-border);--muted:var(--ds-text-muted);
+ background:var(--ds-canvas)
+}
+html[data-theme-variant="agency-gradient"] body{background:var(--ds-canvas);color:var(--ds-text)}
+html[data-theme-variant="agency-gradient"] .app{background:radial-gradient(ellipse at 12% 0%,#25151f 0%,transparent 37%),var(--ds-canvas)}
+html[data-theme-variant="agency-gradient"] .sidebar{background:#100d12;border-right:1px solid #352733;box-shadow:none}
+html[data-theme-variant="agency-gradient"] header{background:#151116ed;border-color:var(--ds-border)}
+html[data-theme-variant="agency-gradient"] .navGroup a.active,
+html[data-theme-variant="agency-gradient"] .btn:not(.secondary):not(.danger),
+html[data-theme-variant="agency-gradient"] .settingsNav button.active,
+html[data-theme-variant="agency-gradient"] .notification i,
+html[data-theme-variant="agency-gradient"] .userAvatar{background:var(--agency-gradient);color:#fff}
+html[data-theme-variant="agency-gradient"] .navGroup a.active{box-shadow:0 5px 20px #e83b7840}
+html[data-theme-variant="agency-gradient"] .btn:not(.secondary):not(.danger){border-color:transparent;box-shadow:0 5px 18px #e83b7833}
+html[data-theme-variant="agency-gradient"] .btn:not(.secondary):not(.danger):hover:not(:disabled){filter:brightness(1.08);box-shadow:0 8px 24px #e83b7850}
+html[data-theme-variant="agency-gradient"] .logo .rmark{background:var(--agency-gradient);background-clip:text;color:transparent}
+html[data-theme-variant="agency-gradient"] .tabs button.active,
+html[data-theme-variant="agency-gradient"] .viewTabs button.active,
+html[data-theme-variant="agency-gradient"] .taskViewTabs button.active{color:#ff6aa9;border-color:#f04d86}
+html[data-theme-variant="agency-gradient"] .tabs button:hover,
+html[data-theme-variant="agency-gradient"] .viewTabs button:hover,
+html[data-theme-variant="agency-gradient"] .taskViewTabs button:hover{color:#ff78ad}
+html[data-theme-variant="agency-gradient"] ::selection{background:#d83280}
+html[data-theme-variant="agency-gradient"] .themeChoices button.active{border-color:#ed4a8a;box-shadow:0 0 0 2px #ed4a8a30}
+html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]{border-color:#6c3657}
+html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]:hover{border-color:#ed4a8a}
+.themeChoices button[data-theme-choice="agency-gradient"]::after{content:"";height:5px;margin-top:6px;border-radius:99px;background:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%)}
+
 .themeChoices{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}
 .themeChoices button{display:grid;gap:5px;text-align:left;padding:14px 16px}
 .themeChoices button b,.themeChoices button small{display:block}
