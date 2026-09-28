@@ -84,6 +84,15 @@ html[data-theme="dark"] .crmPageBoard .crmColumn{background:color-mix(in srgb,va
 html[data-theme="dark"] .crmFilteredEmpty{background:#141c2b}
 html[data-theme-variant="all-black"] .crmPageBoard .crmColumn,html[data-theme-variant="all-black"] .crmFilteredEmpty{background:#050505}
 
+/* Harmoniza os raios e recua a divisória do cabeçalho para não cortar as bordas. */
+.crmPageBoard .crmColumns{gap:12px}
+.crmPageBoard .crmColumn{border-radius:16px;padding:11px}
+.crmPageBoard .crmColumn>header{margin:0 3px 10px;padding:7px 4px 10px;border-radius:10px;border-bottom-width:1px!important}
+.crmPageBoard .crmCards{gap:10px}
+.crmPageBoard .leadCard{border-radius:12px}
+.crmPageBoard .crmColumnEmpty{width:100%;min-height:148px;padding:18px 12px;border:1px dashed color-mix(in srgb,var(--stage-color) 28%,var(--border));border-radius:12px;background:color-mix(in srgb,var(--stage-color) 4%,var(--card))}
+.crmPageBoard .kanbanMoreButton{border-radius:10px}
+
 @media(max-width:1180px){
  .crmPage .crmKpis{grid-template-columns:repeat(3,minmax(0,1fr))}
  .crmFilterBar{grid-template-columns:repeat(3,minmax(0,1fr))}

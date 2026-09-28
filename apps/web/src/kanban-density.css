@@ -13,3 +13,13 @@ html[data-theme="dark"] .kanbanViewActions button,html[data-theme="dark"] .kanba
 .crmPageBoard .leadCard.compact .crmQuickMove{margin-top:5px;padding-top:5px}
 .crmPageBoard .leadCard.compact .crmQuickMove>span{display:none}
 .crmPageBoard .leadCard.compact .crmQuickMove select{height:27px;font-size:8px}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton{width:34px;height:34px;min-width:34px;min-height:34px;padding:0;gap:0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);box-shadow:none;transition:background .16s ease,color .16s ease}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton span:not(.srOnly){display:none}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton svg,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton svg{width:16px;height:16px}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton:hover,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton:hover{border-color:transparent;background:color-mix(in srgb,var(--purple) 10%,var(--card));color:var(--purple);box-shadow:none}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton:focus-visible,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton{width:34px;height:34px;min-width:34px;min-height:34px;padding:0;gap:0;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);box-shadow:none;transition:background .16s ease,color .16s ease}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton span:not(.srOnly){display:none}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton svg,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton svg{width:16px;height:16px}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton:hover,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton:hover{border-color:transparent;background:color-mix(in srgb,var(--purple) 10%,var(--card));color:var(--purple);box-shadow:none}
+.tasksEnhanced .taskWorkspaceHead>.fullscreenButton:focus-visible,.tasksEnhanced .kanbanDensityBar .compactTaskDensityButton:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
