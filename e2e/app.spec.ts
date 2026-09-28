@@ -63,6 +63,17 @@ test('mantém os últimos filtros ao navegar entre as páginas',async({page})=>{
 
 test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
  await page.goto('/crm');
+ const boardActions=page.locator('.crmPageBoard .kanbanViewActions');
+ const fullscreen=boardActions.getByRole('button',{name:'Tela cheia de pipeline comercial'});
+ await expect(fullscreen.locator('span')).toHaveCount(0);
+ const [counter,compactButton,fullscreenButton]=await Promise.all([
+  boardActions.locator('small').boundingBox(),
+  boardActions.getByRole('button',{name:'Compactar cards'}).boundingBox(),
+  fullscreen.boundingBox(),
+ ]);
+ expect(counter&&compactButton&&fullscreenButton).toBeTruthy();
+ expect(counter!.x+counter!.width).toBeLessThanOrEqual(compactButton!.x+1);
+ expect(compactButton!.x+compactButton!.width).toBeLessThanOrEqual(fullscreenButton!.x+1);
  await page.getByRole('button',{name:'Compactar cards'}).click();
  await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
  await expect(page.getByRole('button',{name:'Expandir cards'})).toBeVisible();

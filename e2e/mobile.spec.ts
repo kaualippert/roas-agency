@@ -5,6 +5,18 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('ações do pipeline do CRM não se sobrepõem no telefone',async({page})=>{
+ await page.goto('/crm');
+ const actions=page.locator('.crmPageBoard .kanbanViewActions');
+ const compact=actions.getByRole('button',{name:'Compactar cards'});
+ const fullscreen=actions.getByRole('button',{name:'Tela cheia de pipeline comercial'});
+ const [counterBox,compactBox,fullscreenBox]=await Promise.all([actions.locator('small').boundingBox(),compact.boundingBox(),fullscreen.boundingBox()]);
+ expect(counterBox&&compactBox&&fullscreenBox).toBeTruthy();
+ expect(counterBox!.x+counterBox!.width).toBeLessThanOrEqual(compactBox!.x+1);
+ expect(compactBox!.x+compactBox!.width).toBeLessThanOrEqual(fullscreenBox!.x+1);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+});
+
 test('edita post editorial pelo toque no celular',async({page})=>{
  await page.goto('/projects/project-1/editorial');
  await page.getByRole('button',{name:'Novo conteúdo'}).click();

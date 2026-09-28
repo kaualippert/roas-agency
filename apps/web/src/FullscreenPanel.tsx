@@ -64,5 +64,5 @@ export function FullscreenTargetButton({target,label,compact=false}:{target:stri
   element.classList.add('fullscreenSurface','fullscreenSurfaceActive');setActive(true);if(element.requestFullscreen)await element.requestFullscreen().catch(()=>undefined);
  };
  const accessibleLabel=active?`Sair da tela cheia de ${label}`:`Tela cheia de ${label}`;
- return <button ref={buttonRef} type="button" className={`fullscreenButton${compact?' compact':''}`} onClick={toggle} aria-pressed={active} aria-label={accessibleLabel} title={accessibleLabel}>{active?<Minimize2/>:<Maximize2/>}{compact?<span className="srOnly">{accessibleLabel}</span>:<><span>{active?'Sair da tela cheia':'Tela cheia'}</span><span className="srOnly"> de {label}</span></>}</button>;
+ return <button ref={buttonRef} type="button" className={`fullscreenButton${compact?' compact':''}`} onClick={toggle} aria-pressed={active} aria-label={accessibleLabel} title={accessibleLabel}>{active?<Minimize2/>:<Maximize2/>}{!compact&&<><span>{active?'Sair da tela cheia':'Tela cheia'}</span><span className="srOnly"> de {label}</span></>}</button>;
 }

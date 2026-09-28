@@ -31,11 +31,13 @@
 .crmFilterResult{padding-left:44px;font-size:10px}
 
 .crmPageBoard{border-radius:16px;padding:20px 16px;box-shadow:0 12px 34px rgba(21,29,46,.05)}
-.crmBoardLabel{padding:0 4px 18px}
+.crmPageBoard .crmBoardLabel{flex-wrap:wrap;gap:12px;padding:0 4px 18px}
+.crmPageBoard .crmBoardLabel>div:first-child{flex:1 1 250px;min-width:0}
 .crmBoardLabel b{font-size:17px}
 .crmBoardLabel span{font-size:11px;line-height:1.45}
-.crmPageBoard .kanbanViewActions{gap:5px}
-.crmPageBoard .kanbanViewActions .crmIconAction,.crmPageBoard .kanbanViewActions .fullscreenButton.compact{width:32px;height:32px;min-height:32px;padding:0;gap:0;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);box-shadow:none}
+.crmPageBoard .kanbanViewActions{flex:0 0 auto;flex-direction:row;align-items:center;justify-content:flex-end;gap:5px;min-width:0}
+.crmPageBoard .kanbanViewActions small{margin:0 6px 0 0;line-height:1.4}
+.crmPageBoard .kanbanViewActions .crmIconAction,.crmPageBoard .kanbanViewActions .fullscreenButton.compact{flex:0 0 32px;width:32px;height:32px;min-height:32px;padding:0;gap:0;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);box-shadow:none}
 .crmPageBoard .kanbanViewActions .crmIconAction:hover,.crmPageBoard .kanbanViewActions .fullscreenButton.compact:hover{border-color:transparent;background:color-mix(in srgb,var(--purple) 9%,var(--card));color:var(--purple)}
 .crmPageBoard .kanbanViewActions .crmIconAction[aria-pressed="true"]{background:color-mix(in srgb,var(--purple) 11%,var(--card));color:var(--purple)}
 .crmPageBoard .kanbanViewActions .crmIconAction:focus-visible,.crmPageBoard .kanbanViewActions .fullscreenButton.compact:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
@@ -111,6 +113,7 @@ html[data-theme-variant="all-black"] .crmPageBoard .crmColumn,html[data-theme-va
  .crmPageBoard .leadCard footer>small{font-size:10px}
 }
 @media(max-width:480px){
+ .crmPageBoard .kanbanViewActions{align-self:flex-end}
  .crmPage .crmKpis{grid-template-columns:repeat(2,minmax(0,1fr))}
  .crmKpis article{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px}
  .crmKpis small{font-size:9px}

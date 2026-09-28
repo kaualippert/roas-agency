@@ -1,4 +1,5 @@
-.fullscreenButton{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.fullscreenButton{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.fullscreenButton .srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .fullscreenButton svg{width:14px;height:14px;flex:none}
 .taskWorkspaceActions,.editorialFullscreenActions{display:flex;align-items:center;gap:7px}
 .taskWorkspaceHead .fullscreenButton,.kanbanDensityBar .fullscreenButton,.kanbanViewActions .fullscreenButton,.editorialKanbanHead .fullscreenButton,.editorialCalendarHeader .fullscreenButton{border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);padding:7px 10px;font-size:9px}
