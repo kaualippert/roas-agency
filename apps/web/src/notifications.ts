@@ -16,7 +16,8 @@ export function notificationForUser(item:AppNotification,userId:string):AppNotif
 }
 
 export function currentAppVersion(){
- return typeof __APP_VERSION__==='string'?__APP_VERSION__.trim():'';
+ const injected=typeof __APP_VERSION__==='string'?__APP_VERSION__.trim():'';
+ return injected||import.meta.env.VITE_APP_VERSION?.trim()||'';
 }
 
 export function createVersionNotification(version:string,createdAt=new Date().toISOString()):AppNotification|null{

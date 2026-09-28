@@ -226,6 +226,13 @@ test('filtra, movimenta e protege oportunidades no CRM',async({page})=>{
 test('cria lead com serviço mensal e valor automático',async({page})=>{
  await page.goto('/crm');
  await page.getByRole('button',{name:'Novo lead'}).click();
+ const dialog=page.getByRole('dialog',{name:'Adicionar oportunidade'});
+ const serviceGrid=dialog.locator('.crmServicesSelect');
+ await expect(serviceGrid).toHaveCSS('display','grid');
+ const checkbox=serviceGrid.getByRole('checkbox').first();
+ const checkboxBox=await checkbox.boundingBox();
+ expect(checkboxBox?.width).toBeLessThanOrEqual(20);
+ expect(checkboxBox?.height).toBeLessThanOrEqual(20);
  await page.getByLabel('Empresa').fill('Clínica Aurora');
  await page.getByLabel('Contato',{exact:true}).fill('Marina');
  await page.getByRole('dialog',{name:'Adicionar oportunidade'}).getByRole('checkbox',{name:/Social Media/}).check();
