@@ -15,7 +15,7 @@ import './agency-branding.css';
 import './sidebar-preference.css';
 import './app-shell.css';
 
-applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')));
+applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')),undefined,localStorage.getItem('roas_agency_gradient_colors')==='3'?3:4);
 
 createRoot(document.getElementById('root')!).render(
  <React.StrictMode>

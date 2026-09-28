@@ -71,6 +71,7 @@ html[data-theme-variant="agency-gradient"]{
  --ds-focus:0 0 0 3px rgba(245,47,148,.25);--purple:var(--ds-brand-600);--card:var(--ds-surface);--text:var(--ds-text);--border:var(--ds-border);--muted:var(--ds-text-muted);
  background:var(--ds-canvas)
 }
+html[data-theme-variant="agency-gradient"][data-agency-gradient-colors="3"]{--agency-gradient:linear-gradient(105deg,#ff4028 0%,#f52f94 52%,#6516a0 100%)}
 html[data-theme-variant="agency-gradient"] body{background:var(--ds-canvas);color:var(--ds-text)}
 html[data-theme-variant="agency-gradient"] .app{background:radial-gradient(ellipse at 12% 0%,#25151f 0%,transparent 37%),var(--ds-canvas)}
 html[data-theme-variant="agency-gradient"] .sidebar{background:#100d12;border-right:1px solid #352733;box-shadow:none}
@@ -95,6 +96,17 @@ html[data-theme-variant="agency-gradient"] .themeChoices button.active{border-co
 html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]{border-color:#6c3657}
 html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]:hover{border-color:#ed4a8a}
 .themeChoices button[data-theme-choice="agency-gradient"]::after{content:"";height:5px;margin-top:6px;border-radius:99px;background:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%)}
+html[data-agency-gradient-colors="3"] .themeChoices button[data-theme-choice="agency-gradient"]::after{background:linear-gradient(105deg,#ff4028 0%,#f52f94 52%,#6516a0 100%)}
+.agencyGradientSettings{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px;padding:15px 17px;border:1px solid var(--ds-border);border-radius:12px;background:var(--ds-surface-subtle)}
+.agencyGradientSettings>div:first-child b,.agencyGradientSettings>div:first-child small{display:block}
+.agencyGradientSettings>div:first-child b{color:var(--ds-text);font-size:12px}
+.agencyGradientSettings>div:first-child small{margin-top:4px;color:var(--ds-text-muted);font-size:10px}
+.agencyGradientOptions{display:flex;gap:8px;flex:none}
+.agencyGradientOptions button{display:grid;gap:7px;min-width:100px;padding:9px 11px;border:1px solid var(--ds-border);border-radius:9px;background:var(--ds-surface);color:var(--ds-text-secondary);text-align:left;font-size:11px;font-weight:700}
+.agencyGradientOptions button.active{border-color:var(--ds-brand-500);box-shadow:0 0 0 2px color-mix(in srgb,var(--ds-brand-500) 18%,transparent)}
+.gradientSample{display:block;height:6px;border-radius:99px;background:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%)}
+.gradientSample.colors3{background:linear-gradient(105deg,#ff4028 0%,#f52f94 52%,#6516a0 100%)}
+@media(max-width:520px){.agencyGradientSettings{align-items:stretch;flex-direction:column}.agencyGradientOptions button{flex:1}}
 
 .themeChoices{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}
 .themeChoices button{display:grid;gap:5px;text-align:left;padding:14px 16px}
