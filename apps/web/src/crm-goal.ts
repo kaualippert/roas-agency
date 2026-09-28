@@ -1,4 +1,4 @@
-import type {CRMLead} from './crm-leads';
+import {crmWonAt,type CRMLead} from './crm-leads';
 
 export type CRMGoalMetric='value'|'quantity';
 
@@ -43,7 +43,12 @@ export function isDateInMonth(value:string|undefined,reference=new Date()){
 
 export function calculateCRMGoalProgress(goal:CRMGoal,leads:CRMLead[],reference=new Date()):CRMGoalProgress{
  const excluded=new Set(goal.excludedWonLeadIds||[]);
- const won=leads.filter(lead=>lead.stage==='Negócio fechado'&&!excluded.has(lead.id)&&isDateInMonth(lead.updatedAt||lead.createdAt,reference));
+ const resetTime=goal.resetAt?new Date(goal.resetAt).getTime():NaN;
+ const won=leads.filter(lead=>{
+  if(lead.stage!=='Negócio fechado'||!isDateInMonth(crmWonAt(lead),reference))return false;
+  if(!excluded.has(lead.id))return true;
+  return Boolean(lead.wonAt&&Number.isFinite(resetTime)&&new Date(lead.wonAt).getTime()>resetTime);
+ });
  const achieved=goal.metric==='quantity'?won.length:won.reduce((sum,lead)=>sum+Math.max(0,Number(lead.value)||0),0);
  const target=Math.max(0,Number(goal.target)||0);
  const progress=target>0?Math.min(100,Math.round(achieved/target*100)):0;
@@ -52,7 +57,7 @@ export function calculateCRMGoalProgress(goal:CRMGoal,leads:CRMLead[],reference=
 
 export function resetCRMGoal(goal:CRMGoal,leads:CRMLead[],reference=new Date()):CRMGoal{
  const resetAt=reference.toISOString();
- const excludedWonLeadIds=leads.filter(lead=>lead.stage==='Negócio fechado'&&isDateInMonth(lead.updatedAt||lead.createdAt,reference)).map(lead=>lead.id);
+ const excludedWonLeadIds=leads.filter(lead=>lead.stage==='Negócio fechado'&&isDateInMonth(crmWonAt(lead),reference)).map(lead=>lead.id);
  return {...goal,updatedAt:resetAt,cycleId:resetAt,resetAt,excludedWonLeadIds};
 }
 

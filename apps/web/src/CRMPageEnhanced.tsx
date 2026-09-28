@@ -91,7 +91,7 @@ export default function CRMPage(){
   const name=String(form.get('name')||'').trim(),contact=String(form.get('contact')||'').trim();
   if(!name||!contact)return;
   const stage=String(form.get('stage')||newLeadStage) as Stage;
-  save([{id:crypto.randomUUID(),name,contact,phone:String(form.get('phone')||'').trim(),responsibleId:String(form.get('responsibleId')||''),value:estimatedValue,stage,source:String(form.get('source')||'Outro'),nextAction:crmStageNextAction[stage],color:palette[leads.length%palette.length],serviceIds:selectedServiceIds,createdAt:now,updatedAt:now},...leads]);
+  save([{id:crypto.randomUUID(),name,contact,phone:String(form.get('phone')||'').trim(),responsibleId:String(form.get('responsibleId')||''),value:estimatedValue,stage,source:String(form.get('source')||'Outro'),nextAction:crmStageNextAction[stage],color:palette[leads.length%palette.length],serviceIds:selectedServiceIds,createdAt:now,updatedAt:now,wonAt:stage==='Negócio fechado'?now:undefined},...leads]);
   closeModal();
  };
  const openGoalModal=()=>{setGoalMetric(goal.metric);setGoalTarget(goal.target);setGoalModal(true)};
@@ -104,7 +104,7 @@ export default function CRMPage(){
  const saveGoal=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
   if(goalTarget<=0)return;
-  const next:CRMGoal={metric:goalMetric,target:goalMetric==='quantity'?Math.max(1,Math.round(goalTarget)):goalTarget,updatedAt:new Date().toISOString()};
+  const next:CRMGoal={...goal,metric:goalMetric,target:goalMetric==='quantity'?Math.max(1,Math.round(goalTarget)):goalTarget,updatedAt:new Date().toISOString()};
   setGoal(next);
   store.set('crm_goal',next);
   setGoalModal(false);

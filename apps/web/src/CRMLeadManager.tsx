@@ -4,7 +4,7 @@ import {useLocation,useNavigate} from 'react-router-dom';
 import {store} from './storage';
 import type {AgencyService} from './ServicesManager';
 import type {Client,TeamMember} from './types';
-import {CRM_LEAD_OPEN_EVENT,crmStages as stages,leadServiceIds,serviceEstimate,type CRMLead as Lead,type CRMStage as Stage} from './crm-leads';
+import {CRM_LEAD_OPEN_EVENT,crmStages as stages,crmWonAt,leadServiceIds,serviceEstimate,type CRMLead as Lead,type CRMStage as Stage} from './crm-leads';
 
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const today=()=>new Date().toISOString().slice(0,10);
@@ -60,7 +60,8 @@ export default function CRMLeadManager(){
   event.preventDefault();
   const form=new FormData(event.currentTarget),all=store.get<Lead[]>('prospects',[]),now=new Date().toISOString();
   const stage=converted?'Negócio fechado':String(form.get('stage')) as Stage;
-  const edited:Lead={...selected,name:String(form.get('name')||'').trim(),contact:String(form.get('contact')||'').trim(),phone:String(form.get('phone')||'').trim(),responsibleId:String(form.get('responsibleId')||''),value:estimatedValue,stage,source:String(form.get('source')||'Outro'),nextAction:converted?'Cliente convertido':String(form.get('nextAction')||'').trim(),serviceIds:selectedServiceIds,services:undefined,updatedAt:now};
+  const wonAt=stage==='Negócio fechado'?(selected.stage==='Negócio fechado'?crmWonAt(selected)||now:now):undefined;
+  const edited:Lead={...selected,name:String(form.get('name')||'').trim(),contact:String(form.get('contact')||'').trim(),phone:String(form.get('phone')||'').trim(),responsibleId:String(form.get('responsibleId')||''),value:estimatedValue,stage,source:String(form.get('source')||'Outro'),nextAction:converted?'Cliente convertido':String(form.get('nextAction')||'').trim(),serviceIds:selectedServiceIds,services:undefined,updatedAt:now,wonAt};
   store.set('prospects',all.map(lead=>lead.id===edited.id?edited:lead));
   close();
  };
@@ -80,7 +81,7 @@ export default function CRMLeadManager(){
    id:crypto.randomUUID(),sourceLeadId:selected.id,companyName:String(form.get('companyName')||'').trim(),contactName:String(form.get('contactName')||'').trim(),email:String(form.get('email')||'').trim(),phone:String(form.get('phone')||'').trim(),instagram:String(form.get('instagram')||'').trim(),segment:String(form.get('segment')||'').trim(),city:String(form.get('city')||'').trim(),cnpj:String(form.get('cnpj')||'').trim(),paymentDay:paymentDayValue>=1&&paymentDayValue<=31?paymentDayValue:undefined,status:'active',managerId,responsibleIds:managerId?[managerId]:[],monthlyRevenue:Math.max(0,Number(form.get('monthlyRevenue')||0)),serviceIds:Array.from(new Set(form.getAll('serviceIds').map(String))),startDate:String(form.get('startDate')||today()),notes:String(form.get('notes')||'').trim(),color:selected.color||'#5b36f2',createdAt:now,updatedAt:now,
   };
   store.set('clients',[client,...currentClients]);
-  store.set('prospects',store.get<Lead[]>('prospects',[]).map(lead=>lead.id===selected.id?{...lead,stage:'Negócio fechado',nextAction:'Cliente convertido',convertedClientId:client.id,updatedAt:now}:lead));
+  store.set('prospects',store.get<Lead[]>('prospects',[]).map(lead=>lead.id===selected.id?{...lead,stage:'Negócio fechado',nextAction:'Cliente convertido',convertedClientId:client.id,updatedAt:now,wonAt:lead.stage==='Negócio fechado'?crmWonAt(lead)||now:now}:lead));
   close();
   navigate(`/clients/${client.id}`);
  };

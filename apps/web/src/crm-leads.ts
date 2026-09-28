@@ -19,6 +19,7 @@ export type CRMLead={
   convertedClientId?:string;
   createdAt?:string;
   updatedAt?:string;
+  wonAt?:string;
 };
 
 export const crmStages:CRMStage[]=['Leads captados','Primeiro contato','Em andamento','Reunião','Ciclo de acompanhamento','Em espera','Negócio fechado','Negócio perdido'];
@@ -40,6 +41,7 @@ export type CRMLeadStatusFilter='all'|'active'|'won'|'lost';
 export type CRMLeadFilters={status:CRMLeadStatusFilter;source:string;responsibleId:string;serviceId:string};
 
 export const leadServiceIds=(lead:Pick<CRMLead,'serviceIds'|'services'>|undefined,catalog:AgencyService[])=>resolveServiceIds(lead,catalog);
+export const crmWonAt=(lead:Pick<CRMLead,'wonAt'|'updatedAt'|'createdAt'>)=>lead.wonAt||lead.updatedAt||lead.createdAt;
 
 export const serviceEstimate=(serviceIds:string[],catalog:AgencyService[])=>{
   const selected=catalog.filter(service=>serviceIds.includes(service.id));
@@ -55,7 +57,7 @@ export function isConvertedLead(lead:Pick<CRMLead,'id'|'convertedClientId'>,conv
 export function moveCRMLeadToStage(lead:CRMLead,stage:CRMStage,converted=false,updatedAt=new Date().toISOString()):CRMLead{
   if(converted&&stage!=='Negócio fechado')return lead;
   if(lead.stage===stage)return lead;
-  return {...lead,stage,nextAction:crmStageNextAction[stage],updatedAt};
+  return {...lead,stage,nextAction:crmStageNextAction[stage],updatedAt,wonAt:stage==='Negócio fechado'?updatedAt:undefined};
 }
 
 export function filterCRMLeads(leads:CRMLead[],filters:CRMLeadFilters,catalog:AgencyService[]){

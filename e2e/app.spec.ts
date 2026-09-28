@@ -288,12 +288,19 @@ test('configura a meta comercial no CRM e compartilha o velocímetro com o dashb
  const resetSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/crm_goal')&&response.request().method()==='PUT');
  await crmGoal.getByRole('button',{name:'Redefinir meta'}).click();
  await resetSaved;
- await expect(crmGoal).toContainText('0%');
+ await expect(crmGoal.locator('.salesGoalGaugeValue strong')).toHaveText('0%');
+ await crmGoal.getByRole('button',{name:'Editar meta'}).click();
+ await dialog.getByLabel('Quantidade de negócios').fill('3');
+ const edited=page.waitForResponse(response=>response.url().endsWith('/api/state/crm_goal')&&response.request().method()==='PUT');
+ await dialog.getByRole('button',{name:'Salvar meta'}).click();
+ await edited;
+ await expect(crmGoal).toContainText('3 negócios');
+ await expect(crmGoal.locator('.salesGoalGaugeValue strong')).toHaveText('0%');
  await page.goto('/dashboard');
  const dashboardGoal=page.locator('.dashboardSalesGoal');
  await expect(dashboardGoal).toContainText('Meta por negócios fechados');
- await expect(dashboardGoal).toContainText('5 negócios');
- await expect(dashboardGoal).toContainText('0%');
+ await expect(dashboardGoal).toContainText('3 negócios');
+ await expect(dashboardGoal.locator('.salesGoalGaugeValue strong')).toHaveText('0%');
  await expect(dashboardGoal.locator('.salesGoalArc')).toHaveCSS('opacity','0');
 });
 

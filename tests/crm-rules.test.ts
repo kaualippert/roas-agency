@@ -24,3 +24,12 @@ test('movimentação atualiza próxima ação e protege lead convertido',()=>{
  assert.equal(moved.updatedAt,now);
  assert.equal(moveCRMLeadToStage(leads[1],'Em andamento',true,now),leads[1]);
 });
+
+test('registra a data de fechamento e a renova se o negócio for reaberto',()=>{
+ const won=moveCRMLeadToStage(leads[0],'Negócio fechado',false,now);
+ assert.equal(won.wonAt,now);
+ const reopened=moveCRMLeadToStage(won,'Em andamento',false,'2026-08-02T12:00:00.000Z');
+ assert.equal(reopened.wonAt,undefined);
+ const wonAgain=moveCRMLeadToStage(reopened,'Negócio fechado',false,'2026-08-03T12:00:00.000Z');
+ assert.equal(wonAgain.wonAt,'2026-08-03T12:00:00.000Z');
+});
