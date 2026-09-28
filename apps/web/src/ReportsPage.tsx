@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import {BarChart3,CalendarDays,CheckCircle2,Copy,Eye,FileText,Mail,MessageCircle,Plus,Printer,Search,Send,Share2,Sparkles,Trash2,X} from 'lucide-react';
+import {useLocation,useNavigate} from 'react-router-dom';
 import {filterReports,type ReportPeriodFilter,type ReportStatusFilter} from './report-filters';
 import {useStoreData} from './app/useStoreData';
 import type {Client,GenericItem} from './types';
@@ -10,6 +11,7 @@ import {aggregateMarketingMetrics,normalizeMarketingMetricsSnapshots,type Market
 import {buildReportShareText,reportEmailUrl,reportWhatsAppUrl} from './report-sharing';
 import './marketing-metrics.css';
 import './report-client.css';
+import './portfolio-reports.css';
 
 interface MarketingReport extends GenericItem{
  metricIds?:MarketingMetricKey[];
@@ -21,6 +23,8 @@ interface MarketingReport extends GenericItem{
  recipientPhone?:string;
  recommendations?:string;
  overviewValues?:Partial<Record<MarketingMetricKey,number>>;
+ sentAt?:string;
+ deliveryChannel?:'email'|'whatsapp'|'device'|'other';
 }
 
 interface GeneralSettings{agencyName?:string;logoDataUrl?:string;email?:string;phone?:string;website?:string}
@@ -29,34 +33,40 @@ function currency(n=0){return n.toLocaleString('pt-BR',{style:'currency',currenc
 function displayDate(value?:string){return value?new Date(`${value.slice(0,10)}T12:00:00`).toLocaleDateString('pt-BR'):'—'}
 
 export default function ReportsPage(){
+ const route=useLocation(),navigate=useNavigate();
  const [reports,setReports]=useStoreData<MarketingReport[]>('reports',[]);
  const [clients]=useStoreData<Client[]>('clients',[]);
  const [storedIntegrations]=useStoreData<ClientMarketingIntegration[]>('client_marketing_integrations',[]);
  const [storedMetrics]=useStoreData<MarketingMetricsSnapshot[]>('marketing_metrics',[]);
  const [agencySettings]=useStoreData<GeneralSettings>('general_settings',{});
  const [query,setQuery]=usePersistentState('roas_filter_reports_query','');
+ const [clientFilter,setClientFilter]=usePersistentState('roas_filter_reports_client','all');
  const [statusFilter,setStatusFilter]=usePersistentState<ReportStatusFilter>('roas_filter_reports_status','all');
  const [periodFilter,setPeriodFilter]=usePersistentState<ReportPeriodFilter>('roas_filter_reports_period','this_month');
  const [modal,setModal]=useState(false);
  const [viewing,setViewing]=useState<MarketingReport|null>(null);
- const [sharing,setSharing]=useState<MarketingReport|null>(null),[shareNotice,setShareNotice]=useState('');
+ const [sharing,setSharing]=useState<MarketingReport|null>(null),[shareNotice,setShareNotice]=useState(''),[shareChannel,setShareChannel]=useState<MarketingReport['deliveryChannel']>('other');
  const integrations=useMemo(()=>normalizeClientMarketingIntegrations(storedIntegrations).filter(item=>item.status==='connected'&&(item.provider==='meta_ads'||item.provider==='google_ads')),[storedIntegrations]);
  const metricsSnapshots=useMemo(()=>normalizeMarketingMetricsSnapshots(storedMetrics),[storedMetrics]);
  const syncedClientIds=useMemo(()=>new Set(metricsSnapshots.filter(snapshot=>integrations.some(item=>item.id===snapshot.integrationId)).map(snapshot=>snapshot.clientId)),[integrations,metricsSnapshots]);
  const reportClients=useMemo(()=>clients.filter(client=>client.status==='active'&&syncedClientIds.has(client.id)),[clients,syncedClientIds]);
- const requestedClient=new URLSearchParams(location.search).get('client')||'';
  const [reportClientId,setReportClientId]=useState(''),[draftMetricIds,setDraftMetricIds]=useState<MarketingMetricKey[]>([...defaultMarketingMetricIds]);
- useEffect(()=>{if(requestedClient&&reportClients.some(client=>client.id===requestedClient)){setReportClientId(requestedClient);setModal(true);history.replaceState({},'',location.pathname)}},[reportClients,requestedClient]);
+ useEffect(()=>{
+  if(!route.search)return;
+  const params=new URLSearchParams(route.search),requestedClient=params.get('client'),requestedReport=params.get('report');
+  if(requestedClient&&clients.some(client=>client.id===requestedClient))setClientFilter(requestedClient);
+  if(requestedClient&&params.get('create')==='1'&&reportClients.some(client=>client.id===requestedClient)){setReportClientId(requestedClient);setModal(true)}
+  if(requestedReport){const report=reports.find(item=>item.id===requestedReport&&(!requestedClient||item.clientId===requestedClient));if(report)setViewing(report)}
+  navigate(route.pathname,{replace:true});
+ },[route.pathname,route.search,clients,reportClients,reports,navigate,setClientFilter]);
  const selectedReportClientId=reportClientId||reportClients[0]?.id||'';
  const selectedReportClient=reportClients.find(client=>client.id===selectedReportClientId);
  const reportSnapshots=metricsSnapshots.filter(snapshot=>snapshot.clientId===selectedReportClientId&&integrations.some(item=>item.id===snapshot.integrationId));
  const reportMetrics=reportSnapshots.length?aggregateMarketingMetrics(reportSnapshots):null;
  const reportPeriod=periodLabel(reportSnapshots.map(item=>item.periodFrom).sort()[0],reportSnapshots.map(item=>item.periodTo).sort().at(-1));
- const filtered=useMemo(
-  ()=>filterReports(reports,query,statusFilter,periodFilter),
-  [periodFilter,query,reports,statusFilter],
- );
- const filtersActive=Boolean(query.trim())||statusFilter!=='all'||periodFilter!=='all';
+ const scopedReports=useMemo(()=>reports.filter(report=>clientFilter==='all'||report.clientId===clientFilter),[reports,clientFilter]);
+ const filtered=useMemo(()=>filterReports(scopedReports,query,statusFilter,periodFilter),[periodFilter,query,scopedReports,statusFilter]);
+ const filtersActive=Boolean(query.trim())||statusFilter!=='all'||periodFilter!=='all'||clientFilter!=='all';
 
  const save=(next:MarketingReport[])=>{
   setReports(next);
@@ -65,8 +75,9 @@ export default function ReportsPage(){
   setQuery('');
   setStatusFilter('all');
   setPeriodFilter('all');
+  setClientFilter('all');
  };
- const openCreate=()=>{setReportClientId(reportClients[0]?.id||'');setDraftMetricIds([...defaultMarketingMetricIds]);setModal(true)};
+ const openCreate=()=>{setReportClientId(reportClients.find(client=>client.id===clientFilter)?.id||reportClients[0]?.id||'');setDraftMetricIds([...defaultMarketingMetricIds]);setModal(true)};
  const toggleMetric=(id:MarketingMetricKey)=>setDraftMetricIds(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]);
  const create=(event:React.FormEvent<HTMLFormElement>)=>{
   event.preventDefault();
@@ -97,14 +108,15 @@ export default function ReportsPage(){
   save([report,...reports]);
   setModal(false);
  };
- const markSent=(report:MarketingReport)=>save(reports.map(item=>item.id===report.id?{...item,status:'Enviado',updatedAt:new Date().toISOString()}:item));
+ const markSent=(report:MarketingReport,channel:MarketingReport['deliveryChannel']='other')=>{const now=new Date().toISOString();save(reports.map(item=>item.id===report.id?{...item,status:'Enviado',sentAt:now,deliveryChannel:channel,updatedAt:now}:item));setSharing(null);setViewing(current=>current?.id===report.id?{...current,status:'Enviado',sentAt:now,deliveryChannel:channel,updatedAt:now}:current)};
+ const openShare=(report:MarketingReport)=>{setShareChannel('other');setShareNotice('');setSharing(report)};
  const sharePayload=(report:MarketingReport)=>{const client=clients.find(item=>item.id===report.clientId);return buildReportShareText({name:report.name,clientName:client?.companyName||'Cliente',period:report.category||'Período do relatório',description:report.description,recommendations:report.recommendations,metricIds:report.metricIds?.length?normalizeMarketingMetricIds(report.metricIds):[],metricValues:report.metricValues||{},agencyName:agencySettings.agencyName||'Agência ROAS'})};
- const copyReport=async(report:MarketingReport)=>{try{await navigator.clipboard.writeText(sharePayload(report));setShareNotice('Resumo copiado. Já pode colar na conversa com o cliente.')}catch{setShareNotice('Não foi possível copiar automaticamente. Tente pelo compartilhamento do dispositivo.')}setTimeout(()=>setShareNotice(''),3200)};
- const nativeShare=async(report:MarketingReport)=>{if(!navigator.share){await copyReport(report);return}try{await navigator.share({title:report.name,text:sharePayload(report)});markSent(report);setSharing(null)}catch(error){if((error as DOMException).name!=='AbortError')setShareNotice('Não foi possível abrir o compartilhamento.') }};
- const openEmail=(report:MarketingReport)=>{location.href=reportEmailUrl(report.recipientEmail||'',report.name,sharePayload(report));markSent(report);setSharing(null)};
- const openWhatsApp=(report:MarketingReport)=>{window.open(reportWhatsAppUrl(sharePayload(report),report.recipientPhone),'_blank','noopener,noreferrer');markSent(report);setSharing(null)};
+ const copyReport=async(report:MarketingReport)=>{try{await navigator.clipboard.writeText(sharePayload(report));setShareChannel('other');setShareNotice('Resumo copiado. Confirme abaixo se ele foi enviado ao cliente.')}catch{setShareNotice('Não foi possível copiar automaticamente. Tente pelo compartilhamento do dispositivo.')}};
+ const nativeShare=async(report:MarketingReport)=>{if(!navigator.share){await copyReport(report);return}try{await navigator.share({title:report.name,text:sharePayload(report)});setShareChannel('device');setShareNotice('Compartilhamento concluído. Confirme o envio abaixo.')}catch(error){if((error as DOMException).name!=='AbortError')setShareNotice('Não foi possível abrir o compartilhamento.') }};
+ const openEmail=(report:MarketingReport)=>{setShareChannel('email');window.location.href=reportEmailUrl(report.recipientEmail||'',report.name,sharePayload(report));setShareNotice('Após enviar o e-mail, confirme a entrega abaixo.')};
+ const openWhatsApp=(report:MarketingReport)=>{setShareChannel('whatsapp');window.open(reportWhatsAppUrl(sharePayload(report),report.recipientPhone),'_blank','noopener,noreferrer');setShareNotice('Após enviar no WhatsApp, confirme a entrega abaixo.')};
  const printReport=(report:MarketingReport)=>{setViewing(report);setSharing(null);setTimeout(()=>window.print(),120)};
- const sent=reports.filter(report=>report.status==='Enviado').length;
+ const sent=scopedReports.filter(report=>report.status==='Enviado').length;
 
  return <main>
   <div className="reportsHeader">
@@ -115,10 +127,10 @@ export default function ReportsPage(){
   {!reportClients.length&&<section className="marketingDataNotice"><FileText/><div><b>Nenhum cliente sincronizado</b><span>Vincule e sincronize uma conta de anúncios antes de criar relatórios de performance.</span></div></section>}
 
   <div className="reportStats">
-   <article><FileText/><span><small>Relatórios criados</small><strong>{reports.length}</strong></span></article>
+   <article><FileText/><span><small>Relatórios criados</small><strong>{scopedReports.length}</strong></span></article>
    <article><Send/><span><small>Relatórios enviados</small><strong>{sent}</strong></span></article>
-   <article><CalendarDays/><span><small>Pendentes</small><strong>{reports.filter(report=>report.status==='Pendente').length}</strong></span></article>
-   <article><CheckCircle2/><span><small>Taxa de envio</small><strong>{reports.length?Math.round(sent/reports.length*100):0}%</strong></span></article>
+   <article><CalendarDays/><span><small>Pendentes</small><strong>{scopedReports.filter(report=>report.status==='Pendente').length}</strong></span></article>
+   <article><CheckCircle2/><span><small>Taxa de envio</small><strong>{scopedReports.length?Math.round(sent/scopedReports.length*100):0}%</strong></span></article>
   </div>
 
   <section className="card reportsPanel">
@@ -127,6 +139,7 @@ export default function ReportsPage(){
      <Search/>
      <input aria-label="Buscar relatório" placeholder="Buscar relatório..." value={query} onChange={event=>setQuery(event.target.value)}/>
     </div>
+    <select aria-label="Filtrar relatórios por cliente" className="reportsFilter" value={clientFilter} onChange={event=>setClientFilter(event.target.value)}><option value="all">Todos os clientes</option>{clients.filter(client=>client.id===clientFilter||reports.some(report=>report.clientId===client.id)||reportClients.some(item=>item.id===client.id)).map(client=><option key={client.id} value={client.id}>{client.companyName}</option>)}</select>
     <select aria-label="Filtrar relatórios por status" className="reportsFilter" value={statusFilter} onChange={event=>setStatusFilter(event.target.value as ReportStatusFilter)}>
      <option value="all">Todos os status</option>
      <option value="pending">Pendentes</option>
@@ -138,7 +151,7 @@ export default function ReportsPage(){
      <option value="last_3_months">Últimos 3 meses</option>
      <option value="all">Todo o período</option>
     </select>
-    <span className="reportsResultCount">{filtered.length} de {reports.length} relatórios</span>
+    <span className="reportsResultCount">{filtered.length} de {scopedReports.length} relatórios</span>
     {filtersActive&&<button className="reportsClearFilters" onClick={clearFilters}>Limpar filtros</button>}
    </div>
 
@@ -150,12 +163,12 @@ export default function ReportsPage(){
       <div className="reportName"><i><FileText/></i><span><b>{report.name}</b><small>{report.description||'Relatório de desempenho'}</small></span></div>
       <span>{client?.companyName||'—'}</span>
       <span>{report.category||'—'}</span>
-      <span className={'badge '+(report.status==='Enviado'?'green':'orange')}>{report.status}</span>
-      <span>{displayDate(report.date)}</span>
+      <span className={'badge '+(report.status==='Enviado'?'green':'orange')} title={report.sentAt?`Enviado em ${displayDate(report.sentAt)}`:undefined}>{report.status}</span>
+      <span>{displayDate(report.updatedAt)}</span>
       <div className="reportActions">
        <button className="iconBtn" title="Visualizar" onClick={()=>setViewing(report)}><Eye/></button>
-       <button className="iconBtn" title="Duplicar" onClick={()=>save([{...report,id:crypto.randomUUID(),name:`Cópia — ${report.name}`,status:'Pendente',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()},...reports])}><Copy/></button>
-       <button className="iconBtn" title="Compartilhar" onClick={()=>setSharing(report)}><Share2/></button>
+       <button className="iconBtn" title="Duplicar" onClick={()=>save([{...report,id:crypto.randomUUID(),name:`Cópia — ${report.name}`,status:'Pendente',sentAt:undefined,deliveryChannel:undefined,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()},...reports])}><Copy/></button>
+       <button className="iconBtn" title="Compartilhar" onClick={()=>openShare(report)}><Share2/></button>
        <button className="iconBtn memberDelete" title="Excluir" onClick={()=>{if(confirm('Excluir relatório?'))save(reports.filter(item=>item.id!==report.id))}}><Trash2/></button>
       </div>
      </article>;
@@ -184,7 +197,7 @@ export default function ReportsPage(){
    </form>
   </div></div>}
 
-  {viewing&&<div className="overlay reportPreviewOverlay"><div className="reportPreviewShell"><div className="reportPreviewToolbar"><div><b>Pré-visualização do cliente</b><span>Este é o documento que será compartilhado.</span></div><div><button className="btn secondary" onClick={()=>window.print()}><Printer/> Salvar em PDF</button><button className="btn" onClick={()=>setSharing(viewing)}><Share2/> Compartilhar</button><button className="iconBtn" aria-label="Fechar pré-visualização" onClick={()=>setViewing(null)}><X/></button></div></div><article className="reportPreview reportClientDocument">
+  {viewing&&<div className="overlay reportPreviewOverlay"><div className="reportPreviewShell"><div className="reportPreviewToolbar"><div><b>Pré-visualização do cliente</b><span>Este é o documento que será compartilhado.</span></div><div><button className="btn secondary" onClick={()=>window.print()}><Printer/> Salvar em PDF</button><button className="btn" onClick={()=>openShare(viewing)}><Share2/> Compartilhar</button><button className="iconBtn" aria-label="Fechar pré-visualização" onClick={()=>setViewing(null)}><X/></button></div></div><article className="reportPreview reportClientDocument">
    <header className="reportDocumentHeader"><div className="reportAgencyBrand">{agencySettings.logoDataUrl?.startsWith('data:image/')?<img src={agencySettings.logoDataUrl} alt="Logo da agência"/>:<span>{(agencySettings.agencyName||'ROAS').slice(0,1)}</span>}<div><b>{agencySettings.agencyName||'Agência ROAS'}</b><small>Relatório de performance</small></div></div><div className="reportDocumentMeta"><small>EMITIDO EM</small><b>{displayDate(viewing.date)}</b></div></header>
    <section className="reportDocumentCover"><span>RELATÓRIO DE RESULTADOS</span><h1>{viewing.name}</h1><p>{clients.find(client=>client.id===viewing.clientId)?.companyName||'Cliente'} · {viewing.category||'Período não informado'}</p><div>{(viewing.providers||[]).map(provider=><i key={provider}>{provider==='meta_ads'?'Meta Ads':provider==='google_ads'?'Google Ads':provider}</i>)}</div></section>
    <section className="reportDocumentSection"><div className="reportSectionHeading"><span><Sparkles/></span><div><small>VISÃO GERAL</small><h2>Principais indicadores</h2></div></div><div className="previewMetrics">{reportPreviewMetrics(viewing).map(item=><div key={item[0]}><small>{item[0]}</small><b>{item[1]}</b></div>)}</div></section>
@@ -193,7 +206,7 @@ export default function ReportsPage(){
    <footer className="reportDocumentFooter"><div><b>{agencySettings.agencyName||'Agência ROAS'}</b><span>{[agencySettings.email,agencySettings.phone,agencySettings.website].filter(Boolean).join(' · ')}</span></div><small>Dados consolidados automaticamente pelo Flow ROAS</small></footer>
   </article></div></div>}
 
-  {sharing&&<div className="overlay"><div className="modal reportShareModal" role="dialog" aria-label="Compartilhar relatório"><div className="modalHead"><div><small>ENVIAR AO CLIENTE</small><h2>Compartilhar relatório</h2><p>Escolha como deseja entregar “{sharing.name}”.</p></div><button className="iconBtn" aria-label="Fechar" onClick={()=>setSharing(null)}><X/></button></div><div className="reportShareClient"><span>{clients.find(client=>client.id===sharing.clientId)?.companyName?.slice(0,1)||'C'}</span><div><b>{clients.find(client=>client.id===sharing.clientId)?.companyName}</b><small>{sharing.recipientEmail||'E-mail não informado'} · {sharing.recipientPhone||'WhatsApp não informado'}</small></div></div><div className="reportShareOptions"><button type="button" onClick={()=>openWhatsApp(sharing)}><span className="whatsapp"><MessageCircle/></span><div><b>Enviar pelo WhatsApp</b><small>Abre uma mensagem pronta para o cliente</small></div></button><button type="button" onClick={()=>openEmail(sharing)}><span className="email"><Mail/></span><div><b>Enviar por e-mail</b><small>Abre seu aplicativo com assunto e resumo</small></div></button><button type="button" onClick={()=>void nativeShare(sharing)}><span className="share"><Share2/></span><div><b>Compartilhar pelo dispositivo</b><small>Use os aplicativos disponíveis no computador ou celular</small></div></button><button type="button" onClick={()=>void copyReport(sharing)}><span className="copy"><Copy/></span><div><b>Copiar resumo</b><small>Copia indicadores e observações formatados</small></div></button><button type="button" onClick={()=>printReport(sharing)}><span className="print"><Printer/></span><div><b>Salvar ou imprimir PDF</b><small>Gera a versão visual pronta para apresentação</small></div></button></div>{shareNotice&&<div className="reportShareNotice">{shareNotice}</div>}<div className="reportShareHint"><CheckCircle2/><span>O status será atualizado para enviado ao usar WhatsApp, e-mail ou o compartilhamento do dispositivo.</span></div></div></div>}
+  {sharing&&<div className="overlay"><div className="modal reportShareModal" role="dialog" aria-label="Compartilhar relatório"><div className="modalHead"><div><small>ENVIAR AO CLIENTE</small><h2>Compartilhar relatório</h2><p>Escolha como deseja entregar “{sharing.name}”.</p></div><button className="iconBtn" aria-label="Fechar" onClick={()=>setSharing(null)}><X/></button></div><div className="reportShareClient"><span>{clients.find(client=>client.id===sharing.clientId)?.companyName?.slice(0,1)||'C'}</span><div><b>{clients.find(client=>client.id===sharing.clientId)?.companyName}</b><small>{sharing.recipientEmail||'E-mail não informado'} · {sharing.recipientPhone||'WhatsApp não informado'}</small></div></div><div className="reportShareOptions"><button type="button" onClick={()=>openWhatsApp(sharing)}><span className="whatsapp"><MessageCircle/></span><div><b>Enviar pelo WhatsApp</b><small>Abre uma mensagem pronta para o cliente</small></div></button><button type="button" onClick={()=>openEmail(sharing)}><span className="email"><Mail/></span><div><b>Enviar por e-mail</b><small>Abre seu aplicativo com assunto e resumo</small></div></button><button type="button" onClick={()=>void nativeShare(sharing)}><span className="share"><Share2/></span><div><b>Compartilhar pelo dispositivo</b><small>Use os aplicativos disponíveis no computador ou celular</small></div></button><button type="button" onClick={()=>void copyReport(sharing)}><span className="copy"><Copy/></span><div><b>Copiar resumo</b><small>Copia indicadores e observações formatados</small></div></button><button type="button" onClick={()=>printReport(sharing)}><span className="print"><Printer/></span><div><b>Salvar ou imprimir PDF</b><small>Gera a versão visual pronta para apresentação</small></div></button></div>{shareNotice&&<div className="reportShareNotice">{shareNotice}</div>}<div className="reportShareConfirm"><span>O relatório só será marcado como enviado após sua confirmação.</span><button className="btn" type="button" onClick={()=>markSent(sharing,shareChannel)}><CheckCircle2/> Confirmar envio ao cliente</button></div></div></div>}
  </main>;
 }
 

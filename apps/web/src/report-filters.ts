@@ -30,8 +30,8 @@ export function reportMatchesPeriod(report:GenericItem,period:ReportPeriodFilter
  return difference>=0&&difference<=2;
 }
 
-export function filterReports(
- reports:GenericItem[],
+export function filterReports<T extends GenericItem>(
+ reports:T[],
  query:string,
  status:ReportStatusFilter,
  period:ReportPeriodFilter,
