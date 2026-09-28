@@ -1,5 +1,5 @@
-import {useEffect,useMemo,useRef,useState} from 'react';
-import {BarChart3,CalendarDays,FilterX,Funnel,GripVertical,Maximize2,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
+import {useEffect,useMemo,useState} from 'react';
+import {BarChart3,CalendarDays,ChartNoAxesCombined,FilterX,Funnel,GripVertical,Maximize2,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Cell,Line,LineChart,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
 import {KanbanMoreButton,useKanbanColumnLimit,visibleKanbanCards} from './KanbanColumnLimit';
@@ -47,8 +47,6 @@ export default function CRMPage(){
  const [selectedServiceIds,setSelectedServiceIds]=useState<string[]>([]);
  const [variableEstimate,setVariableEstimate]=useState(0);
  const [filters,setFilters]=usePersistentState<CRMLeadFilters>('roas_filter_crm',emptyFilters);
- const [focusedStage,setFocusedStage]=usePersistentState<Stage>('roas_filter_crm_stage','Leads captados');
- const pipelineRef=useRef<HTMLDivElement>(null);
  const {isExpanded,toggleColumn}=useKanbanColumnLimit();
  const {compact,toggleDensity}=useKanbanDensity('roas_kanban_crm_density');
 
@@ -96,10 +94,6 @@ export default function CRMPage(){
   save([{id:crypto.randomUUID(),name,contact,phone:String(form.get('phone')||'').trim(),responsibleId:String(form.get('responsibleId')||''),value:estimatedValue,stage,source:String(form.get('source')||'Outro'),nextAction:crmStageNextAction[stage],color:palette[leads.length%palette.length],serviceIds:selectedServiceIds,createdAt:now,updatedAt:now},...leads]);
   closeModal();
  };
- const focusStage=(stage:Stage)=>{
-  setFocusedStage(stage);
-  pipelineRef.current?.querySelector<HTMLElement>(`[data-crm-stage="${stage}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
- };
  const openGoalModal=()=>{setGoalMetric(goal.metric);setGoalTarget(goal.target);setGoalModal(true)};
  const resetGoal=()=>{
   if(!confirm('Redefinir o progresso da meta? Os negócios já contabilizados serão preservados, mas o novo ciclo começará em 0%.'))return;
@@ -120,13 +114,16 @@ export default function CRMPage(){
  const sourceData=useMemo(()=>Array.from(new Set(filteredLeads.map(lead=>lead.source||'Sem origem'))).map(source=>({name:source,value:filteredLeads.filter(lead=>(lead.source||'Sem origem')===source).length})),[filteredLeads]);
  const active=filteredLeads.filter(lead=>!['Negócio fechado','Negócio perdido'].includes(lead.stage));
  const won=filteredLeads.filter(lead=>lead.stage==='Negócio fechado');
+ const lost=filteredLeads.filter(lead=>lead.stage==='Negócio perdido');
  const conversion=filteredLeads.length?Math.round(won.length/filteredLeads.length*100):0;
+ const decidedCount=won.length+lost.length,winRate=decidedCount?Math.round(won.length/decidedCount*100):0;
+ const averageWonTicket=won.length?won.reduce((sum,lead)=>sum+Number(lead.value||0),0)/won.length:0;
  const stageMetrics=useMemo(()=>Object.fromEntries(stages.map(stage=>{const items=filteredLeads.filter(lead=>lead.stage===stage);return[stage,{count:items.length,value:items.reduce((sum,lead)=>sum+Number(lead.value||0),0)}]})) as Record<Stage,{count:number;value:number}>,[filteredLeads]);
  const trend=useMemo(()=>Array.from({length:12},(_,index)=>{const end=new Date();end.setHours(23,59,59,999);end.setDate(end.getDate()-(11-index)*7);const start=new Date(end);start.setDate(start.getDate()-6);start.setHours(0,0,0,0);return{week:start.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),leads:filteredLeads.filter(lead=>{if(!lead.createdAt)return false;const createdAt=new Date(lead.createdAt);return !Number.isNaN(createdAt.getTime())&&createdAt>=start&&createdAt<=end}).length}}),[filteredLeads]);
 
  return <main className="crmPage">
   <div className="crmPageTitle"><div><small className="crmEyebrow">VISÃO COMERCIAL</small><h2>CRM de Prospecção</h2><p>Acompanhe oportunidades, serviços solicitados e a saúde do funil.</p></div><button className="btn crmPrimaryAction" onClick={()=>openModal()}><Plus/> Novo lead</button></div>
-  <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((sum,lead)=>sum+Number(lead.value||0),0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((sum,lead)=>sum+Number(lead.value||0),0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão" value={`${conversion}%`} note="Do recorte atual" tone="orange"/></div>
+  <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((sum,lead)=>sum+Number(lead.value||0),0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((sum,lead)=>sum+Number(lead.value||0),0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão geral" value={`${conversion}%`} note="Ganhos sobre todos os leads" tone="orange"/><Kpi icon={<ChartNoAxesCombined/>} label="Taxa de ganho" value={`${winRate}%`} note={decidedCount?`${won.length} de ${decidedCount} decididas · ticket médio ${money(averageWonTicket)}`:'Aguardando negócios decididos'}/></div>
   <SalesGoalGauge goal={goal} result={goalResult} onConfigure={openGoalModal} onReset={resetGoal}/>
 
   <section className="card crmFilterBar" aria-label="Filtros do CRM">
@@ -142,11 +139,10 @@ export default function CRMPage(){
   </section>
 
   <section className="card crmPageBoard">
-   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button type="button" onClick={toggleDensity} aria-pressed={compact} title={compact?'Expandir cards':'Compactar cards'}>{compact?<Maximize2/>:<Minimize2/>}{compact?'Expandir cards':'Compactar cards'}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial"/></div></div>
-   <div className="crmStageNav" aria-label="Navegar pelas etapas">{stages.map((stage,index)=><button type="button" key={stage} className={focusedStage===stage?'active':''} onClick={()=>focusStage(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}><i/><span><b>{stage}</b><small>{money(stageMetrics[stage].value)}</small></span><strong>{stageMetrics[stage].count}</strong></button>)}</div>
-   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>setFilters(emptyFilters)}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns" ref={pipelineRef}>{stages.map((stage,index)=>{
+   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button className="crmIconAction" type="button" onClick={toggleDensity} aria-label={compact?'Expandir cards':'Compactar cards'} aria-pressed={compact} title={compact?'Expandir cards':'Compactar cards'}>{compact?<Maximize2/>:<Minimize2/>}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial" compact/></div></div>
+   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>setFilters(emptyFilters)}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns">{stages.map((stage,index)=>{
     const items=filteredLeads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);
-    return <div className={`crmColumn${focusedStage===stage?' focused':''}`} data-crm-stage={stage} key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>drop(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}>
+    return <div className="crmColumn" data-crm-stage={stage} key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>drop(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}>
      <header><div><i/><b>{stage}</b></div><span>{items.length}</span><small>{money(stageMetrics[stage].value)}</small></header>
      <div className="crmCards">{visibleKanbanCards(items,expanded).map(lead=>{
       const linked=services.filter(service=>leadServiceIds(lead,services).includes(service.id));
@@ -178,7 +174,7 @@ export default function CRMPage(){
  </main>;
 }
 
-function FunnelOverview({data,total,conversion}:{data:FunnelItem[];total:number;conversion:number}){return <section className="card crmFunnelOverview"><div className="crmFunnelHeader"><div><span className="crmFunnelTitleIcon"><Funnel/></span><div><h3>Funil de oportunidades</h3><p>Percentual de leads em cada etapa do recorte atual</p></div></div><span className="crmFunnelTotal"><b>{total}</b> leads no total</span></div><div className="crmFunnelBody"><div className="crmFunnelShape">{data.map((item,index)=><div className="crmFunnelStep" key={item.fullStage} style={{width:`${Math.max(46,100-index*7.5)}%`,background:item.color}}><span>{item.fullStage}</span><strong>{item.percentage}%</strong><small>{item.leads} {item.leads===1?'lead':'leads'}</small></div>)}</div><div className="crmFunnelBreakdown">{data.map(item=><div className="crmFunnelMetric" key={item.fullStage}><div><i style={{background:item.color}}/><span>{item.fullStage}</span><b>{item.leads}</b></div><div className="crmFunnelProgress"><span style={{width:`${item.percentage}%`,background:item.color}}/></div><small>{item.percentage}% do total</small></div>)}<div className="crmFunnelConversion"><span>Conversão final</span><strong>{conversion}%</strong><small>Leads totais → negócios fechados</small></div></div></div></section>}
+function FunnelOverview({data,total,conversion}:{data:FunnelItem[];total:number;conversion:number}){return <section className="card crmFunnelOverview"><div className="crmFunnelHeader"><div><span className="crmFunnelTitleIcon"><Funnel/></span><div><h3>Funil de oportunidades</h3><p>Percentual de leads em cada etapa do recorte atual</p></div></div><span className="crmFunnelTotal"><b>{total}</b> leads no total</span></div><div className="crmFunnelBody"><div className="crmFunnelShape" role="list" aria-label="Etapas do funil">{data.map((item,index)=><div className="crmFunnelStep" role="listitem" aria-label={`${item.fullStage}: ${item.percentage}%, ${item.leads} ${item.leads===1?'lead':'leads'}`} key={item.fullStage} style={{'--funnel-width':`${100*Math.pow(.91,index)}%`,'--funnel-color':item.color} as React.CSSProperties}><span>{item.fullStage}</span><strong>{item.percentage}%</strong><small>{item.leads} {item.leads===1?'lead':'leads'}</small></div>)}</div><div className="crmFunnelBreakdown">{data.map(item=><div className="crmFunnelMetric" key={item.fullStage}><div><i style={{background:item.color}}/><span>{item.fullStage}</span><b>{item.leads}</b></div><div className="crmFunnelProgress"><span style={{width:`${item.percentage}%`,background:item.color}}/></div><small>{item.percentage}% do total</small></div>)}<div className="crmFunnelConversion"><span>Conversão final</span><strong>{conversion}%</strong><small>Leads totais → negócios fechados</small></div></div></div></section>}
 function Kpi({icon,label,value,note,tone='' }:{icon:React.ReactNode;label:string;value:string;note:string;tone?:string}){return <article><span className={'crmKpiIcon '+tone}>{icon}</span><div><small>{label}</small><strong>{value}</strong><em>{note}</em></div></article>}
 function Chart({title,subtitle,children,last=false}:{title:string;subtitle:string;children:React.ReactNode;last?:boolean}){return <section className={'card crmChart wide '+(last?'last':'')}><div className="chartTitle"><h3>{title}</h3><p>{subtitle}</p></div>{children}</section>}
 function ChartEmpty({text}:{text:string}){return <div className="crmChartEmpty"><BarChart3/><span>{text}</span></div>}

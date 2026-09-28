@@ -48,7 +48,7 @@ export function FullscreenButton({active,onClick,label='visualização'}:{active
  return <button type="button" className="fullscreenButton" onClick={onClick} aria-pressed={active} title={active?'Sair da tela cheia':'Abrir em tela cheia'}>{active?<Minimize2/>:<Maximize2/>}<span>{active?'Sair da tela cheia':`Tela cheia`}</span><span className="srOnly"> de {label}</span></button>;
 }
 
-export function FullscreenTargetButton({target,label}:{target:string;label:string}){
+export function FullscreenTargetButton({target,label,compact=false}:{target:string;label:string;compact?:boolean}){
  const buttonRef=useRef<HTMLButtonElement>(null),[active,setActive]=useState(false);
  const surface=()=>buttonRef.current?.closest<HTMLElement>(target)||null;
  useExitForExternalDialog(active,surface,()=>{surface()?.classList.remove('fullscreenSurfaceActive');setActive(false)});
@@ -63,5 +63,6 @@ export function FullscreenTargetButton({target,label}:{target:string;label:strin
   if(active){element.classList.remove('fullscreenSurfaceActive');setActive(false);if(document.fullscreenElement)await document.exitFullscreen().catch(()=>undefined);return}
   element.classList.add('fullscreenSurface','fullscreenSurfaceActive');setActive(true);if(element.requestFullscreen)await element.requestFullscreen().catch(()=>undefined);
  };
- return <button ref={buttonRef} type="button" className="fullscreenButton" onClick={toggle} aria-pressed={active} title={active?'Sair da tela cheia':'Abrir em tela cheia'}>{active?<Minimize2/>:<Maximize2/>}<span>{active?'Sair da tela cheia':'Tela cheia'}</span><span className="srOnly"> de {label}</span></button>;
+ const accessibleLabel=active?`Sair da tela cheia de ${label}`:`Tela cheia de ${label}`;
+ return <button ref={buttonRef} type="button" className={`fullscreenButton${compact?' compact':''}`} onClick={toggle} aria-pressed={active} aria-label={accessibleLabel} title={accessibleLabel}>{active?<Minimize2/>:<Maximize2/>}{compact?<span className="srOnly">{accessibleLabel}</span>:<><span>{active?'Sair da tela cheia':'Tela cheia'}</span><span className="srOnly"> de {label}</span></>}</button>;
 }

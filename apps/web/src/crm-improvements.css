@@ -11,10 +11,6 @@
 .crmClearFilters:disabled{opacity:.4;cursor:not-allowed}
 .crmFilterResult{grid-column:1/-1;color:var(--muted);font-size:9px}
 .crmFilterResult b{color:var(--text)}
-.crmStageNav{display:flex;gap:6px;overflow-x:auto;padding:0 2px 12px;scrollbar-width:thin;scrollbar-color:#b5a8ef transparent}
-.crmStageNav button{display:flex;align-items:center;gap:7px;min-height:34px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--muted);font-size:9px;white-space:nowrap;cursor:pointer}
-.crmStageNav button:hover,.crmStageNav button.active{border-color:#9e8af7;color:var(--purple);background:#f7f5ff}
-.crmStageNav button b{display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#eeeaff;color:var(--purple);font-size:8px}
 .crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(190px,1fr));overflow-x:auto;scroll-snap-type:x proximity}
 .crmPageBoard .crmColumn{scroll-snap-align:start}
 .shell.narrow .crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(145px,1fr));overflow-x:auto}
@@ -43,10 +39,9 @@
 .leadEditModal label>small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
 html[data-theme="dark"] .crmStatusFilters{background:#111827}
 html[data-theme="dark"] .crmStatusFilters button:hover,html[data-theme="dark"] .crmStatusFilters button.active{background:#202a3d}
-html[data-theme="dark"] .crmStageNav button:hover,html[data-theme="dark"] .crmStageNav button.active{background:#211d33}
 html[data-theme="dark"] .crmPageBoard .leadCard.converted{background:linear-gradient(180deg,#132a22,#1c2639);border-color:#295b43}
 html[data-theme="dark"] .convertedLeadBadge{background:#153829;color:#76dbad}
-html[data-theme-variant="all-black"] .crmStatusFilters,html[data-theme-variant="all-black"] .crmStatusFilters button.active,html[data-theme-variant="all-black"] .crmStageNav button,html[data-theme-variant="all-black"] .crmFilterBar select,html[data-theme-variant="all-black"] .crmClearFilters,html[data-theme-variant="all-black"] .crmQuickMove select{background:#080808;border-color:#292929;color:#e8e8eb}
+html[data-theme-variant="all-black"] .crmStatusFilters,html[data-theme-variant="all-black"] .crmStatusFilters button.active,html[data-theme-variant="all-black"] .crmFilterBar select,html[data-theme-variant="all-black"] .crmClearFilters,html[data-theme-variant="all-black"] .crmQuickMove select{background:#080808;border-color:#292929;color:#e8e8eb}
 @media(max-width:1180px){.crmFilterBar{grid-template-columns:repeat(3,minmax(0,1fr))}.crmStatusFilters{grid-column:1/-1;width:max-content;max-width:100%;overflow-x:auto}.crmClearFilters{align-self:end}.crmFilterResult{grid-column:1/-1}}
 @media(max-width:700px){
  .crmPageTitle .btn{width:100%;justify-content:center}
@@ -60,7 +55,6 @@ html[data-theme-variant="all-black"] .crmStatusFilters,html[data-theme-variant="
  .crmBoardLabel>small{white-space:nowrap}
  .crmPageBoard .crmColumns,.shell.narrow .crmPageBoard .crmColumns,.shell.wide .crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(calc(100vw - 70px),1fr));gap:8px;overflow-x:auto;scroll-snap-type:x mandatory}
  .crmPageBoard .crmColumn{min-height:410px;scroll-snap-align:center}
- .crmStageNav{position:sticky;left:0;z-index:2}
  .crmQuickMove select{height:38px;font-size:10px}
  .crmPage>.crmServicesAnalytics{margin:14px 0 26px}
  .conversionModal,.leadEditModal,.crmModal{width:100%;max-height:calc(100dvh - 16px);border-radius:14px}
