@@ -14,6 +14,7 @@ const css={
  crm:()=>import('../prospects-crm.css'),crmPage:()=>import('../crm-page.css'),crmCompact:()=>import('../crm-pipeline-compact.css'),crmServices:()=>import('../crm-services.css'),crmServicesChart:()=>import('../crm-services-chart.css'),crmLead:()=>import('../crm-lead-manager.css'),crmHeader:()=>import('../crm-header.css'),crmImprovements:()=>import('../crm-improvements.css'),crmFunnel:()=>import('../crm-funnel.css'),crmUx:()=>import('../crm-ux-refresh.css'),
  finance:()=>import('../finance.css'),billing:()=>import('../billing-payments.css'),settings:()=>import('../settings.css'),agencyLogo:()=>import('../agency-logo-adjust.css'),serviceDark:()=>import('../service-dark-fix.css'),servicePricing:()=>import('../service-pricing.css'),
  marketingIntegrations:()=>import('../marketing-integrations.css'),marketingModule:()=>import('../marketing-module.css'),marketingMetrics:()=>import('../marketing-metrics.css'),
+ marketingExperiments:()=>import('../marketing-experiments.css'),
 };
 
 const DashboardPage=page([css.dashboard,css.dashboardCharts],()=>import('../DashboardPage'));
@@ -32,6 +33,7 @@ const PaymentsPage=page([css.billing],()=>import('../BillingPaymentsPage').then(
 const SettingsPage=page([css.settings,css.agencyLogo,css.serviceDark,css.servicePricing],()=>import('../SettingsPage'));
 const MarketingIntegrationsPage=page([css.marketingIntegrations,css.marketingModule,css.marketingMetrics],()=>import('../MarketingIntegrationsPage'));
 const MarketingDashboardPage=page([css.marketingModule,css.marketingMetrics],()=>import('../MarketingDashboardPage'));
+const MarketingExperimentsPage=page([css.marketingModule,css.marketingExperiments],()=>import('../MarketingExperimentsPage'));
 const GenericPage=page([],()=>import('../pages/GenericPage'));
 
 export default function AppRoutes(){
@@ -47,6 +49,7 @@ export default function AppRoutes(){
   <Route path="/team" element={<TeamPage/>}/>
   <Route path="/marketing/dashboard" element={<MarketingDashboardPage/>}/>
   <Route path="/marketing/integrations" element={<MarketingIntegrationsPage/>}/>
+  <Route path="/marketing/experiments" element={<MarketingExperimentsPage/>}/>
   <Route path="/marketing/reports" element={<ReportsPage/>}/>
   <Route path="/reports" element={<Navigate to="/marketing/reports" replace/>}/>
   <Route path="/crm" element={<CRMPage/>}/>

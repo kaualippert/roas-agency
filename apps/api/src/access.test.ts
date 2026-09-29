@@ -16,6 +16,7 @@ test('blocks state areas that were not granted',()=>{
  assert.equal(canAccessStateKey(limited,'crm_goal'),true);
  assert.equal(canAccessStateKey(limited,'client_processes'),true);
  assert.equal(canAccessStateKey(limited,'client_mind_maps'),true);
+ assert.equal(canAccessStateKey(limited,'marketing_experiments'),false);
  assert.equal(canAccessStateKey(limited,'financial_entries'),false);
  assert.equal(canAccessStateKey(limited,'team',true),false);
 });
@@ -46,6 +47,7 @@ test('filters client mind maps by assigned client',()=>{
 
 test('filters brand integrations by the clients assigned to a marketing member',()=>{
  const marketingLimited:AccessContext={...limited,accessAreas:['marketing']};
+ assert.equal(canAccessStateKey(marketingLimited,'marketing_experiments'),true);
  assert.equal(canAccessStateKey(marketingLimited,'clients'),true);
  assert.deepEqual(filterStateValue(marketingLimited,'clients',[{id:'client-1'},{id:'client-2'}]),[{id:'client-1'}]);
  const value=filterStateValue(marketingLimited,'client_marketing_integrations',[
@@ -57,6 +59,10 @@ test('filters brand integrations by the clients assigned to a marketing member',
   {clientId:'client-1',metricIds:['spend']},
   {clientId:'client-2',metricIds:['roas']},
  ]),[{clientId:'client-1',metricIds:['spend']}]);
+ assert.deepEqual(filterStateValue(marketingLimited,'marketing_experiments',[
+  {id:'experiment-1',clientId:'client-1'},
+  {id:'experiment-2',clientId:'client-2'},
+ ]),[{id:'experiment-1',clientId:'client-1'}]);
 });
 
 test('preserves hidden records when a limited member writes a collection',()=>{

@@ -1,6 +1,6 @@
 import {deleteState,getState,updateStateAtomically} from './state.js';
 
-const clientCollections=['activities','client_processes','client_mind_maps','client_marketing_integrations','marketing_metrics','marketing_dashboard_preferences','documents','financial_entries','invoices','onboarding','payments','reports','tasks'] as const;
+const clientCollections=['activities','client_processes','client_mind_maps','client_marketing_integrations','marketing_metrics','marketing_dashboard_preferences','marketing_experiments','documents','financial_entries','invoices','onboarding','payments','reports','tasks'] as const;
 const records=(value:unknown)=>Array.isArray(value)?value as Array<Record<string,unknown>>:[];
 export const removeClientRecords=(value:unknown,clientId:string)=>records(value).filter(item=>String(item.clientId||'')!==clientId);
 

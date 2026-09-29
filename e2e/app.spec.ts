@@ -407,6 +407,47 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await expect(shareDialog.getByRole('button',{name:/Salvar ou imprimir PDF/})).toBeVisible();
 });
 
+test('cria, acompanha e registra o aprendizado de um experimento de marketing',async({page})=>{
+ await page.goto('/marketing/experiments');
+ await expect(page.locator('.headTitle h1')).toHaveText('Experimentos');
+ await page.getByRole('button',{name:'Novo experimento'}).click();
+ const dialog=page.getByRole('dialog',{name:'Novo experimento'});
+ await dialog.getByLabel('Nome do experimento').fill('Teste de anúncio com depoimento');
+ await dialog.getByLabel('Cliente').selectOption('client-1');
+ await dialog.getByLabel('Canal').selectOption('meta_ads');
+ await dialog.getByLabel('Hipótese').fill('Um criativo com depoimento reduz o custo por lead para este cliente.');
+ await dialog.getByLabel('Métrica principal').selectOption('costPerLead');
+ await dialog.getByLabel('O resultado deve').selectOption('decrease');
+ await dialog.getByLabel('Linha de base').fill('50');
+ await dialog.getByLabel('Meta').fill('30');
+ await dialog.getByLabel('Valor observado').fill('40');
+ await dialog.getByLabel('Limite de investimento (R$)').fill('600');
+ await dialog.getByLabel('Investimento realizado (R$)').fill('180');
+ await dialog.getByLabel('Responsável').selectOption('member-admin');
+ const created=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().endsWith('/api/state/marketing_experiments'));
+ await dialog.getByRole('button',{name:'Criar experimento'}).click();
+ await created;
+ const card=page.locator('.marketingExperimentCard').filter({hasText:'Teste de anúncio com depoimento'});
+ await expect(card).toContainText('50%');
+ await expect(card).toContainText('R$ 40,00');
+ const moved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().endsWith('/api/state/marketing_experiments'));
+ await card.getByLabel('Mover Teste de anúncio com depoimento').selectOption('running');
+ await moved;
+ await expect(page.locator('.marketingExperimentColumn.running').getByText('Teste de anúncio com depoimento')).toBeVisible();
+ await page.locator('.marketingExperimentColumn.running').getByRole('button',{name:'Teste de anúncio com depoimento'}).click();
+ const editor=page.getByRole('dialog',{name:'Editar experimento'});
+ await editor.getByLabel('Etapa atual').selectOption('completed');
+ await editor.getByLabel('Resultado').selectOption('won');
+ await editor.getByLabel('Aprendizado e próximos passos').fill('O depoimento reduziu o custo por lead. Testar variações de abertura no próximo ciclo.');
+ const concluded=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().endsWith('/api/state/marketing_experiments'));
+ await editor.getByRole('button',{name:'Salvar alterações'}).click();
+ await concluded;
+ await expect(page.locator('.marketingExperimentColumn.completed')).toContainText('Venceu');
+ await page.reload();
+ await expect(page.locator('.marketingExperimentColumn.completed')).toContainText('Teste de anúncio com depoimento');
+ await expect(page.locator('.marketingExperimentColumn.completed')).toContainText('Venceu');
+});
+
 test('migra um cadastro manual para o vínculo permanente do cliente',async({page})=>{
  await page.goto('/marketing/integrations');
  await expect(page.getByText('1 cadastro manual pendente')).toBeVisible();

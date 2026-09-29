@@ -29,12 +29,12 @@ const allAreas:AccessArea[]=['general','marketing','finance','settings'];
 const keyAreas:Record<string,AccessArea|AccessArea[]>={
  activities:'general',app_version:'general',clients:['general','marketing','finance'],documents:'general',notifications:allAreas,notification_dismissals:allAreas,notification_preferences:allAreas,
  notification_sound_enabled:allAreas,onboarding:'general',projects:'general',prospects:'general',tasks:'general',crm_goal:'general',client_processes:'general',client_mind_maps:'general',
- campaigns:'marketing',ads:'marketing',creatives:'marketing',integrations:'marketing',marketing_integrations:'marketing',client_marketing_integrations:'marketing',marketing_metrics:'marketing',marketing_dashboard_preferences:'marketing',reports:'marketing',
+ campaigns:'marketing',ads:'marketing',creatives:'marketing',integrations:'marketing',marketing_integrations:'marketing',client_marketing_integrations:'marketing',marketing_metrics:'marketing',marketing_dashboard_preferences:'marketing',marketing_experiments:'marketing',reports:'marketing',
  financial_entries:'finance',invoices:'finance',payments:'finance',
  agency_profile:'settings',general_settings:'settings',permissions:'settings',services:'settings',settings:'settings',team:'settings',team_invitations:'settings',
 };
 const administratorOnly=new Set(['agency_profile','general_settings','permissions','services','settings','team','team_invitations']);
-const clientScopedKeys=new Set(['activities','clients','client_processes','client_mind_maps','client_marketing_integrations','marketing_metrics','marketing_dashboard_preferences','documents','financial_entries','invoices','onboarding','payments','projects','reports','tasks']);
+const clientScopedKeys=new Set(['activities','clients','client_processes','client_mind_maps','client_marketing_integrations','marketing_metrics','marketing_dashboard_preferences','marketing_experiments','documents','financial_entries','invoices','onboarding','payments','projects','reports','tasks']);
 const userScopedKeys=new Set(['notifications','notification_dismissals','notification_preferences','notification_sound_enabled']);
 
 const normalizeEmail=(value:unknown)=>String(value||'').trim().toLowerCase();
