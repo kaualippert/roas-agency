@@ -18,3 +18,9 @@ test('protects every nested marketing route with the marketing permission',()=>{
  assert.equal(canAccessPath(undefined,'/marketing/integrations',['general']),false);
  assert.equal(canAccessPath(undefined,'/marketing/reports',['marketing']),true);
 });
+
+test('shows the unified audit page to members with at least one permitted area',()=>{
+ assert.equal(canAccessPath(undefined,'/history',['finance']),true);
+ assert.equal(canAccessPath(undefined,'/history',['marketing']),true);
+ assert.equal(canAccessPath(undefined,'/history',[]),false);
+});

@@ -13,6 +13,7 @@ import {canAccessClient,canAccessStateKey,filterState,filterStateValue,requireAg
 import {invitationRouter} from './invitations.js';
 import {marketingOAuthRouter} from './marketing-oauth.js';
 import {deleteClientData} from './client-deletion.js';
+import {appendAuditEvents,buildAuditEvents,listAuditEvents} from './audit-history.js';
 
 const valueSchema=z.object({value:z.unknown(),baseValue:z.unknown().optional(),baseMissing:z.boolean().optional()});
 const bulkSchema=z.object({state:z.record(z.unknown())});
@@ -103,6 +104,20 @@ export function createApp(){
 
   app.use(express.json({limit:'5mb'}));
 
+  app.use('/api/audit',requireFirebaseAuth);
+  app.use('/api/audit',(_request,response,next)=>{
+    if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
+    next();
+  });
+  app.use('/api/audit',requireAgencyAccess);
+  app.get('/api/audit',async(request,response,next)=>{
+    try{
+      const page=Math.max(1,Math.min(10000,Number(request.query.page)||1)),limit=Math.max(1,Math.min(100,Number(request.query.limit)||30));
+      const result=await listAuditEvents({access:response.locals.access as AccessContext,page,limit,entityType:String(request.query.entityType||''),action:String(request.query.action||''),clientId:String(request.query.clientId||''),search:String(request.query.search||'')});
+      response.json(result);
+    }catch(error){next(error)}
+  });
+
   app.delete('/api/clients/:clientId',requireFirebaseAuth,(request,response,next)=>{
    if(mongoose.connection.readyState!==1)return response.status(503).json({error:'MongoDB is not connected'});
    next();
@@ -112,7 +127,17 @@ export function createApp(){
     if(!access.isAdministrator)return response.status(403).json({error:'Somente administradores podem excluir clientes definitivamente.'});
     const clientId=String(request.params.clientId),clients=await getState('clients'),exists=Array.isArray(clients)&&clients.some(client=>client&&typeof client==='object'&&String((client as {id?:unknown}).id||'')===clientId);
     if(!exists)return response.status(404).json({error:'Cliente não encontrado.'});
+    const clientRecords=Array.isArray(clients)?clients.filter(client=>client&&typeof client==='object'&&String((client as {id?:unknown}).id||'')===clientId):[];
+    const [tasks,entries,teamBefore]=await Promise.all([getState('tasks'),getState('financial_entries'),getState('team')]);
+    const linked=(value:unknown)=>Array.isArray(value)?value.filter(item=>item&&typeof item==='object'&&String((item as {clientId?:unknown}).clientId||'')===clientId):[];
     const result=await deleteClientData(clientId);
+    const teamAfter=await getState('team'),auditEvents=[
+      ...buildAuditEvents('clients',clientRecords,[],access),
+      ...buildAuditEvents('tasks',linked(tasks),[],access),
+      ...buildAuditEvents('financial_entries',linked(entries),[],access),
+      ...buildAuditEvents('team',teamBefore,teamAfter,access),
+    ];
+    try{await appendAuditEvents(auditEvents)}catch(error){console.error('Could not persist client deletion audit history',error)}
     const files=await mongoose.connection.db!.collection('client_files.files').find({'metadata.clientId':clientId}).project({_id:1}).toArray();
     const bucket=new GridFSBucket(mongoose.connection.db!,{bucketName:'client_files'});
     await Promise.all(files.map(file=>bucket.delete(file._id as ObjectId).catch(()=>undefined)));
@@ -174,6 +199,7 @@ export function createApp(){
       if(!Object.prototype.hasOwnProperty.call(parsed,'baseValue')){
         const current=await getState(request.params.key);
         const saved=await replaceState(request.params.key,scopeStateWrite(access,request.params.key,parsed.value,current));
+        try{await appendAuditEvents(buildAuditEvents(request.params.key,current,saved,access))}catch(error){console.error('Could not persist state change audit history',error)}
         return response.json({value:filterStateValue(access,request.params.key,saved)});
       }
       for(let attempt=0;attempt<5;attempt++){
@@ -183,7 +209,10 @@ export function createApp(){
         const mergedVisible=mergeConcurrentState(parsed.baseMissing?missingBase:parsed.baseValue,currentVisible,parsed.value,request.params.key);
         const next=scopeStateWrite(access,request.params.key,mergedVisible,snapshot.value);
         const saved=await replaceStateAtRevision(request.params.key,next,snapshot);
-        if(saved!==undefined)return response.json({value:filterStateValue(access,request.params.key,saved)});
+        if(saved!==undefined){
+          try{await appendAuditEvents(buildAuditEvents(request.params.key,snapshot.value,saved,access))}catch(error){console.error('Could not persist state change audit history',error)}
+          return response.json({value:filterStateValue(access,request.params.key,saved)});
+        }
       }
       throw new StateConflictError(request.params.key);
     }catch(error){next(error)}

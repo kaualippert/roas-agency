@@ -15,6 +15,7 @@ const css={
  finance:()=>import('../finance.css'),billing:()=>import('../billing-payments.css'),settings:()=>import('../settings.css'),agencyLogo:()=>import('../agency-logo-adjust.css'),serviceDark:()=>import('../service-dark-fix.css'),servicePricing:()=>import('../service-pricing.css'),
  marketingIntegrations:()=>import('../marketing-integrations.css'),marketingModule:()=>import('../marketing-module.css'),marketingMetrics:()=>import('../marketing-metrics.css'),
  marketingExperiments:()=>import('../marketing-experiments.css'),
+ auditHistory:()=>import('../audit-history.css'),
 };
 
 const DashboardPage=page([css.dashboard,css.dashboardCharts],()=>import('../DashboardPage'));
@@ -34,6 +35,7 @@ const SettingsPage=page([css.settings,css.agencyLogo,css.serviceDark,css.service
 const MarketingIntegrationsPage=page([css.marketingIntegrations,css.marketingModule,css.marketingMetrics],()=>import('../MarketingIntegrationsPage'));
 const MarketingDashboardPage=page([css.marketingModule,css.marketingMetrics],()=>import('../MarketingDashboardPage'));
 const MarketingExperimentsPage=page([css.marketingModule,css.marketingExperiments],()=>import('../MarketingExperimentsPage'));
+const AuditHistoryPage=page([css.auditHistory],()=>import('../AuditHistoryPage'));
 const GenericPage=page([],()=>import('../pages/GenericPage'));
 
 export default function AppRoutes(){
@@ -47,6 +49,7 @@ export default function AppRoutes(){
   <Route path="/projects/:projectId/editorial" element={<EditorialPage/>}/>
   <Route path="/tasks" element={<TasksPage/>}/>
   <Route path="/team" element={<TeamPage/>}/>
+  <Route path="/history" element={<AuditHistoryPage/>}/>
   <Route path="/marketing/dashboard" element={<MarketingDashboardPage/>}/>
   <Route path="/marketing/integrations" element={<MarketingIntegrationsPage/>}/>
   <Route path="/marketing/experiments" element={<MarketingExperimentsPage/>}/>

@@ -407,6 +407,25 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await expect(shareDialog.getByRole('button',{name:/Salvar ou imprimir PDF/})).toBeVisible();
 });
 
+test('consulta versões anteriores no histórico de alterações',async({page})=>{
+ await page.route('**/api/audit**',route=>route.fulfill({json:{page:1,hasMore:false,items:[{
+  id:'audit-1',eventId:'audit-event-1',entityType:'clients',entityId:'client-1',entityLabel:'Cliente Teste',action:'updated',areas:['general','marketing','finance'],clientId:'client-1',actorId:'member-admin',actorName:'Admin E2E',actorEmail:'admin@roas-e2e.test',occurredAt:'2026-09-20T14:30:00.000Z',
+  changes:[{key:'email',label:'E-mail',before:'anterior@example.test',after:'novo@example.test'},{key:'monthlyRevenue',label:'Receita mensal',before:2500,after:3500}],
+  before:{companyName:'Cliente Teste',email:'anterior@example.test',monthlyRevenue:2500,status:'active'},after:{companyName:'Cliente Teste',email:'novo@example.test',monthlyRevenue:3500,status:'active'},
+ }]}}));
+ await page.goto('/history?client=client-1');
+ await expect(page.locator('.headTitle h1')).toHaveText('Histórico de alterações');
+ await expect(page.getByText('Admin E2E').first()).toBeVisible();
+ await expect(page.getByText('E-mail',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Consultar versões: Cliente Teste'}).click();
+ const dialog=page.getByRole('dialog',{name:'Versões de Cliente Teste'});
+ await expect(dialog.getByText('anterior@example.test')).toBeVisible();
+ await expect(dialog.getByText('novo@example.test')).toBeVisible();
+ await expect(dialog.getByText('R$ 2.500,00')).toBeVisible();
+ await expect(dialog.getByText('R$ 3.500,00')).toBeVisible();
+ await expect(dialog.getByText('Admin E2E',{exact:true})).toBeVisible();
+});
+
 test('cria, acompanha e registra o aprendizado de um experimento de marketing',async({page})=>{
  await page.goto('/marketing/experiments');
  await expect(page.locator('.headTitle h1')).toHaveText('Experimentos');

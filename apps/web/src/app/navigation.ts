@@ -1,5 +1,5 @@
 import type {LucideIcon} from 'lucide-react';
-import {BriefcaseBusiness,ChartNoAxesColumn,ChartNoAxesCombined,ClipboardCheck,ClipboardList,CreditCard,FlaskConical,FolderKanban,Funnel,House,Layers,LayoutDashboard,PlugZap,ReceiptText,Settings,Users,UsersRound} from 'lucide-react';
+import {BriefcaseBusiness,ChartNoAxesColumn,ChartNoAxesCombined,ClipboardCheck,ClipboardList,CreditCard,FlaskConical,FolderKanban,Funnel,History,House,Layers,LayoutDashboard,PlugZap,ReceiptText,Settings,Users,UsersRound} from 'lucide-react';
 
 export type PageMeta={title:string;sub:string};
 
@@ -21,6 +21,7 @@ export const pageMeta:Record<string,PageMeta>={
  team:{title:'Equipe',sub:'Pessoas, funções e capacidade do time.'},
  integrations:{title:'Integrações de marca',sub:'Vincule as contas de mídia e presença digital de cada cliente.'},
  settings:{title:'Configurações',sub:'Personalize a experiência da sua agência.'},
+ history:{title:'Histórico de alterações',sub:'Consulte quem alterou dados importantes e compare versões anteriores.'},
 };
 
 export type NavItem={path:string;label:string;icon:LucideIcon};
@@ -31,6 +32,7 @@ export const navGroups:NavGroup[]=[
  {label:'GERAL',items:[{path:'clients',label:'Clientes',icon:Users},{path:'onboarding',label:'Onboarding',icon:ClipboardList},{path:'projects',label:'Projetos',icon:BriefcaseBusiness},{path:'tasks',label:'Tarefas',icon:ClipboardCheck},{path:'crm',label:'CRM',icon:Funnel}]},
  {label:'MARKETING',items:[{path:'marketing/dashboard',label:'Dashboard',icon:LayoutDashboard},{path:'marketing/integrations',label:'Integrações de marca',icon:PlugZap},{path:'marketing/experiments',label:'Experimentos',icon:FlaskConical},{path:'marketing/reports',label:'Relatórios',icon:ChartNoAxesColumn}]},
  {label:'FINANCEIRO',items:[{path:'finance',label:'Visão financeira',icon:ChartNoAxesCombined},{path:'invoices',label:'Faturamento',icon:ReceiptText},{path:'payments',label:'Pagamentos',icon:CreditCard}]},
+ {label:'GESTÃO',items:[{path:'history',label:'Histórico de alterações',icon:History}]},
  {label:'CONFIGURAÇÕES',items:[{path:'team',label:'Equipe',icon:UsersRound},{path:'settings',label:'Configurações',icon:Settings}]},
 ];
 
