@@ -11,9 +11,9 @@ export default function Sidebar({open,member,accessAreas,onNavigate}:{open:boole
   <nav>{navGroups.map(group=>{
    const items=group.items.filter(item=>canAccessPath(member,`/${item.path}`,accessAreas));
    if(!items.length)return null;
-   return <div className="navGroup" key={group.label}>
-    {group.label&&<span>{group.label}</span>}
-    {items.map(({path,label,icon:Icon})=><NavLink key={path} title={!open?label:undefined} className={location.pathname===`/${path}`?'active':''} to={`/${path}`} onClick={onNavigate}><Icon/>{open&&<em>{label}</em>}</NavLink>)}
+   return <div className="navGroup" key={group.label} role="group" aria-label={group.label||undefined}>
+    {group.label&&<span aria-hidden={!open}>{group.label}</span>}
+    {items.map(({path,label,icon:Icon})=><NavLink key={path} title={!open?label:undefined} aria-label={label} className={location.pathname===`/${path}`?'active':''} to={`/${path}`} onClick={onNavigate}><Icon/>{open&&<em>{label}</em>}</NavLink>)}
    </div>
   })}</nav>
  </aside>

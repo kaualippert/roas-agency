@@ -4,3 +4,12 @@
 .logo .rmark{width:32px;height:32px;display:grid;place-items:center;line-height:32px;font-size:26px}
 .logo.hasAgencyLogo>div:last-child{max-width:142px}
 .sidebar.closed .logo.hasAgencyLogo>div:last-child{display:none}
+
+/* Keep the compact sidebar intentional: no clipped group captions, centered targets, clear group rhythm. */
+.sidebar.closed nav{padding:2px 0 14px}
+.sidebar.closed .navGroup{display:flex;flex-direction:column;align-items:center;gap:4px;margin:7px 0 10px}
+.sidebar.closed .navGroup>span{display:none}
+.sidebar.closed .navGroup:not(:first-child)::before{content:"";display:block;width:26px;height:1px;margin:0 0 7px;background:rgba(125,135,155,.24)}
+.sidebar.closed .navGroup a{width:46px;height:44px;min-height:44px;flex:0 0 44px;justify-content:center;gap:0;padding:0;margin:0;border-radius:12px}
+.sidebar.closed .navGroup a svg{width:19px;height:19px;flex:0 0 19px}
+.sidebar.closed .navGroup a:focus-visible{outline:2px solid var(--purple);outline-offset:2px}

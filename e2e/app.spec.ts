@@ -27,6 +27,22 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('menu reduzido não corta títulos de seção e mantém nomes acessíveis',async({page})=>{
+ await page.addInitScript(()=>localStorage.setItem('roas_sidebar_open','false'));
+ await page.goto('/dashboard');
+ const sidebar=page.locator('#app-sidebar');
+ await expect(sidebar).toHaveClass(/closed/);
+ await expect(sidebar.locator('.navGroup>span')).toBeHidden();
+ const tasksLink=sidebar.getByRole('link',{name:'Tarefas'});
+ await expect(tasksLink).toHaveAttribute('title','Tarefas');
+ await expect(tasksLink).toHaveAttribute('aria-label','Tarefas');
+ await expect(sidebar.locator('.navGroup[aria-label="MARKETING"]')).toBeVisible();
+ const itemBox=await tasksLink.boundingBox(),sidebarBox=await sidebar.boundingBox();
+ expect(itemBox&&sidebarBox).toBeTruthy();
+ expect(itemBox!.x).toBeGreaterThan(sidebarBox!.x);
+ expect(itemBox!.x+itemBox!.width).toBeLessThanOrEqual(sidebarBox!.x+sidebarBox!.width);
+});
+
 test('exibe a identidade configurada no centro do carregamento',async({page})=>{
  const logo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
  await page.addInitScript(brand=>localStorage.setItem('roas_loading_brand',JSON.stringify(brand)),{agencyName:'Agência E2E',logoDataUrl:logo,logoScale:100});
