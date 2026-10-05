@@ -3,6 +3,8 @@ import {resolveServiceIds} from './service-links';
 
 export type CRMStage='Leads captados'|'Primeiro contato'|'Em andamento'|'Reunião'|'Ciclo de acompanhamento'|'Em espera'|'Negócio fechado'|'Negócio perdido';
 
+export type CRMLeadObservation={id:string;text:string;createdAt:string;authorName:string};
+
 export type CRMLead={
   id:string;
   name:string;
@@ -16,6 +18,7 @@ export type CRMLead={
   color:string;
   serviceIds?:string[];
   services?:string[];
+  observations?:CRMLeadObservation[];
   convertedClientId?:string;
   createdAt?:string;
   updatedAt?:string;
@@ -36,11 +39,21 @@ export const crmStageNextAction:Record<CRMStage,string>={
 };
 
 export const CRM_LEAD_OPEN_EVENT='roas-open-crm-lead';
+export const CRM_LEAD_ACTIVITY_OPEN_EVENT='roas-open-crm-lead-activity';
+
+export function requestCRMLeadActivity(leadId:string,mode:'observations'|'follow-up'){
+ window.dispatchEvent(new CustomEvent(CRM_LEAD_ACTIVITY_OPEN_EVENT,{detail:{leadId,mode}}));
+}
 
 export type CRMLeadStatusFilter='all'|'active'|'won'|'lost';
 export type CRMLeadFilters={status:CRMLeadStatusFilter;source:string;responsibleId:string;serviceId:string};
 
 export const leadServiceIds=(lead:Pick<CRMLead,'serviceIds'|'services'>|undefined,catalog:AgencyService[])=>resolveServiceIds(lead,catalog);
+export function appendCRMLeadObservation(lead:CRMLead,observation:CRMLeadObservation):CRMLead{
+ const text=observation.text.trim();
+ if(!text)return lead;
+ return {...lead,observations:[...(lead.observations||[]),{...observation,text}],updatedAt:observation.createdAt};
+}
 export const crmWonAt=(lead:Pick<CRMLead,'wonAt'|'updatedAt'|'createdAt'>)=>lead.wonAt||lead.updatedAt||lead.createdAt;
 
 export const serviceEstimate=(serviceIds:string[],catalog:AgencyService[])=>{

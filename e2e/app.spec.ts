@@ -100,6 +100,32 @@ test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
  await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
 });
 
+test('registra observações e follow-ups ligados ao lead do CRM',async({page})=>{
+ await page.goto('/crm');
+ const leadCard=page.locator('[data-lead-id="lead-active"]');
+ await leadCard.getByRole('button',{name:'Observações de Academia Horizonte'}).click();
+ const notes=page.getByRole('dialog',{name:'Observações'});
+ await notes.getByLabel('Nova observação').fill('Cliente pediu retorno depois da reunião interna.');
+ const noteSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/prospects')&&response.request().method()==='PUT');
+ await notes.getByRole('button',{name:'Salvar observação'}).click();
+ await noteSaved;
+ await expect(leadCard.getByRole('button',{name:'Observações de Academia Horizonte'})).toContainText('1');
+
+ await leadCard.getByRole('button',{name:'Criar follow-up para Academia Horizonte'}).click();
+ const followUp=page.getByRole('dialog',{name:'Criar follow-up'});
+ await followUp.getByLabel('Título da tarefa').fill('Agendar retorno comercial');
+ const due=new Date();due.setDate(due.getDate()+1);
+ await followUp.getByLabel('Prazo').fill([due.getFullYear(),String(due.getMonth()+1).padStart(2,'0'),String(due.getDate()).padStart(2,'0')].join('-'));
+ const taskSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/tasks')&&response.request().method()==='PUT');
+ await followUp.getByRole('button',{name:'Criar tarefa'}).click();
+ await taskSaved;
+ await page.goto('/tasks');
+ const taskCard=page.locator('.enhancedTaskCard').filter({hasText:'Agendar retorno comercial'});
+ await expect(taskCard).toBeVisible();
+ await taskCard.click();
+ await expect(page.locator('.taskLeadContext')).toContainText('Academia Horizonte');
+});
+
 test('abre a tarefa da lista com informações antes da descrição ampla',async({page})=>{
  await page.goto('/tasks');
  await page.getByRole('button',{name:'Lista'}).click();

@@ -1,5 +1,9 @@
 .enhancedTaskModal{width:min(920px,calc(100vw - 32px));max-height:94vh}
 .enhancedTaskModal .taskDetailHeader{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(12px)}
+.taskLeadContext{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--purple) 24%,var(--border));border-radius:10px;background:color-mix(in srgb,var(--purple) 7%,var(--card));color:var(--muted);font-size:11px}
+.taskLeadContext b{color:var(--text)}
+.taskLeadContext span{margin-left:auto;padding:3px 7px;border-radius:999px;background:color-mix(in srgb,var(--purple) 12%,var(--card));color:var(--purple);font-size:9px;font-weight:700}
+.taskLeadContext small{font-size:10px}
 .taskDetailHeader p{margin:5px 0 0;color:var(--muted);font-size:11px}
 .taskDetailForm{display:block;padding:0 28px 26px}
 .taskTitleSection{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:14px;padding:25px 0 22px}

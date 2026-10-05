@@ -3,15 +3,17 @@ import {ArrowRight,CheckCircle2,Pencil,Trash2,UserPlus,X} from 'lucide-react';
 import {useLocation,useNavigate} from 'react-router-dom';
 import {store} from './storage';
 import type {AgencyService} from './ServicesManager';
-import type {Client,TeamMember} from './types';
-import {CRM_LEAD_OPEN_EVENT,crmStages as stages,crmWonAt,leadServiceIds,serviceEstimate,type CRMLead as Lead,type CRMStage as Stage} from './crm-leads';
+import type {Client,Task,TeamMember} from './types';
+import {CRM_LEAD_ACTIVITY_OPEN_EVENT,CRM_LEAD_OPEN_EVENT,appendCRMLeadObservation,crmStages as stages,crmWonAt,leadServiceIds,serviceEstimate,type CRMLead as Lead,type CRMLeadObservation,type CRMStage as Stage} from './crm-leads';
+import CRMLeadActivityModal from './CRMLeadActivityModal';
+import {createCRMFollowUpTask,type CRMFollowUpInput} from './crm-lead-activities';
 
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const today=()=>new Date().toISOString().slice(0,10);
 
 export default function CRMLeadManager(){
  const location=useLocation(),navigate=useNavigate();
- const [selected,setSelected]=useState<Lead|null>(null),[converting,setConverting]=useState(false);
+ const [selected,setSelected]=useState<Lead|null>(null),[converting,setConverting]=useState(false),[activity,setActivity]=useState<{lead:Lead;mode:'observations'|'follow-up'}|null>(null);
  const [selectedServiceIds,setSelectedServiceIds]=useState<string[]>([]),[variableEstimate,setVariableEstimate]=useState(0);
  const [services,setServices]=useState<AgencyService[]>(()=>store.get('services',[]));
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
@@ -30,7 +32,9 @@ export default function CRMLeadManager(){
    setServices(store.get('services',[]));
    setTeam(store.get('team',[]));
    setClients(store.get('clients',[]));
-   setSelected(current=>current?store.get<Lead[]>('prospects',[]).find(lead=>lead.id===current.id)||null:null);
+   const currentLeads=store.get<Lead[]>('prospects',[]);
+   setSelected(current=>current?currentLeads.find(lead=>lead.id===current.id)||null:null);
+   setActivity(current=>current?{...current,lead:currentLeads.find(lead=>lead.id===current.lead.id)||current.lead}:null);
   };
   window.addEventListener('roas-change',update);
   return()=>window.removeEventListener('roas-change',update);
@@ -46,13 +50,39 @@ export default function CRMLeadManager(){
   return()=>window.removeEventListener(CRM_LEAD_OPEN_EVENT,open);
  },[location.pathname]);
  useEffect(()=>{
+  const open=(event:Event)=>{
+   if(location.pathname!=='/crm')return;
+   const detail=(event as CustomEvent<{leadId?:string;mode?:'observations'|'follow-up'}>).detail;
+   const lead=store.get<Lead[]>('prospects',[]).find(item=>item.id===detail?.leadId);
+   if(lead&&detail?.mode)setActivity({lead,mode:detail.mode});
+  };
+  window.addEventListener(CRM_LEAD_ACTIVITY_OPEN_EVENT,open);
+  return()=>window.removeEventListener(CRM_LEAD_ACTIVITY_OPEN_EVENT,open);
+ },[location.pathname]);
+ useEffect(()=>{
   if(!selected)return;
   const keyboard=(event:KeyboardEvent)=>{if(event.key==='Escape'){if(converting)setConverting(false);else setSelected(null)}};
   window.addEventListener('keydown',keyboard);
   return()=>window.removeEventListener('keydown',keyboard);
  },[selected,converting]);
 
- if(!selected)return null;
+ const addObservation=(text:string)=>{
+  const all=store.get<Lead[]>('prospects',[]),current=all.find(lead=>lead.id===activity?.lead.id);
+  if(!current||!activity)return;
+  const now=new Date().toISOString(),observation:CRMLeadObservation={id:crypto.randomUUID(),text,createdAt:now,authorName:store.access()?.member?.name||'Equipe'};
+  store.set('prospects',all.map(lead=>lead.id===current.id?appendCRMLeadObservation(current,observation):lead));
+  setActivity(null);
+ };
+ const createFollowUp=(input:CRMFollowUpInput)=>{
+  const allLeads=store.get<Lead[]>('prospects',[]),current=allLeads.find(lead=>lead.id===activity?.lead.id);
+  if(!current||!activity)return;
+  const now=new Date().toISOString(),task=createCRMFollowUpTask(current,input,now),allTasks=store.get<Task[]>('tasks',[]);
+  store.set('tasks',[task,...allTasks]);
+  store.set('prospects',allLeads.map(lead=>lead.id===current.id?{...lead,nextAction:task.title,updatedAt:now}:lead));
+  setActivity(null);
+ };
+
+ if(!selected)return activity?<CRMLeadActivityModal lead={activity.lead} mode={activity.mode} team={team} onClose={()=>setActivity(null)} onAddObservation={addObservation} onCreateFollowUp={createFollowUp}/>:null;
  const close=()=>{setSelected(null);setConverting(false)};
  const converted=Boolean(selected.convertedClientId||clients.some(client=>client.sourceLeadId===selected.id));
  const estimate=serviceEstimate(selectedServiceIds,services),estimatedValue=estimate.fixedValue+(estimate.hasVariable||!selectedServiceIds.length?variableEstimate:0);
@@ -81,6 +111,8 @@ export default function CRMLeadManager(){
    id:crypto.randomUUID(),sourceLeadId:selected.id,companyName:String(form.get('companyName')||'').trim(),contactName:String(form.get('contactName')||'').trim(),email:String(form.get('email')||'').trim(),phone:String(form.get('phone')||'').trim(),instagram:String(form.get('instagram')||'').trim(),segment:String(form.get('segment')||'').trim(),city:String(form.get('city')||'').trim(),cnpj:String(form.get('cnpj')||'').trim(),paymentDay:paymentDayValue>=1&&paymentDayValue<=31?paymentDayValue:undefined,status:'active',managerId,responsibleIds:managerId?[managerId]:[],monthlyRevenue:Math.max(0,Number(form.get('monthlyRevenue')||0)),serviceIds:Array.from(new Set(form.getAll('serviceIds').map(String))),startDate:String(form.get('startDate')||today()),notes:String(form.get('notes')||'').trim(),color:selected.color||'#5b36f2',createdAt:now,updatedAt:now,
   };
   store.set('clients',[client,...currentClients]);
+  const relatedTasks=store.get<Task[]>('tasks',[]);
+  if(relatedTasks.some(task=>task.leadId===selected.id&&!task.clientId))store.set('tasks',relatedTasks.map(task=>task.leadId===selected.id&&!task.clientId?{...task,clientId:client.id,updatedAt:now}:task));
   store.set('prospects',store.get<Lead[]>('prospects',[]).map(lead=>lead.id===selected.id?{...lead,stage:'Negócio fechado',nextAction:'Cliente convertido',convertedClientId:client.id,updatedAt:now,wonAt:lead.stage==='Negócio fechado'?crmWonAt(lead)||now:now}:lead));
   close();
   navigate(`/clients/${client.id}`);

@@ -1,10 +1,10 @@
 import {useEffect,useMemo,useState} from 'react';
-import {BarChart3,CalendarDays,ChartNoAxesCombined,FilterX,Funnel,GripVertical,Maximize2,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
+import {BarChart3,CalendarDays,CalendarPlus,ChartNoAxesCombined,FilterX,Funnel,GripVertical,Maximize2,MessageSquarePlus,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Cell,Line,LineChart,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
 import {KanbanMoreButton,useKanbanColumnLimit,visibleKanbanCards} from './KanbanColumnLimit';
 import type {AgencyService} from './ServicesManager';
-import type {Client,TeamMember} from './types';
+import type {Client,Task,TeamMember} from './types';
 import {
  crmStageNextAction,
  crmStages as stages,
@@ -12,6 +12,7 @@ import {
  isConvertedLead,
  leadServiceIds,
  moveCRMLeadToStage,
+ requestCRMLeadActivity,
  requestCRMLeadOpen,
  serviceEstimate,
  type CRMLead as Lead,
@@ -37,6 +38,7 @@ export default function CRMPage(){
  const [services,setServices]=useState<AgencyService[]>(()=>store.get('services',[]));
  const [team,setTeam]=useState<TeamMember[]>(()=>store.get('team',[]));
  const [clients,setClients]=useState<Client[]>(()=>store.get('clients',[]));
+ const [tasks,setTasks]=useState<Task[]>(()=>store.get('tasks',[]));
  const [modal,setModal]=useState(false);
  const [goalModal,setGoalModal]=useState(false);
  const [goal,setGoal]=useState<CRMGoal>(()=>normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)));
@@ -56,6 +58,7 @@ export default function CRMPage(){
    setServices(store.get('services',[]));
    setTeam(store.get('team',[]));
    setClients(store.get('clients',[]));
+   setTasks(store.get('tasks',[]));
    setGoal(normalizeCRMGoal(store.get('crm_goal',emptyCRMGoal)));
   };
   window.addEventListener('roas-change',update);
@@ -147,13 +150,14 @@ export default function CRMPage(){
      <div className="crmCards">{visibleKanbanCards(items,expanded).map(lead=>{
       const linked=services.filter(service=>leadServiceIds(lead,services).includes(service.id));
       const responsible=team.find(member=>member.id===lead.responsibleId);
-      const converted=isConvertedLead(lead,convertedLeadIds);
+      const converted=isConvertedLead(lead,convertedLeadIds),observationCount=lead.observations?.length||0,openFollowUps=tasks.filter(task=>task.leadId===lead.id&&task.status!=='completed').length;
       return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} tabIndex={0} aria-label={`Lead ${lead.name}`} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>{if(!dragged)requestCRMLeadOpen(lead.id)}} onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();requestCRMLeadOpen(lead.id)}}}>
        <div className="leadTop"><i style={{background:lead.color}}>{lead.name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase()}</i><div className="leadIdentity"><h3>{lead.name}</h3><p><UserRound/>{lead.contact||'Contato não informado'}</p></div><div className="leadActions">{converted&&<span className="convertedLeadBadge">Cliente</span>}<GripVertical aria-hidden="true"/><button type="button" className="leadEditButton" aria-label={`Editar ${lead.name}`} onClick={event=>{event.stopPropagation();requestCRMLeadOpen(lead.id)}}><Pencil/></button></div></div>
        {responsible&&<span className="leadResponsible">Responsável: {responsible.name}</span>}
        {linked.length?<div className="leadServices">{linked.slice(0,2).map(service=><span key={service.id}>{service.name}</span>)}{linked.length>2&&<span>+{linked.length-2}</span>}</div>:<span className="leadNoService">Sem serviço vinculado</span>}
        <div className="leadValue"><small>Valor estimado</small><strong>{money(lead.value)}</strong></div>
        <footer><span>{lead.source||'Sem origem'}</span><small><CalendarDays/><span>{lead.nextAction||'Definir próxima ação'}</span></small></footer>
+       <div className="crmLeadQuickActions" onClick={event=>event.stopPropagation()}><button type="button" aria-label={'Observações de '+lead.name} title="Ver e adicionar observações" onClick={()=>requestCRMLeadActivity(lead.id,'observations')}><MessageSquarePlus/><span>Observações</span>{observationCount>0&&<b>{observationCount}</b>}</button><button type="button" aria-label={'Criar follow-up para '+lead.name} title="Criar tarefa de follow-up" onClick={()=>requestCRMLeadActivity(lead.id,'follow-up')}><CalendarPlus/><span>Follow-up</span>{openFollowUps>0&&<b>{openFollowUps}</b>}</button></div>
        <label className="crmQuickMove" onClick={event=>event.stopPropagation()}><span>{converted?'Lead convertido':'Mover para'}</span><select aria-label={`Mover ${lead.name} para outra etapa`} value={lead.stage} disabled={converted} onChange={event=>moveLead(lead.id,event.target.value as Stage)}>{stages.map(option=><option key={option}>{option}</option>)}</select></label>
       </article>})}{!items.length&&<div className="crmColumnEmpty"><span>Sem oportunidades</span><small>Nenhum lead nesta etapa com os filtros atuais.</small></div>}</div>
      <KanbanMoreButton total={items.length} expanded={expanded} onToggle={()=>toggleColumn(stage)}/><button className="addLead" onClick={()=>openModal(stage)}>＋ Adicionar nesta etapa</button>
