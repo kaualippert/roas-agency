@@ -135,6 +135,9 @@ html[data-theme-variant="all-black"] .crmPageBoard .crmColumn,html[data-theme-va
 }
 
 /* Cards menores e com leitura mais direta: identidade, valor e ação em poucos blocos. */
+@media(min-width:701px){
+ .shell.narrow main.crmPage .crmPageBoard .crmColumns,.shell.wide main.crmPage .crmPageBoard .crmColumns{grid-template-columns:repeat(8,minmax(180px,1fr));overflow-x:auto}
+}
 .crmPageBoard .leadCard{padding:9px;border-radius:10px}
 .crmPageBoard .leadTop{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:start;gap:8px}
 .crmPageBoard .leadTop>i{width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:8px;font-size:8px}

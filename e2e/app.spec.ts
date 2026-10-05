@@ -100,7 +100,11 @@ test('mantém cards compactos nos kanbans de CRM e tarefas',async({page})=>{
  await expect(page.locator('.leadCard').first()).toHaveClass(/compact/);
 });
 
-test('registra observações e follow-ups ligados ao lead do CRM',async({page})=>{
+test('registra observações e follow-ups ligados ao lead do CRM',async({page},testInfo)=>{
+ await page.addInitScript(()=>{
+  localStorage.setItem('roas_kanban_crm_density',JSON.stringify('compact'));
+  localStorage.setItem('roas_sidebar_open','false');
+ });
  await page.goto('/crm');
  const leadCard=page.locator('[data-lead-id="lead-active"]');
  await leadCard.getByRole('button',{name:'Observações de Academia Horizonte'}).click();
@@ -111,14 +115,34 @@ test('registra observações e follow-ups ligados ao lead do CRM',async({page})=
  await noteSaved;
  await expect(leadCard.getByRole('button',{name:'Observações de Academia Horizonte'})).toContainText('1');
 
- await leadCard.getByRole('button',{name:'Criar follow-up para Academia Horizonte'}).click();
- const followUp=page.getByRole('dialog',{name:'Criar follow-up'});
+ await leadCard.getByRole('button',{name:'Criar tarefa para Academia Horizonte'}).click();
+ const followUp=page.getByRole('dialog',{name:'Criar tarefa'});
  await followUp.getByLabel('Título da tarefa').fill('Agendar retorno comercial');
  const due=new Date();due.setDate(due.getDate()+1);
  await followUp.getByLabel('Prazo').fill([due.getFullYear(),String(due.getMonth()+1).padStart(2,'0'),String(due.getDate()).padStart(2,'0')].join('-'));
  const taskSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/tasks')&&response.request().method()==='PUT');
  await followUp.getByRole('button',{name:'Criar tarefa'}).click();
  await taskSaved;
+ await expect(followUp).toBeHidden();
+ await expect(leadCard.getByRole('button',{name:'Criar tarefa para Academia Horizonte'})).toContainText('1');
+ // Os ícones, textos e contadores devem caber mesmo nos cards estreitos.
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:900});
+  await leadCard.scrollIntoViewIfNeeded();
+  const layout=await leadCard.locator('.crmLeadQuickActions').evaluate(actions=>{
+   return Array.from(actions.querySelectorAll('button')).map(button=>{
+    const bounds=button.getBoundingClientRect();
+    const label=button.querySelector('span')!;
+    return {textFits:label.scrollWidth<=label.clientWidth,childrenFit:Array.from(button.children).every(child=>{
+     const rect=child.getBoundingClientRect();
+     return rect.left>=bounds.left&&rect.right<=bounds.right&&rect.top>=bounds.top&&rect.bottom<=bounds.bottom;
+    })};
+   });
+  });
+  expect(layout).toEqual([{textFits:true,childrenFit:true},{textFits:true,childrenFit:true}]);
+ }
+ await page.setViewportSize({width:1440,height:900});
+ await leadCard.screenshot({path:testInfo.outputPath('crm-lead-card.png')});
  await page.goto('/tasks');
  const taskCard=page.locator('.enhancedTaskCard').filter({hasText:'Agendar retorno comercial'});
  await expect(taskCard).toBeVisible();
