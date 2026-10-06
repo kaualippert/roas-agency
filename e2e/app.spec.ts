@@ -1,6 +1,52 @@
 import {expect,test} from '@playwright/test';
 import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
 
+test('editar cliente carrega seleções ao abrir a central diretamente e salva centavos',async({page},testInfo)=>{
+ await page.goto('/clients/client-1');
+ await page.getByRole('button',{name:'Editar cadastro'}).click();
+ const dialog=page.getByRole('dialog',{name:'Atualizar cadastro'});
+ const social=dialog.getByRole('checkbox',{name:'Social Media'});
+ const site=dialog.getByRole('checkbox',{name:'Landing Page'});
+ await social.check();
+ await site.check();
+ await site.uncheck();
+ await expect(dialog.locator('input[name="responsibleIds"]')).toBeChecked();
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:900});
+  await dialog.locator('.clientServicesField').scrollIntoViewIfNeeded();
+  const checkbox=await social.boundingBox();
+  expect(checkbox!.width).toBeLessThanOrEqual(20);
+  expect(checkbox!.height).toBeLessThanOrEqual(20);
+  const label=await social.locator('..').boundingBox();
+  expect(checkbox!.x).toBeGreaterThanOrEqual(label!.x);
+  expect(checkbox!.x+checkbox!.width).toBeLessThanOrEqual(label!.x+label!.width);
+  await dialog.locator('.clientServicesField').screenshot({path:testInfo.outputPath(`client-services-${width}.png`)});
+ }
+ await dialog.getByLabel('Receita mensal',{exact:true}).fill('3500.75');
+ const saved=page.waitForRequest(request=>request.url().endsWith('/api/state/clients')&&request.method()==='PUT');
+ await dialog.getByRole('button',{name:'Salvar cliente'}).click();
+ const client=(await saved).postDataJSON().value.find((item:{id:string})=>item.id==='client-1');
+ expect(client.monthlyRevenue).toBe(3500.75);
+ expect(client.serviceIds).toEqual(['service-social']);
+ expect(client.responsibleIds).toEqual(['member-admin']);
+ await expect(dialog).toBeHidden();
+ await page.reload();
+ await page.getByRole('button',{name:'Editar cadastro'}).click();
+ await expect(social).toBeChecked();
+ await expect(site).not.toBeChecked();
+ await expect(dialog.getByLabel('Receita mensal',{exact:true})).toHaveValue('3500.75');
+ await page.keyboard.press('Escape');
+ await expect(dialog).toBeHidden();
+ await page.goto('/clients');
+ await page.getByRole('button',{name:'Novo cliente'}).click();
+ const create=page.getByRole('dialog',{name:'Cadastrar cliente'});
+ await expect(create.getByRole('checkbox',{name:'Social Media'})).not.toBeChecked();
+ const responsibleBox=await create.locator('input[name="responsibleIds"]').boundingBox();
+ expect(responsibleBox!.height).toBeLessThanOrEqual(20);
+ await create.getByRole('button',{name:'Cancelar'}).click();
+ await expect(create).toBeHidden();
+});
+
 test('abre edição de tarefa sem esconder o formulário na tela cheia',async({page})=>{
  await page.goto('/tasks');
  await page.getByRole('button',{name:'Tela cheia de tarefas'}).click();

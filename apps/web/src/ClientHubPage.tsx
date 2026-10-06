@@ -6,7 +6,7 @@ import type {Client,GenericItem,Project,Task,TeamMember} from './types';
 import type {AgencyService} from './ServicesManager';
 import {linkedServices} from './service-links';
 import ClientTaskModal from './ClientTaskModal';
-import {ClientForm} from './ClientsPageEnhanced';
+import {ClientForm} from './ClientForm';
 import ClientProcessesPanel from './ClientProcessesPanel';
 import {clientProcessProgress,type ClientProcess} from './client-processes';
 import ClientMindMapsPanel from './ClientMindMapsPanel';
