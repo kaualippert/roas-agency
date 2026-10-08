@@ -13,3 +13,10 @@
 .tasksEnhanced .enhancedKanbanColumn>header{position:static;height:auto;min-height:38px;padding:6px 8px;margin:0 0 8px;border-radius:9px;background:var(--card)}
 .tasksEnhanced .enhancedKanbanColumn>header button{display:grid;place-items:center;width:26px;height:26px;padding:0;border-radius:7px;cursor:pointer}
 .tasksEnhanced .enhancedKanbanColumn>header button:hover{background:var(--soft);color:var(--purple)}
+.tasksEnhanced .taskFilters{flex-wrap:nowrap;overflow-x:auto;align-items:center;scrollbar-width:thin;overscroll-behavior-inline:contain}
+.tasksEnhanced .taskFilters>*{flex-shrink:0}
+.tasksEnhanced .taskFilters .taskSearch{flex:1 0 200px;min-width:200px;max-width:300px}
+.tasksEnhanced .taskFilters .taskFilterSelect{flex:0 0 auto;min-width:105px;max-width:175px}
+.tasksEnhanced .taskFilters .taskFilterSelect select{min-width:0;max-width:120px}
+.tasksEnhanced .taskFilters .taskSortSelect{max-width:none}
+.tasksEnhanced .taskFilters .taskSortSelect select{max-width:none}

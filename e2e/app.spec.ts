@@ -1,6 +1,35 @@
 import {expect,test} from '@playwright/test';
 import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
 
+test('filtros de tarefas ficam juntos e a ordenação por criação persiste',async({page},testInfo)=>{
+ await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,tasks:testState.tasks.map((task,index)=>({...task,createdAt:index?'2026-07-01T12:00:00Z':'2026-01-01T12:00:00Z'}))}}}));
+ await page.goto('/tasks');
+ await page.getByRole('button',{name:'Lista',exact:true}).click();
+ const order=page.getByLabel('Ordenar tarefas',{exact:true});
+ await order.selectOption('newest');
+ await expect(page.locator('.enhancedTaskTable tbody tr').first()).toContainText('Planejamento futuro');
+ await order.selectOption('oldest');
+ await expect(page.locator('.enhancedTaskTable tbody tr').first()).toContainText('Relatório atrasado');
+ await page.goto('/dashboard');
+ await page.goto('/tasks');
+ await expect(order).toHaveValue('oldest');
+ await order.selectOption('title_asc');
+ await expect(page.locator('.enhancedTaskTable tbody tr').first()).toContainText('Planejamento futuro');
+ await order.selectOption('title_desc');
+ await expect(page.locator('.enhancedTaskTable tbody tr').first()).toContainText('Relatório atrasado');
+ await expect(page.locator('.advancedTaskFilters')).toHaveCount(0);
+ await page.getByLabel('Cliente',{exact:true}).selectOption('client-1');
+ await page.getByLabel('Prazo',{exact:true}).selectOption('overdue');
+ await expect(page.locator('.enhancedTaskTable tbody tr')).toHaveCount(1);
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:900});
+  const offsets=await page.locator('.taskFilters>label').evaluateAll(labels=>labels.map(label=>Math.round(label.getBoundingClientRect().top)));
+  expect(new Set(offsets).size).toBe(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+  await page.locator('.taskFilters').screenshot({path:testInfo.outputPath(`task-filters-${width}.png`)});
+ }
+});
+
 test('editar cliente carrega seleções ao abrir a central diretamente e salva centavos',async({page},testInfo)=>{
  await page.goto('/clients/client-1');
  await page.getByRole('button',{name:'Editar cadastro'}).click();
