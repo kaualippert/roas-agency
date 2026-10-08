@@ -1,8 +1,35 @@
 import {expect,test} from '@playwright/test';
-import {captureBrowserErrors,mockRoasApi} from './fixtures';
+import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
 
 test.beforeEach(async({page})=>{
  await mockRoasApi(page);
+});
+
+test('cria ramos por toque e foca o mapa mental no celular',async({page})=>{
+ const errors=captureBrowserErrors(page);
+ await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,client_mind_maps:[{
+  id:'map-mobile',clientId:'client-1',title:'Mapa do cliente',description:'',createdAt:'2026-10-01',updatedAt:'2026-10-01',nodes:[
+   {id:'root',parentId:null,text:'Campanha mobile',color:'#5b36f2',x:540,y:310},
+   {id:'branch',parentId:'root',text:'Público',color:'#2563eb',x:130,y:140},
+  ],
+ }]}}}));
+ await page.goto('/clients/client-1');
+ await page.getByRole('button',{name:'Mapas mentais'}).tap();
+ await page.getByRole('button',{name:'Enquadrar mapa',exact:true}).tap();
+ const zoom=page.getByTitle('Restaurar zoom para 100%');
+ await expect(zoom).not.toHaveText('100%');
+ await page.getByRole('button',{name:'Focar tópico'}).tap();
+ await expect(zoom).toHaveText('100%');
+ const root=page.locator('.mindMapNode.root');
+ await root.tap();
+ await root.getByRole('button',{name:'Criar ramo right'}).tap();
+ await page.getByLabel('Nome do novo ramo').fill('Follow-up mobile');
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_mind_maps')&&response.request().method()==='PUT');
+ await page.getByRole('button',{name:'Criar tópico',exact:true}).tap();
+ await saved;
+ await expect(page.getByLabel('Texto do tópico selecionado')).toHaveValue('Follow-up mobile');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ expect(errors).toEqual([]);
 });
 
 test('ações do pipeline do CRM não se sobrepõem no telefone',async({page})=>{

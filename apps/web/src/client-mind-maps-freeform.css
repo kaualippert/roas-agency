@@ -37,3 +37,18 @@ html[data-theme-variant="all-black"] .mindMapQuickEditor{background:#080808}
 html[data-theme-variant="all-black"] .mindMapCanvasFrame{background:#080808;border-color:#242424}
 @media(max-width:800px){.mindMapCanvasFrame{max-width:calc(100vw - 28px)}.mindMapCanvasScroll{min-height:390px}.mindMapFocusButton{display:none}}
 @media(max-width:520px){.mindMapViewportControls{right:8px;bottom:8px}}
+.mindMapCanvasScroll{cursor:grab;scrollbar-width:thin}
+.mindMapCanvasScroll.panning,.mindMapCanvasScroll.panning .mindMapCanvas{cursor:grabbing;user-select:none}
+.mindMapCanvasStage{transition:none}
+.mindMapCanvas path{stroke-dasharray:none;stroke-linecap:round}
+.mindMapNode b{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.mindMapNode:focus-visible,.mindMapHandle:focus-visible,.mindMapViewportControls button:focus-visible{outline:2px solid var(--purple);outline-offset:3px}
+.mindMapToolbar>div:first-child{min-width:0}
+.mindMapToolbar h4,.mindMapToolbar p{overflow-wrap:anywhere}
+.mindMapInspector{min-width:0}
+.mindMapCanvasHint{max-width:calc(100% - 32px);line-height:1.5}
+.mindMapNode>span svg{position:static;width:16px;height:16px}
+.mindMapNode b{font-size:12px;-webkit-line-clamp:3}
+.mindMapToolbar>div:last-child{flex-shrink:0}
+@media(max-width:800px){.mindMapToolbar{flex-wrap:wrap}.mindMapToolbar>div:last-child{flex-wrap:wrap}.mindMapViewportControls button{min-width:40px;height:40px}.mindMapViewportControls .mindMapFocusButton{font-size:0;padding:0 12px}.mindMapViewportControls .mindMapFocusButton svg{width:16px;height:16px}}
+@media(max-width:520px){.mindMapToolbar>div:last-child{grid-template-columns:1fr 1fr;width:100%}.mindMapCanvasHint{display:none}}

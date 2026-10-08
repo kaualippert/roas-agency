@@ -19,7 +19,7 @@ export type ClientMindMap={
 
 export type PositionedMindMapNode=ClientMindMapNode&{x:number;y:number};
 
-export const mindMapMinZoom=.45;
+export const mindMapMinZoom=.2;
 export const mindMapMaxZoom=2;
 
 export function clampMindMapZoom(zoom:number){
@@ -37,7 +37,22 @@ export function fitMindMapZoom(viewportWidth:number,viewportHeight:number,width=
 }
 
 export function clampMindMapPosition(x:number,y:number,width=1080,height=620){
- return {x:Math.max(90,Math.min(width-90,x)),y:Math.max(48,Math.min(height-48,y))};
+ return {x:Math.max(112,Math.min(width-112,x)),y:Math.max(64,Math.min(height-64,y))};
+}
+
+export function fitMindMapView(nodes:PositionedMindMapNode[],viewportWidth:number,viewportHeight:number){
+ if(!nodes.length)return {zoom:1,scrollLeft:0,scrollTop:0};
+ const left=Math.max(0,Math.min(...nodes.map(node=>node.x))-115),right=Math.max(...nodes.map(node=>node.x))+115;
+ const top=Math.max(0,Math.min(...nodes.map(node=>node.y))-65),bottom=Math.max(...nodes.map(node=>node.y))+65;
+ const zoom=fitMindMapZoom(viewportWidth,viewportHeight,right-left,bottom-top,24);
+ return {zoom,scrollLeft:Math.max(0,(left+right)/2*zoom-viewportWidth/2),scrollTop:Math.max(0,(top+bottom)/2*zoom-viewportHeight/2)};
+}
+
+export function availableMindMapPosition(nodes:PositionedMindMapNode[],x:number,y:number,width=1080,height=620){
+ const target=clampMindMapPosition(x,y,width,height);
+ const candidates=[target];
+ for(let row=64;row<=height-64;row+=90)for(let column=112;column<=width-112;column+=200)candidates.push({x:column,y:row});
+ return candidates.sort((a,b)=>Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y)).find(candidate=>nodes.every(node=>Math.abs(node.x-candidate.x)>=200||Math.abs(node.y-candidate.y)>=85))||target;
 }
 
 export function mindMapRoot(nodes:ClientMindMapNode[]){
