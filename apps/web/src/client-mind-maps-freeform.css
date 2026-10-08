@@ -39,7 +39,8 @@ html[data-theme-variant="all-black"] .mindMapCanvasFrame{background:#080808;bord
 @media(max-width:520px){.mindMapViewportControls{right:8px;bottom:8px}}
 .mindMapCanvasScroll{cursor:grab;scrollbar-width:thin}
 .mindMapCanvasScroll.panning,.mindMapCanvasScroll.panning .mindMapCanvas{cursor:grabbing;user-select:none}
-.mindMapCanvasStage{transition:none}
+.mindMapCanvasStage{transition:none;background-image:radial-gradient(circle,var(--border) var(--mind-map-dot-size,1px),transparent var(--mind-map-dot-size,1px));background-repeat:repeat}
+.mindMapCanvas{background-image:none}
 .mindMapCanvas path{stroke-dasharray:none;stroke-linecap:round}
 .mindMapNode b{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .mindMapNode:focus-visible,.mindMapHandle:focus-visible,.mindMapViewportControls button:focus-visible{outline:2px solid var(--purple);outline-offset:3px}

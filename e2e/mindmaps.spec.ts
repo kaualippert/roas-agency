@@ -53,6 +53,21 @@ test('mapa mental permite navegar, editar e enquadrar sem gravações desnecess�
   }).toBe(true);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
   await page.locator('.mindMapMain').screenshot({path:testInfo.outputPath(`mind-map-${width}.png`)});
+  // A grade deve preencher o viewport inteiro mesmo quando o conteúdo fica menor.
+  await viewport.dispatchEvent('wheel',{deltaY:2000});
+  await expect(zoom).toHaveText('20%');
+  const grid=await page.locator('.mindMapCanvasStage').evaluate(element=>{
+   const style=getComputedStyle(element),rect=element.getBoundingClientRect(),view=element.parentElement!.getBoundingClientRect();
+   return {width:rect.width,height:rect.height,viewportWidth:view.width,viewportHeight:view.height,image:style.backgroundImage,size:style.backgroundSize,repeat:style.backgroundRepeat};
+  });
+  expect(grid.width).toBeGreaterThanOrEqual(grid.viewportWidth-1);
+  expect(grid.height).toBeGreaterThanOrEqual(grid.viewportHeight-1);
+  expect(grid.image).toContain('radial-gradient');
+  expect(grid.image).toContain('0.2px');
+  expect(grid.size).toBe('4px 4px');
+  expect(grid.repeat).toBe('repeat');
+  expect(await page.locator('.mindMapCanvas').evaluate(element=>getComputedStyle(element).backgroundImage)).toBe('none');
+  await viewport.screenshot({path:testInfo.outputPath(`mind-map-grid-${width}.png`)});
  }
  await page.getByRole('button',{name:'Focar tópico'}).click();
  await expect(zoom).toHaveText('100%');
