@@ -23,10 +23,10 @@ test('filtros de tarefas ficam juntos e a ordenação por criação persiste',as
  await expect(page.locator('.enhancedTaskTable tbody tr')).toHaveCount(1);
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:900});
-  const offsets=await page.locator('.taskFilters>label').evaluateAll(labels=>labels.map(label=>Math.round(label.getBoundingClientRect().top)));
-  expect(new Set(offsets).size).toBe(1);
+  await expect(page.locator('.compactFiltersMain')).toBeVisible();
+  await expect(page.getByRole('button',{name:/Mais filtros/})).toHaveAttribute('aria-expanded','false');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
-  await page.locator('.taskFilters').screenshot({path:testInfo.outputPath(`task-filters-${width}.png`)});
+  await page.locator('.compactFilters').screenshot({path:testInfo.outputPath(`task-filters-${width}.png`)});
  }
 });
 
@@ -343,7 +343,7 @@ test('aplica o filtro de tarefas atrasadas usando a regra real de prazo',async({
  await statusFilter.selectOption('overdue');
  await expect(page.getByText('Relatório atrasado')).toBeVisible();
  await expect(page.getByText('Planejamento futuro')).toHaveCount(0);
- await expect(page.locator('.taskResultBar')).toContainText('1');
+ await expect(page.locator('.compactFiltersResult')).toContainText('1');
 });
 
 test('filtra, movimenta e protege oportunidades no CRM',async({page})=>{

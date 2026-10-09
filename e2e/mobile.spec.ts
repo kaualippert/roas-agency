@@ -5,6 +5,22 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('mais filtros e etiquetas funcionam por toque no tema escuro',async({page},testInfo)=>{
+ await page.addInitScript(()=>localStorage.setItem('roas_theme','dark'));
+ await page.goto('/tasks');
+ const filters=page.locator('.compactFilters');
+ await filters.getByRole('button',{name:/Mais filtros/}).tap();
+ await filters.getByLabel('Prioridade',{exact:true}).selectOption('urgent');
+ await filters.getByRole('button',{name:/Mais filtros/}).tap();
+ await expect(filters.getByLabel('Prioridade',{exact:true})).toBeHidden();
+ await expect(filters.getByRole('button',{name:'Remover filtro Prioridade: Urgente'})).toBeVisible();
+ await page.goto('/dashboard');await page.goto('/tasks');
+ await filters.getByRole('button',{name:'Remover filtro Prioridade: Urgente'}).tap();
+ await expect(page.locator('.enhancedTaskCard')).toHaveCount(2);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ await filters.screenshot({path:testInfo.outputPath('filters-dark-mobile.png')});
+});
+
 test('abre detalhes dos cards leves por toque sem expor descrições no kanban',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.goto('/tasks');

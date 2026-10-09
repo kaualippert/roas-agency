@@ -1,3 +1,4 @@
+import CompactFilters from './CompactFilters';
 import KanbanCardSummary from './KanbanCardSummary';
 import {localDateKey} from './task-rules';
 import {useEffect,useMemo,useState} from 'react';
@@ -49,6 +50,7 @@ export default function CRMPage(){
  const [dragged,setDragged]=useState<string|null>(null);
  const [selectedServiceIds,setSelectedServiceIds]=useState<string[]>([]);
  const [variableEstimate,setVariableEstimate]=useState(0);
+ const [query,setQuery]=usePersistentState('roas_filter_crm_query','');
  const [filters,setFilters]=usePersistentState<CRMLeadFilters>('roas_filter_crm',emptyFilters);
  const {isExpanded,toggleColumn}=useKanbanColumnLimit();
  const {compact,toggleDensity}=useKanbanDensity('roas_kanban_crm_density');
@@ -67,8 +69,8 @@ export default function CRMPage(){
  },[]);
 
  const convertedLeadIds=useMemo(()=>new Set(clients.map(client=>client.sourceLeadId).filter(Boolean) as string[]),[clients]);
- const filteredLeads=useMemo(()=>filterCRMLeads(leads,filters,services),[leads,filters,services]);
- const hasFilters=Object.entries(filters).some(([key,value])=>key==='status'?value!=='all':Boolean(value));
+ const filteredLeads=useMemo(()=>filterCRMLeads(leads,filters,services).filter(lead=>`${lead.name} ${lead.contact} ${lead.phone||''} ${lead.nextAction}`.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR'))),[leads,filters,services,query]);
+ const hasFilters=Boolean(query)||Object.entries(filters).some(([key,value])=>key==='status'?value!=='all':Boolean(value));
  const activeFilterCount=Object.entries(filters).filter(([key,value])=>key==='status'?value!=='all':Boolean(value)).length;
  const sources=useMemo(()=>Array.from(new Set(leads.map(lead=>lead.source?.trim()).filter(Boolean))).sort(),[leads]);
  const activeTeam=useMemo(()=>team.filter(member=>member.status==='active'),[team]);
@@ -130,21 +132,19 @@ export default function CRMPage(){
   <div className="crmKpis"><Kpi icon={<Target/>} label="Oportunidades ativas" value={String(active.length)} note="Em negociação"/><Kpi icon={<TrendingUp/>} label="Valor no pipeline" value={money(active.reduce((sum,lead)=>sum+Number(lead.value||0),0))} note="Potencial de receita" tone="blue"/><Kpi icon={<Trophy/>} label="Negócios fechados" value={String(won.length)} note={money(won.reduce((sum,lead)=>sum+Number(lead.value||0),0))} tone="green"/><Kpi icon={<BarChart3/>} label="Conversão geral" value={`${conversion}%`} note="Ganhos sobre todos os leads" tone="orange"/><Kpi icon={<ChartNoAxesCombined/>} label="Taxa de ganho" value={`${winRate}%`} note={decidedCount?`${won.length} de ${decidedCount} decididas · ticket médio ${money(averageWonTicket)}`:'Aguardando negócios decididos'}/></div>
   <SalesGoalGauge goal={goal} result={goalResult} onConfigure={openGoalModal} onReset={resetGoal}/>
 
-  <section className="card crmFilterBar" aria-label="Filtros do CRM">
-   <div className="crmFilterHeading"><span><Funnel/></span><div><b>Filtrar oportunidades</b><small>{activeFilterCount?`${activeFilterCount} ${activeFilterCount===1?'filtro ativo':'filtros ativos'}`:'Visualizando todo o funil'}</small></div></div>
-   <div className="crmStatusFilters" role="group" aria-label="Situação das oportunidades">
+  <CompactFilters label="Filtros do CRM" query={query} onQuery={setQuery} placeholder="Buscar oportunidade ou contato..." primary={<><div className="crmStatusFilters" role="group" aria-label="Situação das oportunidades">
     {[['all','Todos'],['active','Em aberto'],['won','Ganhos'],['lost','Perdidos']].map(([value,label])=><button type="button" key={value} className={filters.status===value?'active':''} onClick={()=>setFilters(current=>({...current,status:value as CRMLeadFilters['status']}))}>{label}</button>)}
-   </div>
-   <label><span>Origem</span><select value={filters.source} onChange={event=>setFilters(current=>({...current,source:event.target.value}))}><option value="">Todas</option>{sources.map(source=><option key={source}>{source}</option>)}</select></label>
-   <label><span>Responsável</span><select value={filters.responsibleId} onChange={event=>setFilters(current=>({...current,responsibleId:event.target.value}))}><option value="">Todos</option>{activeTeam.map(member=><option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
-   <label><span>Serviço</span><select value={filters.serviceId} onChange={event=>setFilters(current=>({...current,serviceId:event.target.value}))}><option value="">Todos</option>{availableServices.map(service=><option key={service.id} value={service.id}>{service.name}</option>)}</select></label>
-   <button type="button" className="crmClearFilters" disabled={!hasFilters} onClick={()=>setFilters(emptyFilters)}><FilterX/> Limpar</button>
-   <small className="crmFilterResult"><b>{filteredLeads.length}</b> de {leads.length} oportunidades exibidas</small>
-  </section>
+   </div><label><span>Responsável</span><select aria-label="Responsável" value={filters.responsibleId} onChange={event=>setFilters(current=>({...current,responsibleId:event.target.value}))}><option value="">Todos</option>{activeTeam.map(member=><option key={member.id} value={member.id}>{member.name}</option>)}</select></label></>} secondary={<><label><span>Origem</span><select aria-label="Origem" value={filters.source} onChange={event=>setFilters(current=>({...current,source:event.target.value}))}><option value="">Todas</option>{sources.map(source=><option key={source}>{source}</option>)}</select></label><label><span>Serviço</span><select aria-label="Serviço" value={filters.serviceId} onChange={event=>setFilters(current=>({...current,serviceId:event.target.value}))}><option value="">Todos</option>{availableServices.map(service=><option key={service.id} value={service.id}>{service.name}</option>)}</select></label></>} secondaryCount={[filters.source,filters.serviceId].filter(Boolean).length} chips={[
+   ...(query?[{id:'query',label:`Busca: ${query}`,onRemove:()=>setQuery('')}]:[]),
+   ...(filters.status!=='all'?[{id:'status',label:`Situação: ${({active:'Em aberto',won:'Ganhos',lost:'Perdidos'} as Record<string,string>)[filters.status]}`,onRemove:()=>setFilters(current=>({...current,status:'all'}))}]:[]),
+   ...(filters.source?[{id:'source',label:`Origem: ${filters.source}`,onRemove:()=>setFilters(current=>({...current,source:''}))}]:[]),
+   ...(filters.responsibleId?[{id:'responsible',label:`Responsável: ${team.find(member=>member.id===filters.responsibleId)?.name||'Não encontrado'}`,onRemove:()=>setFilters(current=>({...current,responsibleId:''}))}]:[]),
+   ...(filters.serviceId?[{id:'service',label:`Serviço: ${services.find(service=>service.id===filters.serviceId)?.name||'Não encontrado'}`,onRemove:()=>setFilters(current=>({...current,serviceId:''}))}]:[])
+  ]} onClear={()=>{setFilters(emptyFilters);setQuery('')}} result={<>{filteredLeads.length} de {leads.length} oportunidades</>}/>
 
   <section className="card crmPageBoard">
    <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste os cards ou abra uma oportunidade para alterar a etapa.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button className="crmIconAction" type="button" onClick={toggleDensity} aria-label={compact?'Expandir cards':'Compactar cards'} aria-pressed={compact} title={compact?'Expandir cards':'Compactar cards'}>{compact?<Maximize2/>:<Minimize2/>}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial" compact/></div></div>
-   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>setFilters(emptyFilters)}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns lightKanban">{stages.map((stage,index)=>{
+   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>{setFilters(emptyFilters);setQuery('')}}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns lightKanban">{stages.map((stage,index)=>{
     const items=filteredLeads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);
     return <div className="crmColumn" data-crm-stage={stage} key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>drop(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}>
      <header><div><i/><b>{stage}</b></div><span>{items.length}</span><small>{money(stageMetrics[stage].value)}</small></header>

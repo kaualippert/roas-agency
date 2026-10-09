@@ -8,8 +8,10 @@ test('carteira, central e relatório do cliente permanecem conectados',async({pa
  await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,reports:[{id:'report-client-1',name:'Resultados do cliente',clientId:'client-1',status:'Pendente',date:now.slice(0,10),category:'Este mês',description:'Resumo para o cliente',createdAt:now,updatedAt:now}]}}}));
  await page.goto('/clients');
  await expect(page.locator('.portfolioOverview')).toContainText('Saúde da carteira');
+ await page.getByRole('button',{name:/Mais filtros/}).click();
  await page.getByLabel('Filtrar por saúde da carteira').selectOption('attention');
  await expect(page.locator('.clientTablePanel tbody')).toContainText('Cliente Teste');
+ await page.locator('.clientTablePanel tbody tr').filter({hasText:'Cliente Teste'}).click();
  await page.getByRole('link',{name:'Abrir central do cliente'}).click();
  await expect(page.locator('.clientHealthPanel')).toContainText('tarefa atrasada');
  await page.getByRole('button',{name:'Arquivos e relatórios'}).click();

@@ -1,0 +1,27 @@
+.compactFilters{padding:12px 14px;display:grid;gap:10px;min-width:0;border-bottom:1px solid var(--border)}
+.compactFilters .compactFiltersMain{display:flex;align-items:end;flex-wrap:wrap;gap:8px;min-width:0}
+.compactFilters .compactFiltersSearch{display:flex;align-items:center;gap:8px;flex:1 1 220px;min-width:180px;height:40px;padding:0 10px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--muted)}
+.compactFilters .compactFiltersSearch svg{width:15px;height:15px;flex:none}
+.compactFilters .compactFiltersSearch input{width:100%;min-width:0;height:38px;padding:0;border:0;outline:none;background:transparent;color:var(--text);font:inherit;font-size:11px;box-shadow:none}
+.compactFilters .compactFiltersSearch:focus-within{border-color:var(--purple);box-shadow:0 0 0 2px color-mix(in srgb,var(--purple) 12%,transparent)}
+.compactFilters .compactFiltersMain>label:not(.compactFiltersSearch),.compactFilters .compactFiltersSecondary>label{display:grid;gap:4px;min-width:125px;flex:0 1 145px;max-width:none;height:auto;min-height:0;margin:0;padding:0;background:transparent;border:0}
+.compactFilters label>span{font-size:9px;color:var(--muted);font-weight:600}
+.compactFilters label select{width:100%;height:40px;min-width:0;border:1px solid var(--border);border-radius:9px;padding:0 9px;background:var(--card);color:var(--text);font:inherit;font-size:11px;box-shadow:none}
+.compactFilters .compactFiltersToggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 10px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--muted);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}
+.compactFilters .compactFiltersToggle svg{width:15px;height:15px}
+.compactFilters .compactFiltersToggle.active{color:var(--purple);border-color:var(--purple)}
+.compactFilters .compactFiltersToggle>span{padding:1px 5px;background:color-mix(in srgb,var(--purple) 12%,var(--card));border-radius:5px;color:var(--purple);font-size:9px}
+.compactFilters .compactFiltersSecondary{display:flex;flex-wrap:wrap;gap:10px;padding:12px;background:color-mix(in srgb,var(--purple) 3%,var(--card));border:1px solid var(--border);border-radius:10px}
+.compactFilters .compactFiltersSecondary[hidden]{display:none}
+.compactFilters .compactFiltersBottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.compactFilters .compactFiltersChips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.compactFilters .compactFiltersChips button{display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:5px 7px;border:1px solid color-mix(in srgb,var(--purple) 22%,var(--border));border-radius:7px;background:color-mix(in srgb,var(--purple) 6%,var(--card));color:var(--purple);font:inherit;font-size:10px;cursor:pointer}
+.compactFilters .compactFiltersChips button>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.compactFilters .compactFiltersChips svg{width:12px;height:12px;flex:none}
+.compactFilters .compactFiltersChips .compactFiltersClear{border-color:transparent;background:transparent;color:var(--muted)}
+.compactFilters .compactFiltersResult{font-size:10px;color:var(--muted)}
+.compactFilters .crmStatusFilters,.compactFilters .tabs,.compactFilters .projectTabs{display:flex;flex-wrap:wrap;gap:3px;margin:0;padding:3px;border:1px solid var(--border);border-radius:9px;height:auto;min-height:40px;align-items:center;background:var(--card)}
+.compactFilters .crmStatusFilters button,.compactFilters .tabs button,.compactFilters .projectTabs button{padding:6px 9px;height:auto;min-height:30px;border:0;border-radius:6px;font-size:10px;background:transparent;color:var(--muted)}
+.compactFilters .crmStatusFilters button.active,.compactFilters .tabs button.active,.compactFilters .projectTabs button.active{background:color-mix(in srgb,var(--purple) 12%,var(--card));color:var(--purple);box-shadow:none}
+.compactFilters button:focus-visible,.compactFilters select:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+@media(max-width:700px){.compactFilters .compactFiltersMain{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}.compactFilters .compactFiltersSearch{grid-column:1/-1;min-width:0}.compactFilters .compactFiltersMain>label:not(.compactFiltersSearch),.compactFilters .compactFiltersSecondary>label{min-width:0}.compactFilters .crmStatusFilters,.compactFilters .tabs,.compactFilters .projectTabs{grid-column:1/-1}.compactFilters .compactFiltersSecondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.compactFilters .compactFiltersChips button{min-height:32px}.compactFilters .compactFiltersResult{width:100%}}
