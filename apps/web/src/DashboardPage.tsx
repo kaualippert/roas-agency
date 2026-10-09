@@ -9,6 +9,7 @@ import {usePersistentState} from './persistent-ui';
 import type {CRMLead as Lead} from './crm-leads';
 import SalesGoalGauge from './SalesGoalGauge';
 import {dueEntriesInRange,receivedEntriesInRange} from './dashboard-metrics';
+import {MetricHelp,MetricScope} from './DashboardReading';
 
 type FinancialEntry={id:string;clientId:string;kind:'recurring'|'variable'|'one_off';value:number;dueDate:string;status:'pending'|'received';receivedAt?:string;createdAt?:string;updatedAt?:string};
 const DashboardCharts=lazy(()=>import('./DashboardCharts'));
@@ -61,13 +62,22 @@ export default function DashboardPage(){
  ].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,6),[clients,tasks,receivedEntries,range]);
  return <main className="connectedDashboard">
   <div className="dashboardToolbar"><div><h2>Visão geral da agência</h2><p>Indicadores atualizados com os dados reais de cada área.</p></div><label>Período<select value={period} onChange={event=>setPeriod(event.target.value as Period)}>{Object.entries(periods).map(([value,item])=><option key={value} value={value}>{item.label}</option>)}</select></label></div>
-  <div className="dashboardKpis">
-   <DashboardKpi icon={<CircleDollarSign/>} label="Receita recebida" value={money(received)} note={`${receivedEntries.length} pagamentos no período`} scope="period"/>
-   <DashboardKpi icon={<TrendingUp/>} label="Receita recorrente" value={money(mrr)} note={`${activeClients.length} contratos ativos`} scope="current" tone="blue"/>
-   <DashboardKpi icon={<Funnel/>} label="Pipeline comercial" value={money(pipeline)} note={`${activeLeads.length} oportunidades`} scope="current" tone="purple"/>
-   <DashboardKpi icon={<BriefcaseBusiness/>} label="Projetos ativos" value={String(activeProjects.length)} note={`${projectAverage}% de progresso médio`} scope="current" tone="green"/>
-   <DashboardKpi icon={<Clock3/>} label="Tarefas em aberto" value={String(openTasks.length)} note={`${overdueTasks.length} precisam de atenção`} scope="current" tone={overdueTasks.length?'orange':'green'}/>
+  <p className="dashboardReadingNote">O filtro altera os indicadores “Neste período”. Indicadores de “Estado atual” mostram a situação de hoje, independentemente do filtro.</p>
+  <div className="dashboardMetricGroups">
+   <section className="dashboardKpiGroup" aria-label="Resultados"><h3>Resultados</h3><div className="dashboardKpis">
+    <DashboardKpi icon={<Funnel/>} label="Pipeline comercial" value={money(pipeline)} note={`${activeLeads.length} oportunidades`} scope="current" tone="purple" description="Soma do valor estimado das oportunidades que ainda não foram ganhas ou perdidas. Potencial comercial atual, não receita recebida."/>
+    <DashboardKpi icon={<Target/>} label="Conversão comercial" value={`${conversion}%`} note="Conversão acumulada da carteira" scope="current" description="Negócios atualmente fechados divididos por todos os leads cadastrados, incluindo perdidos. Acumulado da carteira; não é a conversão do período selecionado."/>
+   </div></section>
+   <section className="dashboardKpiGroup" aria-label="Operação"><h3>Operação</h3><div className="dashboardKpis">
+    <DashboardKpi icon={<BriefcaseBusiness/>} label="Projetos ativos" value={String(activeProjects.length)} note={`${projectAverage}% de progresso médio`} scope="current" tone="green" description="Quantidade de projetos atualmente ativos. O progresso médio considera apenas esses projetos."/>
+    <DashboardKpi icon={<Clock3/>} label="Tarefas em aberto" value={String(openTasks.length)} note={`${overdueTasks.length} precisam de atenção`} scope="current" tone={overdueTasks.length?'orange':'green'} description="Todas as tarefas ainda não concluídas, independentemente da data de criação. Tarefas atrasadas são identificadas pelo prazo atual."/>
+   </div></section>
+   <section className="dashboardKpiGroup" aria-label="Financeiro"><h3>Financeiro</h3><div className="dashboardKpis">
+    <DashboardKpi icon={<CircleDollarSign/>} label="Receita recebida" value={money(received)} note={`${receivedEntries.length} pagamentos no período`} scope="period" description="Soma dos pagamentos recebidos cuja data de recebimento (receivedAt) está no intervalo selecionado. O vencimento não determina este indicador."/>
+    <DashboardKpi icon={<TrendingUp/>} label="Receita recorrente" value={money(mrr)} note={`${activeClients.length} contratos ativos`} scope="current" tone="blue" description="Soma das receitas mensais cadastradas dos clientes ativos. Previsão recorrente atual; não representa dinheiro recebido no período."/>
+   </div></section>
   </div>
+  <p className="dashboardReadingNote">A meta comercial abaixo acompanha o mês atual e não muda com o filtro de período.</p>
   <SalesGoalGauge goal={goal} result={goalResult} dashboard/>
   <div className="dashboardMainGrid">
    <section className="card dashboardRevenue"><DashboardTitle title="Receita e previsão" subtitle={`Movimentações financeiras — ${periods[period].label.toLowerCase()}`} action={<a href="/finance">Abrir financeiro <ArrowRight/></a>}/><div className="revenueHighlights"><span><i className="received"/><small>Recebido no período</small><b>{money(received)}</b></span><span><i className="forecast"/><small>Previsão recorrente atual</small><b>{money(mrr)}</b></span><span><i className="variable"/><small>Variáveis previstas no período</small><b>{money(variable)}</b></span></div><DeferredChart kind="revenue" data={revenueData}/></section>
@@ -100,6 +110,15 @@ function buildRevenueData(period:Period,entries:FinancialEntry[],mrr:number,rang
 function dateBetween(value:string|undefined,from:Date,to:Date){const date=parseDate(value);return Boolean(date&&date>=from&&date<=to)}
 function priorityValue(priority:Task['priority']){return {low:1,medium:2,high:3,urgent:4}[priority]}
 function relativeDate(value?:string){const date=parseDate(value);if(!date)return 'Agora';const days=Math.max(0,Math.floor((Date.now()-date.getTime())/86400000));return days===0?'Hoje':days===1?'Ontem':`${days} dias`}
-function DashboardKpi({icon,label,value,note,tone='',scope}:{icon:React.ReactNode;label:string;value:string;note:string;tone?:string;scope:'period'|'current'}){return <article><span className={`dashboardKpiIcon ${tone}`}>{icon}</span><div><small>{label}</small><strong>{value}</strong><em>{note}</em></div><i className={`dataSource ${scope}`}>{scope==='period'?'No período':'Agora'}</i></article>}
-function DashboardTitle({title,subtitle,action}:{title:string;subtitle:string;action?:React.ReactNode}){return <div className="connectedTitle"><div><h3>{title}</h3><p>{subtitle}</p></div>{action}</div>}
-function Pulse({label,value,icon,tone}:{label:string;value:number;icon:React.ReactNode;tone:string}){return <div className="pulseRow"><span className={`pulseIcon ${tone}`}>{icon}</span><div><p><b>{label}</b><strong>{value}%</strong></p><i><em style={{width:`${Math.min(100,value)}%`}}/></i></div></div>}
+function DashboardKpi({icon,label,value,note,tone='',scope,description}:{icon:React.ReactNode;label:string;value:string;note:string;tone?:string;scope:'period'|'current';description:string}){return <article><span className={`dashboardKpiIcon ${tone}`}>{icon}</span><div><small>{label} <MetricHelp label={label} description={description}/></small><strong>{value}</strong><em>{note}</em><MetricScope scope={scope}/></div></article>}
+const chartExplanations:Record<string,string>={
+ 'Receita e previsão':'Recebido usa a data de recebimento no período. A previsão distribui a receita mensal atual e adiciona lançamentos não recorrentes pelo vencimento; não é receita histórica realizada.',
+ 'Saúde da operação':'Combina o estado atual de projetos e leads com o status atual das tarefas relacionadas ao período. Consulte a identificação de cada indicador.',
+ 'Funil comercial':'Etapa atual dos leads criados no período (ou atualizados, quando não há data de criação). Não representa o histórico de transições entre etapas.',
+ 'Distribuição de tarefas':'Status atual das tarefas criadas, atualizadas ou com prazo no intervalo selecionado. Não representa apenas tarefas concluídas dentro do período.',
+ 'Progresso dos projetos':'Progresso atual dos primeiros sete projetos ativos, sem restrição pelo período selecionado.',
+ 'Prioridades da equipe':'Até cinco tarefas abertas, ordenadas por prioridade e prazo, independentemente do período.',
+ 'Atividade recente':'Clientes e tarefas concluídas pela última atualização no período; pagamentos pela data de recebimento.'
+};
+function DashboardTitle({title,subtitle,action}:{title:string;subtitle:string;action?:React.ReactNode}){const scope=title==='Progresso dos projetos'||title==='Prioridades da equipe'?'current':'period';return <div className="connectedTitle"><div><h3>{title}<MetricHelp label={title} description={chartExplanations[title]||subtitle}/></h3><p>{subtitle}</p>{!['Receita e previsão','Saúde da operação'].includes(title)&&<MetricScope scope={scope}/>}</div>{action}</div>}
+function Pulse({label,value,icon,tone}:{label:string;value:number;icon:React.ReactNode;tone:string}){const period=label==='Conclusão de tarefas no período';const description=period?'Percentual atualmente concluído entre tarefas criadas, atualizadas ou com prazo no período. Não é um histórico de conclusões.':label==='Progresso atual dos projetos'?'Média do progresso dos projetos atualmente ativos.':'Negócios atualmente fechados divididos pelo total de leads cadastrados, sem filtro de período.';return <div className="pulseRow"><span className={`pulseIcon ${tone}`}>{icon}</span><div><p><b>{label}<MetricHelp label={label} description={description}/></b><strong>{value}%</strong></p><i><em style={{width:`${Math.min(100,value)}%`}}/></i><MetricScope scope={period?'period':'current'}/></div></div>}

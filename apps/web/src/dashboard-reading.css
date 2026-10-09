@@ -1,0 +1,22 @@
+.metricHelp{display:inline-flex!important;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;padding:4px;border:0;border-radius:50%;background:transparent;color:var(--muted);vertical-align:middle;cursor:help}
+.metricHelp:hover,.metricHelp:focus-visible{color:var(--purple);background:var(--ds-surface-hover,var(--card));outline:2px solid var(--purple);outline-offset:1px}
+.metricHelp svg{width:14px!important;height:14px!important;flex:none}
+.metricExplanation{position:fixed;z-index:10000;width:min(280px,calc(100vw - 24px));box-sizing:border-box;padding:12px 14px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 30px #0003;font-size:12px;line-height:1.6;pointer-events:none}
+.metricScope{display:inline-flex!important;width:max-content;max-width:100%;align-items:center;border:1px solid var(--border);border-radius:20px;padding:3px 7px;font-size:10px!important;line-height:1.3;font-style:normal;color:var(--muted)}
+.metricScope.period{color:var(--purple);background:color-mix(in srgb,var(--purple) 8%,transparent)}
+.dashboardMetricGroups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:20px}
+.dashboardKpiGroup{min-width:0}.dashboardKpiGroup h3{font-size:13px;margin:0 0 10px;color:var(--muted)}
+.connectedDashboard .dashboardMetricGroups .dashboardKpis{grid-template-columns:1fr;margin:0;gap:10px}
+.connectedDashboard .dashboardMetricGroups .dashboardKpis>article{min-height:110px}
+.dashboardMetricGroups .dashboardKpis>article>div{min-width:0;flex:1}
+.dashboardMetricGroups .metricScope{margin-top:7px}
+.dashboardReadingNote{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 18px}
+.connectedTitle h3{display:flex;align-items:center;gap:4px}
+.connectedTitle .metricScope{margin-top:6px}
+.pulseRow .metricScope{margin-top:6px}
+.marketingMetricContext{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:12px}
+.marketingMetricContext>span:first-child{font-size:10px;color:var(--muted)}
+.marketingSelectableMetrics article>small{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.marketingPeriodNotice{padding:12px 16px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+@media(max-width:1000px){.dashboardMetricGroups{grid-template-columns:1fr}.connectedDashboard .dashboardMetricGroups .dashboardKpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){.connectedDashboard .dashboardMetricGroups .dashboardKpis{grid-template-columns:1fr}.marketingMetricContext{flex-wrap:wrap}}
