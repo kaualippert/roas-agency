@@ -53,3 +53,16 @@ html[data-theme-variant="all-black"] .mindMapCanvasFrame{background:#080808;bord
 .mindMapToolbar>div:last-child{flex-shrink:0}
 @media(max-width:800px){.mindMapToolbar{flex-wrap:wrap}.mindMapToolbar>div:last-child{flex-wrap:wrap}.mindMapViewportControls button{min-width:40px;height:40px}.mindMapViewportControls .mindMapFocusButton{font-size:0;padding:0 12px}.mindMapViewportControls .mindMapFocusButton svg{width:16px;height:16px}}
 @media(max-width:520px){.mindMapToolbar>div:last-child{grid-template-columns:1fr 1fr;width:100%}.mindMapCanvasHint{display:none}}
+.mindMapCanvasFrame>.mindMapCanvasHint{display:flex;position:absolute;top:12px;left:12px;right:12px;max-width:none;width:fit-content;z-index:21;font-size:10px;line-height:1.5;padding:8px 10px;pointer-events:auto;gap:8px}
+.mindMapCanvasHint button{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--muted);cursor:pointer}
+.mindMapViewportControls .fullscreenButton>span{display:none}
+.mindMapViewportControls .fullscreenButton{min-width:36px;padding:0 9px;box-shadow:none}
+.mindMapViewportControls{max-width:calc(100% - 24px)}
+.mindMapNode.editing{z-index:12;cursor:text;width:210px}
+.mindMapNode.editing>span,.mindMapNode.editing>.mindMapHandle{display:none}
+.mindMapInlineEditor{display:grid;grid-template-columns:minmax(0,1fr) 28px 28px;gap:4px;width:100%;min-width:0}
+.mindMapInlineEditor input{min-width:0;width:100%;height:32px;border:1px solid var(--border);border-radius:6px;padding:0 8px;background:var(--card);color:var(--text);font-size:12px;user-select:text;touch-action:auto}
+.mindMapInlineEditor button{height:32px;width:28px;display:grid;place-items:center;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);padding:0;cursor:pointer}
+.mindMapInlineEditor svg{position:static;width:14px;height:14px}
+.mindMapInlineEditor button:disabled{opacity:.4;cursor:default}
+@media(max-width:800px){.mindMapViewportControls .fullscreenButton{min-width:40px}.mindMapCanvasFrame>.mindMapCanvasHint{font-size:10px}}

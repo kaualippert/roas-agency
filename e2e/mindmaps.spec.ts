@@ -1,6 +1,50 @@
 import {expect,test} from '@playwright/test';
 import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
 
+test('barra flutuante, edição direta e dicas persistentes do mapa mental',async({page},testInfo)=>{
+ await mockRoasApi(page);
+ const errors=captureBrowserErrors(page);
+ await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,client_mind_maps:[{id:'map-inline',clientId:'client-1',title:'Estratégia',description:'',createdAt:'2026-10-01',updatedAt:'2026-10-01',nodes:[{id:'root',parentId:null,text:'Campanha',color:'#5b36f2',x:540,y:310},{id:'branch',parentId:'root',text:'Público',color:'#2563eb',x:900,y:300}]}]}}}));
+ await page.goto('/clients/client-1');
+ await page.getByRole('button',{name:'Mapas mentais'}).click();
+ const controls=page.getByRole('group',{name:'Controles de visualização do mapa'}),hint=page.getByRole('note'),root=page.locator('.mindMapNode.root');
+ await expect(hint).toBeVisible();
+ await expect(page.locator('.mindMapToolbar .fullscreenButton')).toHaveCount(0);
+ await expect(controls.getByRole('button',{name:'Tela cheia de mapa mental'})).toBeVisible();
+ await controls.getByRole('button',{name:'Tela cheia de mapa mental'}).click();
+ await expect(page.locator('.mindMapMain')).toHaveClass(/fullscreenSurfaceActive/);
+ await expect(hint).toHaveCount(0);
+ const branch=page.getByRole('button',{name:'Tópico Público',exact:true});
+ await branch.dblclick();
+ const input=page.getByLabel('Editar texto do tópico');
+ await expect(input).toBeFocused();
+ await expect(input).toHaveValue('Público');
+ await expect(page.locator('.mindMapQuickEditor')).toHaveCount(0);
+ await input.fill('Público qualificado');
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/client_mind_maps')&&response.request().method()==='PUT');
+ await input.press('Enter');await saved;
+ await expect(branch).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Tópico Público qualificado',exact:true})).toBeVisible();
+ await controls.getByRole('button',{name:'Sair da tela cheia de mapa mental'}).click();
+ await root.dblclick();
+ await input.fill('Texto descartado');
+ await input.press('Escape');
+ await expect(root).toContainText('Campanha');
+ await controls.getByRole('button',{name:'Ver dicas do mapa'}).click();
+ await expect(hint).toBeVisible();
+ await page.getByRole('button',{name:'Dispensar dicas do mapa'}).click();
+ await page.reload();await page.getByRole('button',{name:'Mapas mentais'}).click();
+ await expect(hint).toHaveCount(0);
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:900});
+  await expect(controls.getByRole('button',{name:'Tela cheia de mapa mental'})).toBeVisible();
+  const fits=await controls.evaluate(element=>Array.from(element.children).every(child=>{const rect=child.getBoundingClientRect(),view=element.getBoundingClientRect();return rect.left>=view.left&&rect.right<=view.right+1}));
+  expect(fits).toBe(true);
+  await controls.screenshot({path:testInfo.outputPath(`map-controls-${width}.png`)});
+ }
+ expect(errors).toEqual([]);
+});
+
 test('mapa mental permite navegar, editar e enquadrar sem gravações desnecessárias',async({page},testInfo)=>{
  await mockRoasApi(page);
  const errors=captureBrowserErrors(page);

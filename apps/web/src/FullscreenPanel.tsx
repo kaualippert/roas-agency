@@ -45,7 +45,7 @@ export function useFullscreenPanel<T extends HTMLElement>(){
 }
 
 export function FullscreenButton({active,onClick,label='visualização'}:{active:boolean;onClick:()=>void;label?:string}){
- return <button type="button" className="fullscreenButton" onClick={onClick} aria-pressed={active} title={active?'Sair da tela cheia':'Abrir em tela cheia'}>{active?<Minimize2/>:<Maximize2/>}<span>{active?'Sair da tela cheia':`Tela cheia`}</span><span className="srOnly"> de {label}</span></button>;
+ return <button type="button" className="fullscreenButton" onClick={onClick} aria-pressed={active} aria-label={active?`Sair da tela cheia de ${label}`:`Tela cheia de ${label}`} title={active?'Sair da tela cheia':'Abrir em tela cheia'}>{active?<Minimize2/>:<Maximize2/>}<span>{active?'Sair da tela cheia':`Tela cheia`}</span><span className="srOnly"> de {label}</span></button>;
 }
 
 export function FullscreenTargetButton({target,label,compact=false}:{target:string;label:string;compact?:boolean}){
