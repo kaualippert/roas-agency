@@ -257,7 +257,7 @@ test('cadastra e edita a descrição de um conteúdo da linha editorial',async({
  await dialog.getByRole('button',{name:'Salvar conteúdo'}).click();
  await created;
  await expect(page.locator('.editorialContentCell').filter({hasText:'Campanha de lançamento'})).toContainText('Apresentar o conceito da campanha');
- await expect(page.locator('.editorialPostDescription')).toContainText('seus benefícios e a chamada para ação');
+ await expect(page.locator('.editorialKanban .kanbanCardExcerpt')).toContainText('seus benefícios e a chamada para ação');
  await page.locator('.editorialContentCell').getByRole('button',{name:'Campanha de lançamento'}).click();
  const editor=page.getByRole('dialog',{name:'Editar conteúdo'});
  await expect(editor.getByLabel('Descrição')).toHaveValue('Apresentar o conceito da campanha, seus benefícios e a chamada para ação.');

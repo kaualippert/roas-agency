@@ -1,5 +1,6 @@
 import CompactFilters from './CompactFilters';
 import KanbanCardSummary from './KanbanCardSummary';
+import KanbanCardDetails from './KanbanCardDetails';
 import {localDateKey} from './task-rules';
 import {useEffect,useMemo,useState} from 'react';
 import {BarChart3,ChartNoAxesCombined,FilterX,Funnel,Maximize2,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,X} from 'lucide-react';
@@ -153,6 +154,7 @@ export default function CRMPage(){
       const converted=isConvertedLead(lead,convertedLeadIds),followUp=tasks.filter(task=>task.leadId===lead.id&&task.status!=='completed').sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'))[0];
       return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} role="button" tabIndex={0} aria-label={`Lead ${lead.name}`} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>{if(!dragged)requestCRMLeadOpen(lead.id)}} onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();requestCRMLeadOpen(lead.id)}}}>
        <KanbanCardSummary title={lead.name} owner={responsible?.name} dueDate={followUp?.dueDate} priority={followUp?.priority} late={Boolean(followUp?.dueDate&&followUp.dueDate<localDateKey())}/>
+       {!compact&&<KanbanCardDetails fields={[{label:'Valor estimado',value:money(lead.value)},{label:'Contato',value:lead.contact},{label:'Telefone',value:lead.phone||'Não informado'},{label:'Origem',value:lead.source},{label:'Serviços',value:leadServiceIds(lead,services).map(id=>services.find(service=>service.id===id)?.name).filter(Boolean).join(', ')||lead.services?.join(', ')||'Sem serviços'},{label:'Próxima ação',value:followUp?.title||lead.nextAction},{label:'Situação',value:converted?'Convertido em cliente':lead.stage}]} description={lead.observations?.length?lead.observations[lead.observations.length-1].text:undefined}/>}
       </article>})}{!items.length&&<div className="crmColumnEmpty"><span>Sem oportunidades</span><small>Nenhum lead nesta etapa com os filtros atuais.</small></div>}</div>
      <KanbanMoreButton total={items.length} expanded={expanded} onToggle={()=>toggleColumn(stage)}/><button className="addLead" onClick={()=>openModal(stage)}>＋ Adicionar nesta etapa</button>
     </div>
