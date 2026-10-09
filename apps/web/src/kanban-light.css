@@ -1,0 +1,27 @@
+.lightKanban .kanbanCardSummary{display:grid;gap:12px;min-width:0;text-align:left}
+.lightKanban .kanbanCardTitleRow{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.lightKanban .kanbanCardSummary .kanbanCardTitle{flex:1;min-width:0;margin:0;color:var(--text);font-size:12px;line-height:1.5;font-weight:650;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lightKanban .kanbanCardPriority{flex:none;padding:3px 6px;border-radius:6px;font-size:8px;line-height:1.5;font-weight:650;background:color-mix(in srgb,var(--muted) 10%,var(--card));color:var(--muted)}
+.lightKanban .kanbanCardPriority.high{background:color-mix(in srgb,#d97706 12%,var(--card));color:#d97706}
+.lightKanban .kanbanCardPriority.urgent{background:color-mix(in srgb,#e8547c 12%,var(--card));color:#e8547c}
+.lightKanban .kanbanCardMeta{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted);font-size:10px;line-height:1.5;min-width:0}
+.lightKanban .kanbanCardMeta svg{position:static;width:13px;height:13px;flex:none;color:inherit}
+.lightKanban .kanbanCardOwner{display:flex;align-items:center;gap:5px;min-width:0}
+.lightKanban .kanbanCardOwner>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lightKanban .kanbanCardMeta time{display:flex;align-items:center;gap:4px;white-space:nowrap;flex:none}
+.lightKanban .kanbanCardMeta time.late{color:#e8547c}
+.lightKanban .leadCard,.lightKanban .enhancedTaskCard,.lightKanban .editorialColumn article,.lightKanban .marketingExperimentCard{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;box-shadow:0 2px 6px #00000006;transition:border-color .15s,box-shadow .15s}
+.lightKanban .leadCard:hover,.lightKanban .enhancedTaskCard:hover,.lightKanban .editorialColumn article:hover,.lightKanban .marketingExperimentCard:hover{border-color:color-mix(in srgb,var(--purple) 45%,var(--border));box-shadow:0 4px 12px #0000000a}
+.lightKanban article:focus-visible,.lightKanban .marketingExperimentCardOpen:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.lightKanban .leadCard::after{display:none}
+.lightKanban .leadCard.compact,.lightKanban .enhancedTaskCard.compact,.lightKanban .editorialColumn article.compact{padding:9px 10px}
+.lightKanban article.compact .kanbanCardSummary{gap:8px}
+.lightKanban .marketingExperimentCardOpen{padding:0;border:0;width:100%;background:transparent;color:inherit;cursor:pointer}
+.lightKanban>.crmColumn,.lightKanban>.enhancedKanbanColumn,.lightKanban>.editorialColumn,.lightKanban>.marketingExperimentColumn{padding:0;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.lightKanban>div>header,.lightKanban>section>header{margin:6px 6px 0;padding:9px 10px;border-radius:10px;min-height:40px;gap:8px;background:color-mix(in srgb,var(--purple) 4%,var(--card));border-bottom:1px solid var(--border)}
+.lightKanban header b,.lightKanban header span{font-size:11px;line-height:1.4}
+.lightKanban .crmColumn>header small,.lightKanban .marketingExperimentColumn>header small{display:none}
+.lightKanban .crmCards,.lightKanban .marketingExperimentCards,.lightKanban .enhancedKanbanColumn>div,.lightKanban .editorialColumn>div{padding:8px;margin:0;gap:8px}
+.leadDetailQuickActions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.leadDetailQuickActions button{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:8px 12px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text);cursor:pointer;font:inherit;font-size:11px}
+.leadDetailQuickActions svg{width:15px;height:15px}

@@ -1,5 +1,7 @@
+import KanbanCardSummary from './KanbanCardSummary';
+import {localDateKey} from './task-rules';
 import {useEffect,useMemo,useState} from 'react';
-import {BarChart3,CalendarDays,CalendarPlus,ChartNoAxesCombined,FilterX,Funnel,GripVertical,Maximize2,MessageSquarePlus,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,UserRound,X} from 'lucide-react';
+import {BarChart3,ChartNoAxesCombined,FilterX,Funnel,Maximize2,Minimize2,Pencil,Plus,Target,TrendingUp,Trophy,X} from 'lucide-react';
 import {Bar,BarChart,CartesianGrid,Cell,Line,LineChart,Pie,PieChart,ResponsiveContainer,Tooltip,XAxis,YAxis} from 'recharts';
 import {store} from './storage';
 import {KanbanMoreButton,useKanbanColumnLimit,visibleKanbanCards} from './KanbanColumnLimit';
@@ -12,7 +14,6 @@ import {
  isConvertedLead,
  leadServiceIds,
  moveCRMLeadToStage,
- requestCRMLeadActivity,
  requestCRMLeadOpen,
  serviceEstimate,
  type CRMLead as Lead,
@@ -142,23 +143,16 @@ export default function CRMPage(){
   </section>
 
   <section className="card crmPageBoard">
-   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste no computador ou use “Mover para” em qualquer dispositivo.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button className="crmIconAction" type="button" onClick={toggleDensity} aria-label={compact?'Expandir cards':'Compactar cards'} aria-pressed={compact} title={compact?'Expandir cards':'Compactar cards'}>{compact?<Maximize2/>:<Minimize2/>}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial" compact/></div></div>
-   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>setFilters(emptyFilters)}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns">{stages.map((stage,index)=>{
+   <div className="crmBoardLabel"><div><b>Pipeline comercial</b><span>Arraste os cards ou abra uma oportunidade para alterar a etapa.</span></div><div className="kanbanViewActions"><small>{filteredLeads.length} oportunidades visíveis</small><button className="crmIconAction" type="button" onClick={toggleDensity} aria-label={compact?'Expandir cards':'Compactar cards'} aria-pressed={compact} title={compact?'Expandir cards':'Compactar cards'}>{compact?<Maximize2/>:<Minimize2/>}</button><FullscreenTargetButton target=".crmPageBoard" label="pipeline comercial" compact/></div></div>
+   {filteredLeads.length===0?<div className="crmFilteredEmpty"><span><FilterX/></span><h3>Nenhuma oportunidade encontrada</h3><p>{hasFilters?'Ajuste ou limpe os filtros para voltar a visualizar o pipeline.':'Adicione o primeiro lead para começar a organizar sua prospecção.'}</p><div>{hasFilters&&<button type="button" className="btn secondary" onClick={()=>setFilters(emptyFilters)}>Limpar filtros</button>}<button type="button" className="btn" onClick={()=>openModal()}><Plus/> Novo lead</button></div></div>:<div className="crmColumns lightKanban">{stages.map((stage,index)=>{
     const items=filteredLeads.filter(lead=>lead.stage===stage),expanded=isExpanded(stage);
     return <div className="crmColumn" data-crm-stage={stage} key={stage} onDragOver={event=>event.preventDefault()} onDrop={()=>drop(stage)} style={{'--stage-color':palette[index]} as React.CSSProperties}>
      <header><div><i/><b>{stage}</b></div><span>{items.length}</span><small>{money(stageMetrics[stage].value)}</small></header>
      <div className="crmCards">{visibleKanbanCards(items,expanded).map(lead=>{
-      const linked=services.filter(service=>leadServiceIds(lead,services).includes(service.id));
       const responsible=team.find(member=>member.id===lead.responsibleId);
-      const converted=isConvertedLead(lead,convertedLeadIds),observationCount=lead.observations?.length||0,openFollowUps=tasks.filter(task=>task.leadId===lead.id&&task.status!=='completed').length;
-      return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} tabIndex={0} aria-label={`Lead ${lead.name}`} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>{if(!dragged)requestCRMLeadOpen(lead.id)}} onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();requestCRMLeadOpen(lead.id)}}}>
-       <div className="leadTop"><i style={{background:lead.color}}>{lead.name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase()}</i><div className="leadIdentity"><h3>{lead.name}</h3><p><UserRound/>{lead.contact||'Contato não informado'}</p></div><div className="leadActions">{converted&&<span className="convertedLeadBadge">Cliente</span>}<GripVertical aria-hidden="true"/><button type="button" className="leadEditButton" aria-label={`Editar ${lead.name}`} onClick={event=>{event.stopPropagation();requestCRMLeadOpen(lead.id)}}><Pencil/></button></div></div>
-       {responsible&&<span className="leadResponsible">Responsável: {responsible.name}</span>}
-       {linked.length?<div className="leadServices">{linked.slice(0,2).map(service=><span key={service.id}>{service.name}</span>)}{linked.length>2&&<span>+{linked.length-2}</span>}</div>:<span className="leadNoService">Sem serviço vinculado</span>}
-       <div className="leadValue"><small>Valor estimado</small><strong>{money(lead.value)}</strong></div>
-       <footer><span>{lead.source||'Sem origem'}</span><small><CalendarDays/><span>{lead.nextAction||'Definir próxima ação'}</span></small></footer>
-       <div className="crmLeadQuickActions" onClick={event=>event.stopPropagation()}><button type="button" aria-label={'Observações de '+lead.name} title="Ver e adicionar observações" onClick={()=>requestCRMLeadActivity(lead.id,'observations')}><MessageSquarePlus/><span>Observações</span>{observationCount>0&&<b title={`${observationCount} observações`}>{observationCount}</b>}</button><button type="button" aria-label={'Criar tarefa para '+lead.name} title="Criar tarefa vinculada ao lead, como um follow-up" onClick={()=>requestCRMLeadActivity(lead.id,'follow-up')}><CalendarPlus/><span>Criar tarefa</span>{openFollowUps>0&&<b title={`${openFollowUps} tarefas em aberto`}>{openFollowUps}</b>}</button></div>
-       <label className="crmQuickMove" onClick={event=>event.stopPropagation()}><span>{converted?'Lead convertido':'Mover para'}</span><select aria-label={`Mover ${lead.name} para outra etapa`} value={lead.stage} disabled={converted} onChange={event=>moveLead(lead.id,event.target.value as Stage)}>{stages.map(option=><option key={option}>{option}</option>)}</select></label>
+      const converted=isConvertedLead(lead,convertedLeadIds),followUp=tasks.filter(task=>task.leadId===lead.id&&task.status!=='completed').sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'))[0];
+      return <article className={`leadCard${converted?' converted':''}${compact?' compact':''}`} data-lead-id={lead.id} key={lead.id} role="button" tabIndex={0} aria-label={`Lead ${lead.name}`} draggable={!converted} onDragStart={()=>setDragged(lead.id)} onDragEnd={()=>setDragged(null)} onClick={()=>{if(!dragged)requestCRMLeadOpen(lead.id)}} onKeyDown={event=>{if(event.target!==event.currentTarget)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();requestCRMLeadOpen(lead.id)}}}>
+       <KanbanCardSummary title={lead.name} owner={responsible?.name} dueDate={followUp?.dueDate} priority={followUp?.priority} late={Boolean(followUp?.dueDate&&followUp.dueDate<localDateKey())}/>
       </article>})}{!items.length&&<div className="crmColumnEmpty"><span>Sem oportunidades</span><small>Nenhum lead nesta etapa com os filtros atuais.</small></div>}</div>
      <KanbanMoreButton total={items.length} expanded={expanded} onToggle={()=>toggleColumn(stage)}/><button className="addLead" onClick={()=>openModal(stage)}>＋ Adicionar nesta etapa</button>
     </div>

@@ -182,15 +182,17 @@ test('registra observações e follow-ups ligados ao lead do CRM',async({page},t
  });
  await page.goto('/crm');
  const leadCard=page.locator('[data-lead-id="lead-active"]');
- await leadCard.getByRole('button',{name:'Observações de Academia Horizonte'}).click();
+ await leadCard.click();
+ await page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Observações de Academia Horizonte'}).click();
  const notes=page.getByRole('dialog',{name:'Observações'});
  await notes.getByLabel('Nova observação').fill('Cliente pediu retorno depois da reunião interna.');
  const noteSaved=page.waitForResponse(response=>response.url().endsWith('/api/state/prospects')&&response.request().method()==='PUT');
  await notes.getByRole('button',{name:'Salvar observação'}).click();
  await noteSaved;
- await expect(leadCard.getByRole('button',{name:'Observações de Academia Horizonte'})).toContainText('1');
+ await leadCard.click();
+ await expect(page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Observações de Academia Horizonte'})).toContainText('1');
 
- await leadCard.getByRole('button',{name:'Criar tarefa para Academia Horizonte'}).click();
+ await page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Criar tarefa para Academia Horizonte'}).click();
  const followUp=page.getByRole('dialog',{name:'Criar tarefa'});
  await followUp.getByLabel('Título da tarefa').fill('Agendar retorno comercial');
  const due=new Date();due.setDate(due.getDate()+1);
@@ -199,22 +201,12 @@ test('registra observações e follow-ups ligados ao lead do CRM',async({page},t
  await followUp.getByRole('button',{name:'Criar tarefa'}).click();
  await taskSaved;
  await expect(followUp).toBeHidden();
- await expect(leadCard.getByRole('button',{name:'Criar tarefa para Academia Horizonte'})).toContainText('1');
- // Os ícones, textos e contadores devem caber mesmo nos cards estreitos.
+ await expect(leadCard.locator('time')).not.toHaveText('Sem prazo');
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:900});
   await leadCard.scrollIntoViewIfNeeded();
-  const layout=await leadCard.locator('.crmLeadQuickActions').evaluate(actions=>{
-   return Array.from(actions.querySelectorAll('button')).map(button=>{
-    const bounds=button.getBoundingClientRect();
-    const label=button.querySelector('span')!;
-    return {textFits:label.scrollWidth<=label.clientWidth,childrenFit:Array.from(button.children).every(child=>{
-     const rect=child.getBoundingClientRect();
-     return rect.left>=bounds.left&&rect.right<=bounds.right&&rect.top>=bounds.top&&rect.bottom<=bounds.bottom;
-    })};
-   });
-  });
-  expect(layout).toEqual([{textFits:true,childrenFit:true},{textFits:true,childrenFit:true}]);
+  const fits=await leadCard.locator('.kanbanCardMeta').evaluate(meta=>Array.from(meta.children).every(child=>{const bounds=meta.getBoundingClientRect(),rect=child.getBoundingClientRect();return rect.left>=bounds.left&&rect.right<=bounds.right+1}));
+  expect(fits).toBe(true);
  }
  await page.setViewportSize({width:1440,height:900});
  await leadCard.screenshot({path:testInfo.outputPath('crm-lead-card.png')});
@@ -365,11 +357,11 @@ test('filtra, movimenta e protege oportunidades no CRM',async({page})=>{
  await activeCard.focus();
  await page.keyboard.press('Enter');
  await expect(page.getByRole('dialog',{name:'Editar oportunidade'})).toBeVisible();
- await page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Fechar'}).click();
- await activeCard.getByLabel(/Mover Academia Horizonte/).selectOption('Reunião');
+ await page.getByRole('dialog',{name:'Editar oportunidade'}).getByLabel('Etapa',{exact:true}).selectOption('Reunião');
+ await page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Salvar alterações'}).click();
  await expect(page.locator('[data-crm-stage="Reunião"]')).toContainText('Academia Horizonte');
  await page.getByRole('button',{name:'Todos'}).click();
- await page.getByRole('button',{name:'Editar Cliente Convertido'}).click();
+ await page.getByRole('button',{name:'Lead Cliente Convertido',exact:true}).click();
  await expect(page.getByText('Lead convertido em cliente')).toBeVisible();
  await expect(page.getByRole('button',{name:'Excluir lead'})).toBeDisabled();
  await expect(page.locator('.leadEditModal select[name="stage"]')).toBeDisabled();
@@ -579,7 +571,7 @@ test('cria, acompanha e registra o aprendizado de um experimento de marketing',a
  await dialog.getByLabel('Métrica principal').selectOption('costPerLead');
  await dialog.getByLabel('O resultado deve').selectOption('decrease');
  await dialog.getByLabel('Linha de base').fill('50');
- await dialog.getByLabel('Meta').fill('30');
+ await dialog.getByLabel('Meta',{exact:true}).fill('30');
  await dialog.getByLabel('Valor observado').fill('40');
  await dialog.getByLabel('Limite de investimento (R$)').fill('600');
  await dialog.getByLabel('Investimento realizado (R$)').fill('180');
@@ -588,24 +580,31 @@ test('cria, acompanha e registra o aprendizado de um experimento de marketing',a
  await dialog.getByRole('button',{name:'Criar experimento'}).click();
  await created;
  const card=page.locator('.marketingExperimentCard').filter({hasText:'Teste de anúncio com depoimento'});
- await expect(card).toContainText('50%');
- await expect(card).toContainText('R$ 40,00');
+ await expect(card).not.toContainText('Hipótese');
+ await card.getByRole('button',{name:'Abrir experimento Teste de anúncio com depoimento'}).click();
+ const editor=page.getByRole('dialog',{name:'Editar experimento'});
+ await expect(editor.getByLabel('Valor observado')).toHaveValue('40');
+ await expect(editor.getByLabel('Hipótese')).toHaveValue('Um criativo com depoimento reduz o custo por lead para este cliente.');
+ await editor.getByLabel('Etapa atual').selectOption('running');
  const moved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().endsWith('/api/state/marketing_experiments'));
- await card.getByLabel('Mover Teste de anúncio com depoimento').selectOption('running');
+ await editor.getByRole('button',{name:'Salvar alterações'}).click();
  await moved;
  await expect(page.locator('.marketingExperimentColumn.running').getByText('Teste de anúncio com depoimento')).toBeVisible();
- await page.locator('.marketingExperimentColumn.running').getByRole('button',{name:'Teste de anúncio com depoimento'}).click();
- const editor=page.getByRole('dialog',{name:'Editar experimento'});
+ await card.getByRole('button',{name:'Abrir experimento Teste de anúncio com depoimento'}).click();
  await editor.getByLabel('Etapa atual').selectOption('completed');
- await editor.getByLabel('Resultado').selectOption('won');
+ await editor.getByLabel('Resultado',{exact:true}).selectOption('won');
  await editor.getByLabel('Aprendizado e próximos passos').fill('O depoimento reduziu o custo por lead. Testar variações de abertura no próximo ciclo.');
  const concluded=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().endsWith('/api/state/marketing_experiments'));
  await editor.getByRole('button',{name:'Salvar alterações'}).click();
  await concluded;
- await expect(page.locator('.marketingExperimentColumn.completed')).toContainText('Venceu');
+ await card.getByRole('button',{name:'Abrir experimento Teste de anúncio com depoimento'}).click();
+ await expect(editor.getByLabel('Resultado',{exact:true})).toHaveValue('won');
+ await editor.getByRole('button',{name:'Fechar'}).click();
  await page.reload();
  await expect(page.locator('.marketingExperimentColumn.completed')).toContainText('Teste de anúncio com depoimento');
- await expect(page.locator('.marketingExperimentColumn.completed')).toContainText('Venceu');
+ await card.getByRole('button',{name:'Abrir experimento Teste de anúncio com depoimento'}).click();
+ await expect(editor.getByLabel('Resultado',{exact:true})).toHaveValue('won');
+ await expect(editor.getByLabel('Aprendizado e próximos passos')).toHaveValue('O depoimento reduziu o custo por lead. Testar variações de abertura no próximo ciclo.');
 });
 
 test('migra um cadastro manual para o vínculo permanente do cliente',async({page})=>{

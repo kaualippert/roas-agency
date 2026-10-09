@@ -5,6 +5,23 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('abre detalhes dos cards leves por toque sem expor descrições no kanban',async({page})=>{
+ const errors=captureBrowserErrors(page);
+ await page.goto('/tasks');
+ const card=page.getByRole('button',{name:'Abrir tarefa Relatório atrasado'});
+ await expect(card).toContainText('Admin E2E');
+ await expect(card).toContainText('Urgente');
+ await expect(card.locator('.taskCardDescription')).toHaveCount(0);
+ await card.tap();
+ await expect(page.locator('.enhancedTaskModal textarea[name="description"]')).toHaveValue('Deve aparecer na coluna de atrasadas');
+ await page.locator('.enhancedTaskModal').getByRole('button',{name:'Fechar'}).tap();
+ await page.goto('/crm');
+ await page.getByRole('button',{name:'Lead Academia Horizonte',exact:true}).tap();
+ await page.getByRole('dialog',{name:'Editar oportunidade'}).getByRole('button',{name:'Observações de Academia Horizonte'}).tap();
+ await expect(page.getByRole('dialog',{name:'Observações'})).toBeVisible();
+ expect(errors).toEqual([]);
+});
+
 test('cria ramos por toque e foca o mapa mental no celular',async({page})=>{
  const errors=captureBrowserErrors(page);
  await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,client_mind_maps:[{
