@@ -11,6 +11,7 @@ let currentAccess:CurrentAccess|null=null;
 type PendingChange={value:unknown;baseValue:unknown;baseMissing:boolean};
 const pending=new Map<string,PendingChange>();
 let flushTimer:number|undefined;
+let flushing=false;
 let retryDelay=1000;
 
 function emit(key:string){window.dispatchEvent(new CustomEvent('roas-change',{detail:key}))}
@@ -29,8 +30,13 @@ export async function apiRequest(path:string,options?:RequestInit){
 
 async function flush(){
  flushTimer=undefined;
+ // Uma nova edição pode chegar enquanto a API ainda salva a anterior.
+ // Não retire as alterações da fila até receber a nova versão-base.
+ if(flushing)return;
+ flushing=true;
  const entries=[...pending.entries()];pending.clear();
  let failed=false;
+ try{
  await Promise.all(entries.map(async([key,change])=>{
   try{
    const result=await apiRequest(`/state/${key}`,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({value:change.value,baseValue:change.baseMissing?null:change.baseValue,baseMissing:change.baseMissing})});
@@ -50,6 +56,7 @@ async function flush(){
    }
   }
  }));
+ }finally{flushing=false}
  if(pending.size&&flushTimer===undefined){flushTimer=window.setTimeout(()=>void flush(),failed?retryDelay:100);if(failed)retryDelay=Math.min(retryDelay*2,30000)}else if(!failed)retryDelay=1000;
 }
 
