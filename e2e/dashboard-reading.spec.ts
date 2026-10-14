@@ -1,5 +1,6 @@
 import {expect,test} from '@playwright/test';
 import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
+import {marketingPeriodRange} from '../apps/web/src/marketing-period';
 
 test.beforeEach(async({page})=>{await mockRoasApi(page)});
 
@@ -40,9 +41,10 @@ test('dashboard se adapta ao desktop e celular sem cortar cartões',async({page}
 
 test('marketing identifica categorias, período sincronizado e métricas explicadas',async({page})=>{
  const errors=captureBrowserErrors(page);
+ const range=marketingPeriodRange('this_month');
  await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,
   client_marketing_integrations:[{id:'integration-1',clientId:'client-1',provider:'meta_ads',status:'connected',resourceId:'act_123',resourceName:'Conta Teste'}],
-  marketing_metrics:[{id:'snapshot-1',integrationId:'integration-1',clientId:'client-1',provider:'meta_ads',periodFrom:'2026-09-01',periodTo:'2026-09-14',syncedAt:'2026-09-14T12:00:00Z',impressions:10000,reach:8000,clicks:400,spend:1000,results:20,conversions:20,conversionValue:4000,roas:4,topAds:[],performanceRows:[]}]
+  marketing_metrics:[{id:'snapshot-1',integrationId:'integration-1',clientId:'client-1',provider:'meta_ads',periodFrom:range.from,periodTo:range.to,syncedAt:'2026-09-14T12:00:00Z',impressions:10000,reach:8000,clicks:400,spend:1000,results:20,conversions:20,conversionValue:4000,roas:4,topAds:[],performanceRows:[]}]
  }}}));
  await page.goto('/marketing/dashboard');
  const cards=page.locator('.marketingSelectableMetrics article');
@@ -52,6 +54,7 @@ test('marketing identifica categorias, período sincronizado e métricas explica
  await cards.first().getByRole('button').hover();
  await expect(page.getByRole('tooltip')).toContainText('Período dos dados sincronizados');
  await page.getByLabel('Período do dashboard de marketing',{exact:true}).selectOption('yesterday');
- await expect(page.locator('.marketingPeriodNotice')).toContainText('ainda não foi aplicado');
+ await expect(page.locator('.marketingPeriodNotice')).toContainText('não possuem dados sincronizados');
+ await expect(cards.first().locator('strong')).toHaveText('—');
  expect(errors).toEqual([]);
 });

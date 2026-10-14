@@ -485,9 +485,8 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  const adViewSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_dashboard_preferences'));
  await page.getByRole('button',{name:'Anúncios',exact:true}).click();
  await adViewSaved;
- await page.getByLabel('Período do dashboard de marketing').selectOption('last_7');
  const periodRequest=page.waitForRequest(request=>request.method()==='POST'&&request.url().includes('/api/marketing/sync/meta_ads'));
- await page.getByRole('button',{name:'Aplicar'}).click();
+ await page.getByLabel('Período do dashboard de marketing').selectOption('last_7');
  const requested=await periodRequest,input=requested.postDataJSON() as {from:string;to:string};
  expect((new Date(`${input.to}T12:00:00`).getTime()-new Date(`${input.from}T12:00:00`).getTime())/86_400_000).toBe(6);
  await expect(page.getByText('Criativo campeão')).toBeVisible();
