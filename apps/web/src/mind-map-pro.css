@@ -1,0 +1,41 @@
+.mindMapCanvasFrame{isolation:isolate;border-radius:16px;box-shadow:inset 0 0 0 1px var(--border)}
+.mindMapCanvasScroll{position:relative;touch-action:pan-x pan-y;scrollbar-width:none;height:min(680px,calc(100vh - 230px));outline:none}
+.mindMapCanvasScroll::-webkit-scrollbar{display:none}
+.mindMapCanvasFrame .mindMapCanvas{position:absolute;left:0;top:0;transform-origin:0 0;overflow:visible}
+.mindMapCanvasFrame .mindMapCanvas{background-image:none}
+.mindMapCanvasFrame .mindMapCanvasStage{transition:none;background-image:radial-gradient(circle,var(--border) var(--mind-map-dot-size,1px),transparent var(--mind-map-dot-size,1px));background-repeat:repeat}
+.mindMapCanvas>svg{overflow:visible}
+.mindMapCanvas path{stroke-width:2.2;opacity:.7}
+.mindMapTools{position:absolute;left:12px;top:76px;z-index:23;display:flex;flex-direction:column;gap:3px;padding:5px;border:1px solid var(--border);border-radius:12px;background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:0 4px 18px #00000012;backdrop-filter:blur(12px)}
+.mindMapTools button,.mindMapContextBar button{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:var(--muted);padding:0;cursor:pointer;flex:none}
+.mindMapTools svg,.mindMapContextBar svg{width:16px;height:16px}
+.mindMapTools button:hover,.mindMapContextBar button:hover,.mindMapTools button[aria-pressed="true"]{background:color-mix(in srgb,var(--purple) 12%,var(--card));color:var(--purple)}
+.mindMapTools button:disabled,.mindMapContextBar button:disabled{opacity:.35;cursor:default}
+.mindMapTools button:focus-visible,.mindMapContextBar button:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.mindMapTools>span{height:1px;background:var(--border);margin:3px}
+.mindMapContextBar{position:absolute;left:70px;top:12px;max-width:calc(100% - 84px);z-index:23;display:flex;align-items:center;gap:3px;padding:5px 7px;border:1px solid var(--border);border-radius:12px;background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:0 4px 18px #00000012;backdrop-filter:blur(12px)}
+.mindMapContextBar>span{max-width:200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:600;color:var(--text);padding:0 8px}
+.mindMapCanvasFrame>.mindMapCanvasHint{left:70px;top:65px;max-width:calc(100% - 84px);right:auto;font-size:10px;box-shadow:none}
+.mindMapNode{border-width:1.5px;border-radius:14px;box-shadow:0 2px 8px #0000000a;transition:box-shadow .12s,border-color .12s}
+.mindMapNode.root{background:linear-gradient(135deg,var(--node-color),color-mix(in srgb,var(--node-color) 80%,#000));box-shadow:0 6px 20px color-mix(in srgb,var(--node-color) 20%,transparent)}
+.mindMapNode.selected{box-shadow:0 0 0 3px color-mix(in srgb,var(--node-color) 22%,transparent),0 4px 12px #00000010}
+.mindMapNode.dragging{transition:none;z-index:14}
+.mindMapCanvasScroll.handTool,.mindMapCanvasScroll.handTool .mindMapNode{cursor:grab}
+.mindMapCanvasScroll.panning,.mindMapCanvasScroll.panning .mindMapNode{cursor:grabbing}
+.mindMapCollapse{position:absolute;right:5px;bottom:-14px;min-width:23px;height:23px;padding:2px 5px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--node-color);display:flex;align-items:center;justify-content:center;gap:2px;font-size:9px;box-shadow:0 2px 5px #0001;cursor:pointer;z-index:4}
+.mindMapCollapse svg{width:12px;height:12px}
+.mindMapNode:not(.selected):not(:hover) .mindMapCollapse[aria-expanded="true"]{opacity:0}
+.mindMapConnection{display:grid;gap:5px;min-width:160px}
+.mindMapConnection>span{font-size:10px;color:var(--muted)}
+.mindMapConnection select{height:37px;width:100%;max-width:240px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font:inherit;font-size:11px}
+.mindMapInspector{grid-template-columns:minmax(220px,1.2fr) auto minmax(160px,.7fr) minmax(240px,1fr);border-radius:14px}
+.mindMapDeleteBranch{grid-column:1/-1;justify-self:end}
+.fullscreenSurfaceActive.mindMapMain{grid-template-rows:auto minmax(0,1fr) auto;gap:10px}
+.mindMapMain.fullscreenSurface.fullscreenSurfaceActive,.mindMapMain.fullscreenSurface:fullscreen{background:var(--ds-canvas,#f7f8fb)!important}
+html[data-theme-variant="all-black"] .mindMapMain.fullscreenSurface.fullscreenSurfaceActive{background:#000!important}
+.mindMapNode b{font-size:13px;line-height:1.45}.mindMapNode.root b{font-size:14px}
+.fullscreenSurfaceActive .mindMapCanvasFrame{min-height:0}
+.fullscreenSurfaceActive .mindMapCanvasScroll{height:100%;min-height:340px}
+@media(max-width:1200px){.mindMapInspector{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media(max-width:800px){.mindMapContextBar{left:62px;max-width:calc(100% - 74px);flex-wrap:wrap}.mindMapContextBar>span{flex-basis:100%;max-width:100%}.mindMapTools{left:8px;top:112px}.mindMapContextBar button,.mindMapTools button{width:36px;height:36px}.mindMapCanvasFrame>.mindMapCanvasHint{top:106px;left:62px;max-width:calc(100% - 74px)}.mindMapInspector{grid-template-columns:1fr}.mindMapConnection select{max-width:none}.mindMapCanvasScroll{min-height:480px}.fullscreenSurfaceActive .mindMapCanvasScroll{min-height:260px}.fullscreenSurfaceActive .mindMapInspector{max-height:160px;overflow:auto}}
+@media(prefers-reduced-motion:reduce){.mindMapNode{transition:none}}

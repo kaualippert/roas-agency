@@ -72,7 +72,7 @@ export function removeMindMapBranch(nodes:ClientMindMapNode[],nodeId:string){
  return nodes.filter(node=>!removed.has(node.id));
 }
 
-export function layoutMindMapNodes(nodes:ClientMindMapNode[],width=1080,height=620):PositionedMindMapNode[]{
+export function layoutMindMapNodes(nodes:ClientMindMapNode[],width=1080,height=620,freePosition=false):PositionedMindMapNode[]{
  const root=mindMapRoot(nodes);
  if(!root)return [];
  const result:PositionedMindMapNode[]=[{...root,x:width/2,y:height/2}],visited=new Set([root.id]),children=nodes.filter(node=>node.parentId===root.id),radius=Math.min(width,height)*.3;
@@ -87,6 +87,7 @@ export function layoutMindMapNodes(nodes:ClientMindMapNode[],width=1080,height=6
  nodes.filter(node=>!visited.has(node.id)).forEach((node,index)=>result.push({...node,x:140+index%5*190,y:90+Math.floor(index/5)*110}));
  return result.map(node=>{
   const saved=nodes.find(item=>item.id===node.id);
-  return {...node,...clampMindMapPosition(saved?.x??node.x,saved?.y??node.y,width,height)};
+  const x=Number.isFinite(saved?.x)?saved!.x!:node.x,y=Number.isFinite(saved?.y)?saved!.y!:node.y;
+  return {...node,...(freePosition?{x,y}:clampMindMapPosition(x,y,width,height))};
  });
 }
