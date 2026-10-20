@@ -1,0 +1,9 @@
+.tasksEnhanced .calendarDayHeading{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:4px}
+.calendarDayHeading time{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font-size:11px;color:var(--text);font-variant-numeric:tabular-nums}
+.calendarDays>.today .calendarDayHeading time{background:var(--purple);color:#fff}
+.tasksEnhanced .calendarDays .calendarDayHeading .calendarAddTask{display:grid;place-items:center;flex:none;width:26px;height:26px;min-height:26px;padding:0;margin:0;border:0;border-radius:7px;background:transparent;color:var(--muted);text-align:center;box-shadow:none;cursor:pointer;transition:background .15s,color .15s}
+.tasksEnhanced .calendarDays .calendarDayHeading .calendarAddTask:hover{background:color-mix(in srgb,var(--purple) 10%,var(--card));color:var(--purple)}
+.tasksEnhanced .calendarAddTask:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.calendarAddTask svg{width:14px;height:14px;flex:none}
+@media(pointer:coarse){.tasksEnhanced .calendarDays .calendarDayHeading .calendarAddTask{width:32px;height:32px;min-height:32px}}
+@media(prefers-reduced-motion:reduce){.tasksEnhanced .calendarDays .calendarDayHeading .calendarAddTask{transition:none}}
