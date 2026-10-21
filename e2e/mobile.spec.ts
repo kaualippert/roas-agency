@@ -5,6 +5,21 @@ test.beforeEach(async({page})=>{
  await mockRoasApi(page);
 });
 
+test('editor visual aceita tabela colada e formatação por toque no telefone',async({page},testInfo)=>{
+ await page.addInitScript(()=>localStorage.setItem('roas_theme','dark'));
+ await page.goto('/tasks');await page.getByRole('button',{name:'Nova tarefa',exact:true}).tap();
+ const editor=page.getByRole('textbox',{name:'Descrição da tarefa',exact:true});
+ await editor.fill('Texto importante');await editor.selectText();
+ await page.getByRole('button',{name:'Negrito',exact:true}).tap();
+ await expect(editor.locator('b,strong')).toHaveText('Texto importante');
+ await editor.fill('');
+ await editor.evaluate(element=>{const clipboard=new DataTransfer();clipboard.setData('text/plain','| Anúncio | Conteúdo | Teste |\n| --- | --- | --- |\n| Sorriso | Lentes de resina | Naturalidade |');element.dispatchEvent(new ClipboardEvent('paste',{clipboardData:clipboard,bubbles:true,cancelable:true}))});
+ await expect(editor.locator('table th')).toHaveCount(3);
+ await expect(editor.locator('table')).toContainText('Naturalidade');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+ await editor.screenshot({path:testInfo.outputPath('description-table-dark-mobile.png')});
+});
+
 test('mais filtros e etiquetas funcionam por toque no tema escuro',async({page},testInfo)=>{
  await page.addInitScript(()=>localStorage.setItem('roas_theme','dark'));
  await page.goto('/tasks');
@@ -29,7 +44,7 @@ test('abre detalhes dos cards leves por toque sem expor descrições no kanban',
  await expect(card).toContainText('Urgente');
  await expect(card.locator('.taskCardDescription')).toHaveCount(0);
  await card.tap();
- await expect(page.locator('.enhancedTaskModal textarea[name="description"]')).toHaveValue('Deve aparecer na coluna de atrasadas');
+ await expect(page.locator('.enhancedTaskModal').getByRole('textbox',{name:'Descrição da tarefa',exact:true})).toHaveText('Deve aparecer na coluna de atrasadas');
  await page.locator('.enhancedTaskModal').getByRole('button',{name:'Fechar'}).tap();
  await page.goto('/crm');
  await page.getByRole('button',{name:'Lead Academia Horizonte',exact:true}).tap();
@@ -118,7 +133,7 @@ test('formulário de nova tarefa permanece utilizável no telefone',async({page}
  await expect(modal).toBeVisible();
  await expect(modal.getByRole('textbox',{name:/T.tulo/})).toBeVisible();
  await expect(modal.getByText('Admin E2E')).toBeVisible();
- const description=modal.locator('.taskDescriptionSection textarea');
+ const description=modal.locator('.taskDescriptionSection .taskRichEditor');
  await description.scrollIntoViewIfNeeded();
  await expect(description).toBeVisible();
  const descriptionBox=await description.boundingBox();

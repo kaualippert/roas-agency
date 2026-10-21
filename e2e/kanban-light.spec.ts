@@ -2,6 +2,7 @@ import {expect,test} from '@playwright/test';
 import {captureBrowserErrors,mockRoasApi,testState} from './fixtures';
 
 test('cards leves preservam detalhes ao abrir e têm bordas arredondadas',async({page},testInfo)=>{
+ await page.addInitScript(()=>{for(const key of ['roas_kanban_tasks_density','roas_kanban_crm_density','roas_kanban_editorial_density_project-1'])localStorage.setItem(key,JSON.stringify('compact'))});
  await mockRoasApi(page);
  const errors=captureBrowserErrors(page);
  await page.goto('/tasks');
@@ -12,7 +13,7 @@ test('cards leves preservam detalhes ao abrir e têm bordas arredondadas',async(
  await expect(card.locator('.taskTags,.taskCardDescription')).toHaveCount(0);
  await card.focus();await page.keyboard.press('Enter');
  const task=page.locator('.enhancedTaskModal');
- await expect(task.locator('textarea[name="description"]')).toHaveValue('Deve aparecer na coluna de atrasadas');
+ await expect(task.getByRole('textbox',{name:'Descrição da tarefa',exact:true})).toHaveText('Deve aparecer na coluna de atrasadas');
  await task.getByRole('button',{name:'Fechar'}).click();
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:900});

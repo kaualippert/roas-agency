@@ -230,9 +230,10 @@ test('abre a tarefa da lista com informações antes da descrição ampla',async
  await expect(modal.getByRole('heading',{name:'Descrição'})).toBeVisible();
  const information=await modal.locator('.taskInformationSection').boundingBox();
  const description=await modal.locator('.taskDescriptionSection').boundingBox();
- const textarea=await modal.locator('textarea[name="description"]').boundingBox();
+ const textarea=await modal.locator('.taskRichEditor').boundingBox();
  expect((information?.y||0)).toBeLessThan(description?.y||0);
  expect(textarea?.height||0).toBeGreaterThan(220);
+ await modal.getByRole('button',{name:'Markdown',exact:true}).click();
  const preview=modal.locator('.taskDescriptionPreview');
  await expect(preview.locator('.formattedTaskDescription')).toBeVisible();
  await preview.getByRole('button',{name:/Minimizar/}).click();
@@ -240,6 +241,7 @@ test('abre a tarefa da lista com informações antes da descrição ampla',async
  await expect(preview.locator('.formattedTaskDescription')).toHaveCount(0);
  await modal.getByRole('button',{name:'Fechar'}).click();
  await row.click();
+ await page.getByRole('dialog').getByRole('button',{name:'Markdown',exact:true}).click();
  const reopened=page.locator('.enhancedTaskModal .taskDescriptionPreview');
  await expect(reopened.getByRole('button',{name:/Expandir/})).toBeVisible();
  await reopened.getByRole('button',{name:/Expandir/}).click();
@@ -733,7 +735,8 @@ test('mantém editar e excluir somente dentro da central do cliente',async({page
 test('formata descrição com cor e checklist interativo',async({page})=>{
  await page.goto('/tasks');
  await page.locator('.tasksPageTop').getByRole('button',{name:'Nova tarefa'}).click();
- const dialog=page.getByRole('dialog',{name:'Criar tarefa'}),description=dialog.locator('textarea[name="description"]'),toolbar=dialog.getByRole('toolbar',{name:'Formatação da descrição'});
+ await page.getByRole('dialog').getByRole('button',{name:'Markdown',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Criar tarefa'}),description=dialog.getByRole('textbox',{name:'Descrição em Markdown',exact:true}),toolbar=dialog.getByRole('toolbar',{name:'Formatação da descrição'});
  await description.fill('Texto importante');
  await description.selectText();
  await toolbar.getByRole('button',{name:'Negrito'}).click();
