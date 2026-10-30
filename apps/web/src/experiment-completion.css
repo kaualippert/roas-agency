@@ -1,0 +1,13 @@
+.experimentCompletionModal{width:min(480px,calc(100vw - 24px));max-height:90dvh;overflow:auto}
+.experimentCompletionModal .modalHead{align-items:flex-start}
+.experimentCompletionModal .modalHead small{font-size:9px;letter-spacing:.06em;color:var(--purple);font-weight:750}
+.experimentCompletionModal .modalHead h2{font-size:20px;margin:5px 0}
+.experimentCompletionModal .modalHead p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+.experimentCompletionModal form{display:grid;gap:14px;padding:0 20px 20px}
+.experimentCompletionContext{display:grid;gap:6px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--soft);overflow-wrap:anywhere}
+.experimentCompletionContext>b{font-size:12px;color:var(--text)}
+.experimentCompletionContext>span,.experimentCompletionHint{color:var(--muted);font-size:10px;line-height:1.5}
+.experimentCompletionModal .experimentField{font-size:11px}
+.experimentCompletionModal .experimentField select,.experimentCompletionModal .experimentField textarea{font-size:12px}
+.experimentCompletionModal .formActions{display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+@media(max-width:480px){.experimentCompletionModal .formActions{flex-wrap:wrap}.experimentCompletionModal .formActions .btn{flex:1;justify-content:center}}

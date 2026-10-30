@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {experimentProgress,normalizeMarketingExperiments,upsertMarketingExperiment,type MarketingExperiment} from '../apps/web/src/marketing-experiments.ts';
+import {experimentCompletionError,experimentProgress,normalizeMarketingExperiments,upsertMarketingExperiment,type MarketingExperiment} from '../apps/web/src/marketing-experiments.ts';
 
 const experiment:MarketingExperiment={id:'exp-1',title:'Teste de criativo',clientId:'client-1',channel:'meta_ads',campaignName:'Campanha verão',hypothesis:'Depoimentos aumentam leads',metricKey:'leads',direction:'increase',baselineValue:10,targetValue:30,currentValue:20,spendLimit:500,spentValue:100,ownerId:'member-1',dueDate:'2026-10-01',status:'running',learning:'',createdAt:'2026-09-01T00:00:00.000Z',updatedAt:'2026-09-01T00:00:00.000Z'};
 
@@ -34,4 +34,25 @@ test('upsert adiciona e atualiza sem duplicar experimento',()=>{
  assert.equal(updated.length,1);
  assert.equal(updated[0].title,'Novo nome');
  assert.equal(updated[0].createdAt,experiment.createdAt);
+});
+
+test('conclusão exige resultado válido e aprendizado não vazio',()=>{
+ assert.match(experimentCompletionError('', 'Aprendizado')!,/resultado/);
+ assert.match(experimentCompletionError('unknown', 'Aprendizado')!,/resultado/);
+ assert.match(experimentCompletionError('won','   ')!,/aprendizado/);
+ assert.match(experimentCompletionError('won','x'.repeat(3001))!,/3.000/);
+ for(const outcome of ['won','lost','inconclusive'])assert.equal(experimentCompletionError(outcome,'  Testar outra abordagem.  '),null);
+});
+
+test('upsert impede conclusão incompleta sem alterar os dados anteriores',()=>{
+ assert.throws(()=>upsertMarketingExperiment([experiment],{...experiment,status:'completed'}),/resultado/);
+ assert.throws(()=>upsertMarketingExperiment([experiment],{...experiment,status:'completed',outcome:'lost',learning:'  '}),/aprendizado/);
+ assert.equal(experiment.status,'running');
+ const completed=upsertMarketingExperiment([experiment],{...experiment,status:'completed',outcome:'inconclusive',learning:'Precisamos de mais volume.'});
+ assert.equal(completed[0].status,'completed');assert.equal(completed[0].outcome,'inconclusive');
+});
+
+test('normalização mantém experimentos antigos para permitir completar o aprendizado',()=>{
+ const [legacy]=normalizeMarketingExperiments([{...experiment,status:'completed'}]);
+ assert.equal(legacy.status,'completed');assert.equal(legacy.learning,'');
 });

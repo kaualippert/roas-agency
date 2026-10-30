@@ -65,7 +65,18 @@ export function experimentProgress(experiment:Pick<MarketingExperiment,'baseline
 }
 
 export function upsertMarketingExperiment(items:MarketingExperiment[],experiment:MarketingExperiment){
+ if(experiment.status==='completed'){
+  const error=experimentCompletionError(experiment.outcome,experiment.learning);
+  if(error)throw new Error(error);
+ }
  const existing=items.find(item=>item.id===experiment.id),now=new Date().toISOString();
  const next={...experiment,createdAt:existing?.createdAt||experiment.createdAt||now,updatedAt:now};
  return existing?items.map(item=>item.id===next.id?next:item):[next,...items];
+}
+
+export function experimentCompletionError(outcome:unknown,learning:unknown):string|null{
+ if(!outcomes.has(outcome as MarketingExperimentOutcome))return 'Selecione o resultado do experimento.';
+ if(typeof learning!=='string'||!learning.trim())return 'Registre o aprendizado e os próximos passos antes de concluir.';
+ if(learning.trim().length>3000)return 'O aprendizado deve ter no máximo 3.000 caracteres.';
+ return null;
 }

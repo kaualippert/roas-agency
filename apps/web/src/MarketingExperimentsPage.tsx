@@ -2,14 +2,15 @@ import CompactFilters from './CompactFilters';
 import {useKanbanDensity,usePersistentState} from './persistent-ui';
 import KanbanCardSummary from './KanbanCardSummary';
 import KanbanCardDetails from './KanbanCardDetails';
-import {useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {Check,CircleDollarSign,FlaskConical,Lightbulb,Maximize2,Minimize2,Plus,Search,TrendingUp,X} from 'lucide-react';
 import {useStoreData} from './app/useStoreData';
 import {formatMarketingMetric,marketingMetricCatalog,metricValue,type MarketingMetricKey} from './marketing-dashboard-config';
 import {marketingProviders,normalizeClientMarketingIntegrations} from './marketing-integrations';
 import {normalizeMarketingMetricsSnapshots,type MarketingMetricsSnapshot,type MarketingPerformanceRow} from './marketing-metrics';
-import {normalizeMarketingExperiments,upsertMarketingExperiment,type MarketingExperiment,type MarketingExperimentChannel,type MarketingExperimentStatus,type MarketingExperimentOutcome} from './marketing-experiments';
+import {experimentCompletionError,normalizeMarketingExperiments,upsertMarketingExperiment,type MarketingExperiment,type MarketingExperimentChannel,type MarketingExperimentStatus,type MarketingExperimentOutcome} from './marketing-experiments';
 import type {Client,TeamMember} from './types';
+import './experiment-completion.css';
 
 const columns:Array<{id:MarketingExperimentStatus;label:string;hint:string}>=[
  {id:'idea',label:'Ideias',hint:'Hipóteses para explorar'},
@@ -33,6 +34,8 @@ export default function MarketingExperimentsPage(){
  const activeTeam=team.filter(member=>member.status==='active');
  const [editing,setEditing]=useState<MarketingExperiment|null|undefined>(undefined),[query,setQuery]=usePersistentState('roas_filter_experiments_query',''),[clientFilter,setClientFilter]=usePersistentState('roas_filter_experiments_client','all'),[channelFilter,setChannelFilter]=usePersistentState('roas_filter_experiments_channel','all');
  const [expanded,setExpanded]=useState<Partial<Record<MarketingExperimentStatus,boolean>>>({});
+ const [completingId,setCompletingId]=useState<string|null>(null);
+ const completing=experiments.find(item=>item.id===completingId);
  const {compact,toggleDensity}=useKanbanDensity('roas_kanban_experiments_density');
  const filtered=experiments.filter(item=>{
   const client=clients.find(value=>value.id===item.clientId),needle=query.trim().toLocaleLowerCase('pt-BR');
@@ -42,7 +45,7 @@ export default function MarketingExperimentsPage(){
  const completed=experiments.filter(item=>item.status==='completed'),wins=completed.filter(item=>item.outcome==='won').length;
  const spend=experiments.reduce((total,item)=>total+item.spentValue,0);
  const save=(experiment:MarketingExperiment)=>{const next=upsertMarketingExperiment(experiments,experiment);setStoredExperiments(next)};
- const move=(experiment:MarketingExperiment,status:MarketingExperimentStatus)=>save({...experiment,status});
+ const move=(experiment:MarketingExperiment,status:MarketingExperimentStatus)=>{if(status==='completed'){setCompletingId(experiment.id);return}save({...experiment,status})};
  const remove=(experiment:MarketingExperiment)=>{if(!confirm(`Excluir o experimento “${experiment.title}”?`))return;setStoredExperiments(experiments.filter(item=>item.id!==experiment.id));setEditing(undefined)};
  const showMore=(status:MarketingExperimentStatus)=>setExpanded(current=>({...current,[status]:!current[status]}));
 
@@ -65,7 +68,37 @@ export default function MarketingExperimentsPage(){
    return <section className={`marketingExperimentColumn ${column.id}`} key={column.id} onDragOver={event=>event.preventDefault()} onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData('marketing-experiment-id'),experiment=experiments.find(item=>item.id===id);if(experiment&&experiment.status!==column.id)move(experiment,column.id)}}><header><div><b>{column.label}</b><span>{items.length}</span><small>{column.hint}</small></div><button type="button" title={`Criar experimento em ${column.label}`} aria-label={`Criar experimento em ${column.label}`} onClick={()=>setEditing(null)}><Plus/></button></header><div className="marketingExperimentCards">{visible.map(item=><ExperimentCard key={item.id} experiment={item} compact={compact} client={clients.find(client=>client.id===item.clientId)?.companyName} owner={activeTeam.find(member=>member.id===item.ownerId)?.name} onEdit={()=>setEditing(item)}/>)}</div>{items.length>5&&<button type="button" className="marketingExperimentMore" onClick={()=>showMore(column.id)}>{expandedColumn?'Mostrar menos':`Ver mais ${items.length-5}`}</button>}{!items.length&&<p className="marketingExperimentColumnEmpty">Arraste um experimento para cá ou crie um novo.</p>}</section>;
   })}</div>}
   {editing!==undefined&&<ExperimentModal initial={editing} clients={activeClients} allClients={clients} team={activeTeam} integrations={integrations} snapshots={snapshots} onClose={()=>setEditing(undefined)} onSave={experiment=>{save(experiment);setEditing(undefined)}} onDelete={editing?()=>remove(editing):undefined}/>}
+  {completing&&<ExperimentCompletionModal key={completing.id} experiment={completing} onClose={()=>setCompletingId(null)} onComplete={(outcome,learning)=>{save({...completing,status:'completed',outcome,learning});setCompletingId(null)}}/>}
  </main>;
+}
+
+function ExperimentCompletionModal({experiment,onClose,onComplete}:{experiment:MarketingExperiment;onClose:()=>void;onComplete:(outcome:MarketingExperimentOutcome,learning:string)=>void}){
+ const [outcome,setOutcome]=useState<MarketingExperimentOutcome|''>(experiment.outcome||''),[learning,setLearning]=useState(experiment.learning||''),[error,setError]=useState('');
+ const dialog=useRef<HTMLDivElement>(null);
+ useEffect(()=>{
+  const previous=document.activeElement as HTMLElement|null;
+  dialog.current?.querySelector('select')?.focus();
+  return()=>{if(previous?.isConnected)previous.focus()};
+ },[]);
+ const submit=(event:React.FormEvent)=>{event.preventDefault();const error=experimentCompletionError(outcome,learning);if(error){setError(error);return}onComplete(outcome as MarketingExperimentOutcome,learning.trim())};
+ return <div className="overlay marketingExperimentOverlay"><div className="modal experimentCompletionModal" ref={dialog} role="dialog" aria-modal="true" aria-labelledby="experiment-completion-title" aria-describedby="experiment-completion-description" onKeyDown={event=>{
+  if(event.key==='Escape'){event.stopPropagation();onClose()}
+  if(event.key==='Tab'){
+   const fields=dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled),select,textarea');
+   if(!fields?.length)return;const first=fields[0],last=fields[fields.length-1];
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+ }}>
+  <div className="modalHead"><div><small>GROWTH LAB · APRENDIZADO</small><h2 id="experiment-completion-title">Concluir experimento</h2><p id="experiment-completion-description">Todo teste gera aprendizado, mesmo quando não vence.</p></div><button type="button" className="iconBtn" aria-label="Fechar conclusão" onClick={onClose}><X/></button></div>
+  <form onSubmit={submit}>
+   <div className="experimentCompletionContext"><b>{experiment.title}</b><span>{marketingMetricCatalog.find(metric=>metric.id===experiment.metricKey)?.label}: <strong>{formatMarketingMetric(experiment.metricKey,experiment.currentValue)}</strong> · Meta: {formatMarketingMetric(experiment.metricKey,experiment.targetValue)}</span></div>
+   <label className="experimentField">Resultado<select required aria-label="Resultado" value={outcome} onChange={event=>{setOutcome(event.target.value as MarketingExperimentOutcome|'');setError('')}}><option value="">Selecione o resultado</option>{Object.entries(outcomeLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+   <label className="experimentField">Aprendizado e próximos passos<textarea required rows={4} maxLength={3000} value={learning} onChange={event=>{setLearning(event.target.value);setError('')}} placeholder="O que aprendemos? O que repetir, ajustar ou descartar?"/></label>
+   {error&&<p className="experimentFormError" role="alert">{error}</p>}
+   <small className="experimentCompletionHint">O card permanece na etapa atual até você confirmar.</small>
+   <div className="formActions"><button type="button" className="btn secondary" onClick={onClose}>Cancelar</button><button className="btn"><Check/> Concluir experimento</button></div>
+  </form>
+ </div></div>;
 }
 
 function ExperimentCard({experiment,owner,client,compact,onEdit}:{experiment:MarketingExperiment;owner?:string;client?:string;compact:boolean;onEdit:()=>void}){
@@ -97,6 +130,7 @@ function ExperimentModal({initial,clients,allClients,team,integrations,snapshots
   if(!Number.isFinite(base)||!Number.isFinite(goal)||base===goal){setError('A linha de base e a meta precisam ser diferentes.');return}
   if((direction==='increase'&&goal<base)||(direction==='decrease'&&goal>base)){setError(direction==='increase'?'Para uma meta de aumento, a meta deve ser maior que a linha de base.':'Para uma meta de redução, a meta deve ser menor que a linha de base.');return}
   if(![base,goal,actual,budget,spent].every(value=>Number.isFinite(value)&&value>=0)){setError('Use valores válidos, iguais ou maiores que zero.');return}
+  if(status==='completed'){const completionError=experimentCompletionError(outcome,learning);if(completionError){setError(completionError);return}}
   const now=new Date().toISOString();
   onSave({id:initial?.id||crypto.randomUUID(),title:title.trim(),clientId,channel,integrationId:currentIntegrationId||undefined,campaignId:selectedCampaign?.id||undefined,campaignName:selectedCampaign?.name||campaignName.trim(),hypothesis:hypothesis.trim(),metricKey,direction,baselineValue:base,targetValue:goal,currentValue:actual,spendLimit:budget,spentValue:spent,ownerId,dueDate,status,outcome:status==='completed'?outcome||undefined:undefined,learning:learning.trim(),createdAt:initial?.createdAt||now,updatedAt:now});
  };
