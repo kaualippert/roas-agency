@@ -1,0 +1,25 @@
+.marketingComparison{padding:20px;margin:0}
+.marketingComparisonHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.marketingComparisonHead>div>span{display:flex;align-items:center;gap:6px;color:var(--purple);font-size:9px;font-weight:750;letter-spacing:.05em}
+.marketingComparisonHead svg{width:14px;height:14px}
+.marketingComparisonHead h3{margin:6px 0;font-size:16px}
+.marketingComparisonHead>label{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);cursor:pointer}
+.marketingComparisonHead input{accent-color:var(--purple);width:15px;height:15px}
+.marketingComparisonRanges{display:flex;gap:10px 24px;flex-wrap:wrap;margin:12px 0 16px;color:var(--muted);font-size:11px;line-height:1.5}
+.marketingComparisonRanges b{color:var(--text);margin-right:6px}
+.marketingComparisonCards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.marketingComparisonCard{padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--soft);min-width:0}
+.marketingComparisonCard>small{display:block;font-size:11px;color:var(--muted)}
+.marketingComparisonCard>strong{display:block;margin:9px 0;font-size:24px;color:var(--text);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.marketingComparisonCard>span{font-size:10px;color:var(--muted)}
+.marketingComparisonDelta{display:flex;align-items:center;gap:4px;margin-top:12px;font-size:11px;color:var(--muted)}
+.marketingComparisonDelta svg{width:13px;height:13px;flex:none}
+.marketingComparisonCard.better .marketingComparisonDelta{color:#168b67}
+.marketingComparisonCard.worse .marketingComparisonDelta{color:#cc4c60}
+html[data-theme="dark"] .marketingComparisonCard.better .marketingComparisonDelta{color:#6bd2a6}
+html[data-theme="dark"] .marketingComparisonCard.worse .marketingComparisonDelta{color:#ff9da7}
+.marketingComparisonNote{font-size:10px;line-height:1.6;color:var(--muted);margin:12px 0 0}
+.marketingComparisonError{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;color:var(--muted);font-size:11px;line-height:1.5}
+.marketingComparisonError button{display:flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--soft);color:var(--text);font-size:10px;cursor:pointer}
+.marketingComparisonError svg{width:12px;height:12px}
+@media(max-width:700px){.marketingComparisonCards{grid-template-columns:1fr}.marketingComparison{padding:16px}.marketingComparisonCard>strong{font-size:22px}}

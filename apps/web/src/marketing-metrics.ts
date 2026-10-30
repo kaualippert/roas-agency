@@ -110,7 +110,7 @@ export function upsertMarketingMetricsSnapshot(items:MarketingMetricsSnapshot[],
  return [snapshot,...items.filter(item=>item.integrationId!==snapshot.integrationId)];
 }
 
-export function aggregateMarketingMetrics(items:MarketingMetricsSnapshot[]):MarketingMetrics{
+export function aggregateMarketingMetrics(items:readonly MarketingMetrics[]):MarketingMetrics{
  const total=items.reduce((sum,item)=>Object.fromEntries(Object.keys(emptyMarketingMetrics).map(key=>[key,key==='roas'?0:sum[key as keyof MarketingMetrics]+item[key as keyof MarketingMetrics]])) as unknown as MarketingMetrics,{...emptyMarketingMetrics});
  return {...total,roas:total.spend?total.conversionValue/total.spend:0};
 }
