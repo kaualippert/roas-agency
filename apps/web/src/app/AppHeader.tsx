@@ -6,6 +6,7 @@ import type {AccessArea,TeamMember} from '../types';
 import {auth} from '../firebase';
 import {canAccessPath,memberRoles} from './access-control';
 import {pageMeta} from './navigation';
+import SaveStatusIndicator from '../SaveStatusIndicator';
 
 export type LayoutNotification={read:boolean};
 
@@ -35,6 +36,7 @@ export default function AppHeader({onMenu,member,accessAreas,notifications}:{onM
   <button className="mobileMenu iconBtn" type="button" onClick={onMenu} aria-label="Abrir menu" aria-controls="app-sidebar"><Menu/></button>
   <div className="headTitle"><h1>{meta.title}</h1><p>{meta.sub}</p></div>
   <div className="headerSpacer"/>
+  <SaveStatusIndicator/>
   <button className="iconBtn notification" type="button" aria-label="Abrir notificações" onClick={openNotifications}><Bell/>{unread>0&&<i>{unread}</i>}</button>
   <div className="profileSession" ref={profileRef}>
    <button type="button" className="profile" title="Abrir menu do perfil" aria-haspopup="menu" aria-expanded={profileOpen} onClick={()=>setProfileOpen(value=>!value)}><div className="userAvatar">{initials(name)}</div><div><b>{name}</b><small>{role}</small></div><ChevronDown/></button>

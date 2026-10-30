@@ -1,0 +1,24 @@
+.saveStatus{position:relative;flex:none;margin-right:8px;color:var(--muted)}
+.saveStatusToggle{display:flex;align-items:center;gap:5px;border:0;border-radius:8px;background:transparent;color:inherit;padding:7px;font-size:10px;cursor:pointer;white-space:nowrap}
+.saveStatusToggle:hover{background:var(--soft)}
+.saveStatusToggle:focus-visible,.saveStatusDetails button:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.saveStatusToggle svg{width:14px;height:14px;flex:none}
+.saveStatus.saving .saveStatusToggle svg{animation:saveStatusSpin 1s linear infinite}
+.saveStatus.error .saveStatusToggle{color:#e89139;background:color-mix(in srgb,#e89139 8%,transparent)}
+.saveStatusToggle i{font-size:9px;font-style:normal;min-width:14px;text-align:center;border-radius:20px;background:var(--soft)}
+.saveStatusDetails{position:absolute;right:0;top:calc(100% + 12px);width:min(330px,calc(100vw - 24px));padding:16px;z-index:1200;border:1px solid var(--border);border-radius:14px;background:var(--card);color:var(--text);box-shadow:0 16px 48px #0003;font-size:12px;text-align:left}
+.saveStatusHeading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.saveStatusHeading>button{border:0;background:transparent;color:var(--muted);padding:3px;cursor:pointer;display:flex}
+.saveStatusHeading svg{width:16px;height:16px}
+.saveStatusDetails p{font-size:12px;line-height:1.6;margin:10px 0;color:var(--muted)}
+.saveStatusDetails small{display:block;margin-top:12px;font-size:10px;line-height:1.6;color:var(--muted)}
+.saveStatusActions{display:flex;gap:8px;flex-wrap:wrap}
+.saveStatusActions button,.saveRetry{display:inline-flex;align-items:center;gap:5px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--purple);color:white;font-size:11px;cursor:pointer}
+.saveStatusActions button.secondary{background:var(--soft);color:var(--text)}
+.saveStatusActions button:disabled{opacity:.5;cursor:wait}
+.saveStatusActions svg,.saveRetry svg,.saveDraftDownload svg{width:13px;height:13px}
+.saveDraftDownload{display:flex;gap:6px;align-items:center;margin-top:12px;padding:0;background:transparent;border:0;color:var(--muted);font-size:11px;cursor:pointer}
+.saveStatusAnnounce{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:600px){.saveStatus{position:static;margin-right:2px}.saveStatusToggle{font-size:9px;padding:5px}.saveStatusDetails{position:fixed;top:76px;right:12px}}
+@media(prefers-reduced-motion:reduce){.saveStatus.saving .saveStatusToggle svg{animation:none}}
+@keyframes saveStatusSpin{to{transform:rotate(360deg)}}
