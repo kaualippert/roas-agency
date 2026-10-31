@@ -39,7 +39,7 @@ test('dashboard se adapta ao desktop e celular sem cortar cartões',async({page}
  }
 });
 
-test('marketing identifica categorias, período sincronizado e métricas explicadas',async({page})=>{
+test('marketing mantém explicações na ajuda sem textos repetidos nos cartões',async({page})=>{
  const errors=captureBrowserErrors(page);
  const range=marketingPeriodRange('this_month');
  await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,
@@ -49,8 +49,8 @@ test('marketing identifica categorias, período sincronizado e métricas explica
  await page.goto('/marketing/dashboard');
  const cards=page.locator('.marketingSelectableMetrics article');
  await expect(cards.first()).toBeVisible();
- await expect(cards.first().getByText('Neste período',{exact:true})).toBeVisible();
- await expect(cards.first().locator('.marketingMetricContext')).toContainText(/Financeiro|Resultados|Operação/);
+ await expect(cards.locator('.marketingMetricContext')).toHaveCount(0);
+ await expect(cards.first()).not.toContainText('Valor investido em mídia');
  await cards.first().getByRole('button').hover();
  await expect(page.getByRole('tooltip')).toContainText('Período dos dados sincronizados');
  await page.getByLabel('Período do dashboard de marketing',{exact:true}).selectOption('yesterday');

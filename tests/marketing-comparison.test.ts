@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {comparisonCost,marketingVariation,previousMarketingRange} from '../apps/web/src/marketing-comparison';
+import {comparableMetricValue,comparisonCost,marketingComparisonRange,marketingVariation,previousMarketingRange} from '../apps/web/src/marketing-comparison';
+import {emptyMarketingMetrics} from '../apps/web/src/marketing-metrics';
 
 test('compara intervalos inclusivos sem sobreposição',()=>{
  assert.deepEqual(previousMarketingRange({from:'2026-10-24',to:'2026-10-30'}),{from:'2026-10-17',to:'2026-10-23'});
@@ -27,4 +28,21 @@ test('custo por resultado usa os totais e não é zero quando não há resultado
  assert.equal(comparisonCost({spend:400,results:40}),10);
  assert.equal(comparisonCost({spend:0,results:40}),0);
  assert.equal(comparisonCost({spend:400,results:0}),null);
+});
+
+test('comparação mensal respeita dias do mês e fevereiro',()=>{
+ assert.deepEqual(marketingComparisonRange({from:'2026-10-01',to:'2026-10-20'},'this_month'),{from:'2026-09-01',to:'2026-09-20'});
+ assert.deepEqual(marketingComparisonRange({from:'2026-03-01',to:'2026-03-31'},'this_month'),{from:'2026-02-01',to:'2026-02-28'});
+ assert.deepEqual(marketingComparisonRange({from:'2026-03-01',to:'2026-03-31'},'last_month'),{from:'2026-02-01',to:'2026-02-28'});
+ assert.deepEqual(marketingComparisonRange({from:'2026-10-24',to:'2026-10-30'},'last_7'),{from:'2026-10-17',to:'2026-10-23'});
+});
+test('comparação suporta métricas personalizadas sem tratar denominador ausente como zero',()=>{
+ const metrics={...emptyMarketingMetrics,spend:400,results:40,reach:1000,clicks:80,impressions:2000};
+ assert.equal(comparableMetricValue(metrics,'reach'),1000);
+ assert.equal(comparableMetricValue(metrics,'ctr'),4);
+ assert.equal(comparableMetricValue(metrics,'cpc'),5);
+ assert.equal(comparableMetricValue(metrics,'costPerResult'),10);
+ assert.equal(comparableMetricValue(emptyMarketingMetrics,'costPerResult'),null);
+ assert.equal(comparableMetricValue(emptyMarketingMetrics,'roas'),null);
+ assert.equal(comparableMetricValue(emptyMarketingMetrics,'ctr'),null);
 });
