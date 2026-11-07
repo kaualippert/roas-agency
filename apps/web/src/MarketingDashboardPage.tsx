@@ -15,6 +15,7 @@ import type {Client} from './types';
 import './marketing-metrics.css';
 import './marketing-overview.css';
 import MarketingMetricCard from './MarketingMetricCard';
+import MetaBreakdownDialog from './MetaBreakdownDialog';
 import {MetricHelp} from './DashboardReading';
 
 type ProviderFilter='all'|'meta_ads'|'google_ads';
@@ -33,9 +34,11 @@ export default function MarketingDashboardPage(){
  const [periodKey,setPeriodKey]=usePersistentState<MarketingPeriodKey>('roas_filter_marketing_dashboard_period','this_month');
  const [customizing,setCustomizing]=useState(false),[draftMetrics,setDraftMetrics]=useState<MarketingMetricKey[]>([]),[configuringTable,setConfiguringTable]=useState(false);
  const [metricSearch,setMetricSearch]=useState('');
+ const [showMetaBreakdown,setShowMetaBreakdown]=useState(false);
  useEffect(()=>{if(!integratedClients.some(client=>client.id===clientId))setClientId(integratedClients[0]?.id||'')},[clientId,integratedClients,setClientId]);
  const selectedClient=integratedClients.find(client=>client.id===clientId);
  const clientIntegrations=integrations.filter(item=>item.clientId===clientId);
+ const metaAccount=clientIntegrations.find(item=>item.provider==='meta_ads'&&item.agencyConnectionId&&item.resourceId);
  useEffect(()=>{if(providerFilter!=='all'&&clientIntegrations.length&&!clientIntegrations.some(item=>item.provider===providerFilter))setProviderFilter('all')},[clientId,providerFilter,integrations,setProviderFilter]);
  const visibleIntegrations=clientIntegrations.filter(item=>providerFilter==='all'||item.provider===providerFilter);
  const visibleIds=new Set(visibleIntegrations.map(item=>item.id));
@@ -103,6 +106,7 @@ export default function MarketingDashboardPage(){
     <div className="marketingOverviewMetricActions">
      <MarketingComparisonToggle comparison={comparison}/>
      <button type="button" className="marketingOverviewCustomize" onClick={openCustomization}><Settings2 aria-hidden="true"/> Personalizar métricas</button>
+     <button type="button" className="marketingOverviewCustomize" onClick={()=>setShowMetaBreakdown(true)}><Layers3 aria-hidden="true"/> Detalhamento Meta Ads</button>
     </div>
    </div>
    <section aria-busy={syncing} className="marketingRealMetrics marketingSelectableMetrics" aria-label="Métricas selecionadas do cliente">
@@ -120,6 +124,7 @@ export default function MarketingDashboardPage(){
   </>}
   {customizing&&<div className="overlay"><div className="modal marketingMetricsModal" role="dialog" aria-label="Personalizar métricas"><div className="modalHead"><div><small>DASHBOARD DE {selectedClient?.companyName.toUpperCase()}</small><h2>Escolher e ordenar métricas</h2><p>Selecione os indicadores e defina a ordem em que os cartões aparecem.</p></div><button type="button" className="iconBtn" aria-label="Fechar personalização" onClick={()=>setCustomizing(false)}><X/></button></div><div className="marketingMetricTools"><label><Search/><input aria-label="Buscar métrica" value={metricSearch} onChange={event=>setMetricSearch(event.target.value)} placeholder="Buscar por nome ou categoria..."/></label><span><b>{draftMetrics.length}</b> selecionadas</span><button type="button" onClick={()=>setDraftMetrics(marketingMetricCatalog.map(metric=>metric.id))}>Selecionar todas</button></div><section className="marketingMetricOrder"><header><div><b>Ordem dos cartões</b><small>Use as setas para reorganizar o dashboard</small></div></header><div>{draftMetrics.map((id,index)=>{const metric=marketingMetricCatalog.find(item=>item.id===id);return <article key={id}><GripVertical/><span><b>{index+1}. {metric?.label}</b><small>{metric?.category}</small></span><button type="button" aria-label={`Mover ${metric?.label} para cima`} onClick={()=>moveDraftMetric(index,-1)} disabled={!index}><ArrowUp/></button><button type="button" aria-label={`Mover ${metric?.label} para baixo`} onClick={()=>moveDraftMetric(index,1)} disabled={index===draftMetrics.length-1}><ArrowDown/></button></article>})}</div></section><div className="marketingMetricChoices">{metricCategories.map(category=>{const items=filteredMetricCatalog.filter(metric=>metric.category===category);return items.length?<section key={category}><header><b>{category}</b><small>{items.length} métricas</small></header><div>{items.map(metric=><label className={draftMetrics.includes(metric.id)?'selected':''} key={metric.id}><input type="checkbox" checked={draftMetrics.includes(metric.id)} onChange={()=>toggleMetric(metric.id)}/><span><b>{metric.label}</b><small>{metric.description}</small></span></label>)}</div></section>:null})}{!filteredMetricCatalog.length&&<div className="marketingMetricEmpty">Nenhuma métrica encontrada para “{metricSearch}”.</div>}</div><div className="formActions"><button className="btn secondary" onClick={()=>setDraftMetrics([...defaultMarketingMetricIds])}>Restaurar padrão</button><button className="btn" disabled={!draftMetrics.length} onClick={saveCustomization}>Salvar dashboard</button></div></div></div>}
   {configuringTable&&<PerformanceTableModal initial={performanceTable} onClose={()=>setConfiguringTable(false)} onSave={savePerformanceTable}/>}
+  {showMetaBreakdown&&<MetaBreakdownDialog account={metaAccount} clientName={selectedClient?.companyName} range={selectedRange} onClose={()=>setShowMetaBreakdown(false)}/>}
  </main>;
 }
 

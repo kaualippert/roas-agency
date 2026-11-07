@@ -3,7 +3,8 @@ import {Router,type NextFunction,type Request,type Response} from 'express';
 import mongoose from 'mongoose';
 import {config} from './config.js';
 import {requireFirebaseAuth} from './auth.js';
-import {requireAgencyAccess,type AccessContext} from './access.js';
+import {canAccessClient,requireAgencyAccess,type AccessContext} from './access.js';
+import {getState} from './state.js';
 
 type OAuthProvider='meta'|'google';
 type MarketingProvider='meta_ads'|'google_ads'|'google_analytics'|'google_business';
@@ -199,6 +200,55 @@ function syncPeriod(body:Record<string,unknown>){
  return {from,to};
 }
 
+const metaBreakdownFields={age:'age',gender:'gender',region:'region',placement:'publisher_platform,platform_position'} as const;
+type MetaBreakdown=keyof typeof metaBreakdownFields;
+type MetaBreakdownRow=MetaInsightsRow&{age?:string;gender?:string;region?:string;publisher_platform?:string;platform_position?:string;account_currency?:string};
+
+export function parseMetaBreakdown(body:Record<string,unknown>){
+ const {dimension,clientId,integrationId,from,to}=body;
+ if(typeof dimension!=='string'||!Object.hasOwn(metaBreakdownFields,dimension))throw new HttpError(400,'Escolha um recorte do Meta Ads válido.');
+ if(typeof clientId!=='string'||!clientId||clientId.length>150||typeof integrationId!=='string'||!integrationId||integrationId.length>150)throw new HttpError(400,'Selecione um vínculo do Meta Ads.');
+ const validDate=(value:unknown):value is string=>{
+  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+  const date=new Date(value+'T00:00:00Z');return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value;
+ };
+ if(!validDate(from)||!validDate(to)||from>to)throw new HttpError(400,'Informe um período válido para o detalhamento.');
+ return {dimension:dimension as MetaBreakdown,clientId,integrationId,period:{from,to}};
+}
+
+export function resolveMetaBreakdownLink(access:AccessContext,links:unknown,clientId:string,integrationId:string){
+ if(!canAccessClient(access,clientId))throw new HttpError(403,'Você não possui acesso a este cliente.');
+ const link=(Array.isArray(links)?links:[]).find(item=>item&&item.id===integrationId&&item.clientId===clientId&&item.provider==='meta_ads'&&item.status==='connected');
+ if(!link||typeof link.agencyConnectionId!=='string'||!link.agencyConnectionId||typeof link.resourceId!=='string'||!/^(act_)?\d+$/.test(link.resourceId))throw new HttpError(404,'Não encontramos uma conta Meta Ads vinculada a este cliente.');
+ return {connectionId:link.agencyConnectionId as string,resourceId:link.resourceId as string};
+}
+
+export async function fetchMetaBreakdown(token:string,resourceId:string,dimension:MetaBreakdown,period:{from:string;to:string},signal=AbortSignal.timeout(12_000)){
+ const account=resourceId.startsWith('act_')?resourceId:`act_${resourceId}`;
+ const params=new URLSearchParams({level:'account',fields:'account_currency,impressions,reach,clicks,spend,actions',breakdowns:metaBreakdownFields[dimension],time_range:JSON.stringify({since:period.from,until:period.to}),sort:'spend_descending',limit:'100'});
+ const endpoint=`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(account)}/insights`;
+ const rows=new Map<string,{id:string;values:string[];currency:string|null;impressions:number|null;reach:number|null;clicks:number|null;spend:number|null;leads:number|null;purchases:number|null;conversations:number|null}>();
+ const value=(raw:unknown)=>(typeof raw==='number'||typeof raw==='string'&&raw.trim())&&Number.isFinite(Number(raw))&&Number(raw)>=0?Number(raw):null;
+ let truncated=false;
+ for(let page=0;page<5;page++){
+  const result=await requestJson<{data?:MetaBreakdownRow[];paging?:{next?:string;cursors?:{after?:string}}}>(`${endpoint}?${params}`,{headers:{authorization:`Bearer ${token}`},signal,redirect:'error'});
+  if(!Array.isArray(result.data))throw new HttpError(502,'A Meta retornou uma resposta inválida para este recorte.');
+  for(const row of result.data){
+   const values=(dimension==='placement'?[row.publisher_platform,row.platform_position]:[row[dimension]]).map(part=>part?.trim()||'unknown');
+   const id=JSON.stringify(values),actions=Array.isArray(row.actions)?row.actions:[];
+   const action=(types:string[])=>value(types.map(type=>actions.find(item=>item.action_type===type)).find(Boolean)?.value);
+   if(!rows.has(id))rows.set(id,{id,values,currency:/^[A-Z]{3}$/.test(row.account_currency||'')?row.account_currency!:null,impressions:value(row.impressions),reach:value(row.reach),clicks:value(row.clicks),spend:value(row.spend),leads:action(['lead','offsite_conversion.fb_pixel_lead']),purchases:action(['offsite_conversion.fb_pixel_purchase','purchase']),conversations:action(['onsite_conversion.messaging_conversation_started_7d'])});
+  }
+  truncated=Boolean(result.paging?.next);
+  if(!truncated)break;
+  const after=result.paging?.cursors?.after;
+  if(!after||after===params.get('after'))break;
+  // Never follow provider-supplied URLs or send the token to another origin.
+  params.set('after',after);
+ }
+ return {rows:[...rows.values()].sort((a,b)=>(b.spend??0)-(a.spend??0)),truncated};
+}
+
 async function analyticsResources(connection:ConnectionDocument,primaryId?:string){
  const token=await accessToken(connection),result=await requestJson<{accountSummaries?:Array<{account:string;displayName?:string;propertySummaries?:Array<{property:string;displayName?:string;propertyType?:string}>}>}>('https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200',{headers:{authorization:`Bearer ${token}`}}),accounts=result.accountSummaries||[];
  if(!primaryId)return {primaries:accounts.map(item=>({id:strip(item.account,'accounts/'),name:item.displayName||item.account,kind:'analytics_account'})),resources:[] as Resource[]};
@@ -247,6 +297,22 @@ export function marketingOAuthRouter(){
   if(provider!=='meta_ads'&&connection.provider!=='google')throw new HttpError(400,'Escolha uma conexão Google.');
   const result=provider==='meta_ads'?await metaResources(connection,primaryId):provider==='google_ads'?await googleAdsResources(connection,primaryId):provider==='google_analytics'?await analyticsResources(connection,primaryId):provider==='google_business'?await businessResources(connection,primaryId):null;
   if(!result)throw new HttpError(404,'Plataforma não encontrada.');response.json(result);
+ }));
+ router.post('/breakdowns/meta_ads',asyncRoute(async(request,response)=>{
+  const {clientId,integrationId,dimension,period}=parseMetaBreakdown(request.body||{});
+  const access=response.locals.access as AccessContext;
+  if(!canAccessClient(access,clientId))throw new HttpError(403,'Você não possui acesso a este cliente.');
+  const link=resolveMetaBreakdownLink(access,await getState('client_marketing_integrations'),clientId,integrationId);
+  const connection=await connectionById(link.connectionId);
+  if(connection.provider!=='meta')throw new HttpError(400,'O vínculo não pertence a uma conexão Meta Ads.');
+  const signal=AbortSignal.timeout(12_000);
+  try{
+   const result=await fetchMetaBreakdown(await accessToken(connection),link.resourceId,dimension,period,signal);
+   response.set('Cache-Control','no-store').json({integrationId,dimension,period,...result});
+  }catch(error){
+   if(signal.aborted)throw new HttpError(504,'A Meta demorou para responder. Tente um período mais curto.');
+   throw error;
+  }
  }));
  router.post('/sync/:provider',asyncRoute(async(request,response)=>{
   const provider=request.params.provider as MarketingProvider;

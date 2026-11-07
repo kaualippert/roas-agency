@@ -1,0 +1,23 @@
+.metaBreakdownDialog{width:min(900px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:20px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--text);box-shadow:0 16px 60px #0004}
+.metaBreakdownDialog::backdrop{background:#10142699;backdrop-filter:blur(3px)}
+.metaBreakdownHeading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.metaBreakdownHeading>div>span{color:var(--muted);font-size:10px;letter-spacing:.08em;font-weight:700}
+.metaBreakdownHeading h2{font-size:21px;margin:4px 0}
+.metaBreakdownHeading p,.metaBreakdownNote{color:var(--muted);font-size:12px;line-height:1.5;margin:6px 0 0}
+.metaBreakdownControls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0}
+.metaBreakdownTabs{display:flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid var(--border);border-radius:10px;background:var(--soft)}
+.metaBreakdownTabs button{min-height:32px;padding:4px 9px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:650}
+.metaBreakdownTabs button[aria-pressed=true]{background:var(--card);color:var(--text);box-shadow:0 1px 3px #0002}
+.metaBreakdownControls label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px}
+.metaBreakdownControls select{padding:7px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:12px}
+.metaBreakdownScroll{overflow:auto;max-height:48dvh;border:1px solid var(--border);border-radius:10px}
+.metaBreakdownScroll table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums}
+.metaBreakdownScroll :is(th,td){padding:10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)}
+.metaBreakdownScroll th:first-child{text-align:left}
+.metaBreakdownScroll thead th{position:sticky;top:0;background:var(--card);color:var(--muted)}
+.metaBreakdownScroll tbody tr:hover{background:var(--soft)}
+.metaBreakdownScroll tbody tr:last-child>*{border-bottom:0}
+.metaBreakdownState{padding:16px;margin-top:12px;border:1px dashed var(--border);border-radius:10px;color:var(--muted)}
+.metaBreakdownState p{margin:0 0 10px}
+.metaBreakdownDialog :is(button,select,a,div[tabindex]):focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+@media(max-width:500px){.metaBreakdownDialog{padding:14px}.metaBreakdownControls{align-items:flex-start;flex-direction:column}}
