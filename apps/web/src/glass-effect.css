@@ -1,0 +1,106 @@
+/* Liquid Glass for the web, independent of the selected palette. */
+html[data-theme][data-glass-effect="on"]{
+ --glass-bar-base:#f4f6fd;
+ --glass-control-base:#f7f8ff;
+ --glass-control-hover:#fff;
+ --glass-selected-base:#e9e7ff;
+ --glass-sheen:linear-gradient(162deg,rgba(255,255,255,.84),rgba(255,255,255,.12) 45%,rgba(255,255,255,.32));
+ --glass-reflection:radial-gradient(ellipse at 18% -42%,rgba(255,255,255,.94),transparent 65%);
+ --glass-accent:linear-gradient(162deg,rgba(255,255,255,.18),transparent 48%,rgba(16,8,65,.18)),linear-gradient(114deg,rgba(66,49,164,.96),rgba(85,65,181,.94));
+ --glass-rim:inset 0 1px 1px rgba(255,255,255,.92),inset 0 -1px 1px rgba(91,103,154,.14);
+ --glass-depth:var(--glass-rim),0 4px 12px rgba(64,71,123,.11);
+ --glass-bar-filter:none;--glass-control-filter:none;
+ --glass-border:rgba(104,111,161,.22);
+ --glass-bar-border:rgba(255,255,255,.82);
+ --glass-ink:#40318f;
+ --glass-focus:#5144b4;
+ --glass-translucent-bar:rgba(250,251,255,.54);
+ --glass-translucent-control:rgba(255,255,255,.36);
+ --glass-translucent-hover:rgba(255,255,255,.76);
+ --glass-translucent-selected:rgba(216,215,255,.62);
+}
+html[data-theme="dark"][data-glass-effect="on"]{
+ --glass-bar-base:var(--ds-surface);
+ --glass-control-base:var(--ds-surface-raised);
+ --glass-control-hover:var(--ds-surface-hover);
+ --glass-selected-base:color-mix(in srgb,var(--purple) 18%,var(--ds-surface-raised));
+ --glass-sheen:linear-gradient(160deg,#ffffff16,transparent 45%,#ffffff09);
+ --glass-reflection:radial-gradient(ellipse at 18% -42%,#ffffff28,transparent 65%);
+ --glass-rim:inset 0 1px 1px #ffffff26,inset 0 -1px 1px #0005;
+ --glass-depth:var(--glass-rim),0 4px 12px #0004;
+ --glass-border:color-mix(in srgb,var(--ds-border-strong) 78%,transparent);
+ --glass-bar-border:var(--ds-border);
+ --glass-ink:var(--ds-text);
+ --glass-focus:#bcaaff;
+ --glass-translucent-bar:color-mix(in srgb,var(--ds-surface) 78%,transparent);
+ --glass-translucent-control:color-mix(in srgb,var(--ds-surface-raised) 65%,transparent);
+ --glass-translucent-hover:color-mix(in srgb,var(--ds-surface-hover) 85%,transparent);
+ --glass-translucent-selected:color-mix(in srgb,var(--purple) 15%,var(--ds-surface-raised));
+}
+html[data-theme][data-glass-effect="on"][data-theme-variant="agency-gradient"]{
+ --glass-accent:linear-gradient(162deg,rgba(10,0,18,.18),rgba(10,0,18,.46)),var(--agency-gradient);
+ --glass-focus:#ff9ac0;
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+ html[data-theme][data-glass-effect="on"]{
+  --glass-bar-base:var(--glass-translucent-bar);--glass-control-base:var(--glass-translucent-control);--glass-control-hover:var(--glass-translucent-hover);--glass-selected-base:var(--glass-translucent-selected);
+  --glass-bar-filter:blur(22px) saturate(165%);--glass-control-filter:blur(8px) saturate(145%);
+ }
+}
+html[data-theme][data-glass-effect="on"] .sidebar,
+html[data-theme][data-glass-effect="on"] .shell>header,
+html[data-theme][data-glass-effect="on"] :is(.compactFilters,.marketingOverviewFilters,.crmFilterBar,.taskViewTabs,.marketingProviderTabs,.marketingBreakdownTabs,.metaBreakdownTabs,.settingsNav){
+ background:var(--glass-reflection),var(--glass-sheen),var(--glass-bar-base);
+ border-color:var(--glass-bar-border);
+ box-shadow:var(--glass-rim),0 7px 24px rgba(54,67,99,.09);
+ -webkit-backdrop-filter:var(--glass-bar-filter);backdrop-filter:var(--glass-bar-filter);
+}
+html[data-theme][data-glass-effect="on"] .navGroup a:hover{background:var(--glass-sheen),var(--glass-control-hover);color:var(--glass-ink)}
+html[data-theme][data-glass-effect="on"] .navGroup a.active{color:var(--glass-ink);background:var(--glass-sheen),var(--glass-selected-base);border:1px solid var(--glass-bar-border);box-shadow:var(--glass-depth)}
+html[data-theme][data-glass-effect="on"] .btn.secondary:not(.danger,.ghost),
+html[data-theme][data-glass-effect="on"] .settingsNav button,
+html[data-theme][data-glass-effect="on"] .themeChoices button,
+html[data-theme][data-glass-effect="on"] .shell>header :is(.iconBtn,.profile,.saveStatusToggle),
+html[data-theme][data-glass-effect="on"] :is(.compactFiltersToggle,.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry,.marketingTableSettings,.fullscreenButton){
+ background:var(--glass-sheen),var(--glass-control-base);
+ border-color:var(--glass-border);
+ box-shadow:var(--glass-depth);
+}
+html[data-theme][data-glass-effect="on"] .btn:not(.secondary,.danger,.ghost){
+ background:var(--glass-accent);
+ border-color:rgba(61,43,149,.5);
+ color:#fff;
+ box-shadow:inset 0 1px 1px rgba(255,255,255,.38),inset 0 -1px 2px rgba(22,10,83,.3),0 5px 14px rgba(65,44,147,.24);
+ -webkit-backdrop-filter:var(--glass-control-filter);backdrop-filter:var(--glass-control-filter);
+}
+html[data-theme][data-glass-effect="on"] .btn.secondary:not(.danger,.ghost),
+html[data-theme][data-glass-effect="on"] :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle){
+ -webkit-backdrop-filter:var(--glass-control-filter);backdrop-filter:var(--glass-control-filter);
+}
+html[data-theme][data-glass-effect="on"] .btn.secondary:not(.danger,.ghost):hover:not(:disabled),
+html[data-theme][data-glass-effect="on"] .settingsNav button:hover,
+html[data-theme][data-glass-effect="on"] :is(.compactFiltersToggle,.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingTableSettings):hover:not(:disabled){background:var(--glass-sheen),var(--glass-control-hover)}
+html[data-theme][data-glass-effect="on"] .settingsNav button.active,
+html[data-theme][data-glass-effect="on"] :is(.taskViewTabs,.marketingProviderTabs,.marketingBreakdownTabs,.metaBreakdownTabs) button:is(.active,[aria-pressed="true"]),
+html[data-theme][data-glass-effect="on"] :is(.marketingCompareToggle[aria-pressed="true"],.compactFiltersToggle[aria-expanded="true"]){
+ background:var(--glass-sheen),var(--glass-selected-base);color:var(--glass-ink);box-shadow:var(--glass-depth);
+}
+html[data-theme][data-glass-effect="on"] :is(.btn:not(.danger,.ghost),.compactFiltersToggle,.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingTableSettings):active:not(:disabled){
+ transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(33,26,89,.18),inset 0 -1px rgba(255,255,255,.45);
+}
+html[data-theme][data-glass-effect="on"] :is(.btn,.iconBtn,.profile,.saveStatusToggle,.settingsNav button,.themeChoices button,.compactFiltersToggle,.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingTableSettings):focus-visible{
+ outline:2px solid var(--glass-focus);outline-offset:2px;
+}
+html[data-theme][data-glass-effect="on"] :is(.btn:not(.danger,.ghost),.marketingCompareToggle,.marketingOverviewRefresh):disabled{box-shadow:none;filter:none;opacity:.5;transform:none}
+@media(prefers-reduced-motion:reduce){
+ html[data-theme][data-glass-effect="on"] :is(.btn:not(.danger,.ghost),.compactFiltersToggle,.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingTableSettings):active:not(:disabled){transform:none}
+}
+@media(prefers-reduced-transparency:reduce){
+ html[data-theme][data-glass-effect="on"]{
+  --glass-bar-base:var(--ds-canvas);--glass-control-base:var(--ds-canvas);--glass-control-hover:var(--ds-surface-hover);
+  --glass-selected-base:color-mix(in srgb,var(--purple) 14%,var(--ds-canvas));
+  --glass-sheen:linear-gradient(transparent,transparent);--glass-reflection:linear-gradient(transparent,transparent);
+  --glass-accent:#4937a8;--glass-bar-filter:none;--glass-control-filter:none;
+ }
+ html[data-theme][data-glass-effect="on"][data-theme-variant="agency-gradient"]{--glass-accent:#9e2f5a}
+}

@@ -21,9 +21,19 @@ export function resolveThemePreference(value:ThemePreference,prefersDark=false){
  return {theme:value,variant:null};
 }
 
-export function applyThemePreference(value:ThemePreference,prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches,agencyGradientColors:3|4=4){
+export const glassEffectPreferenceKey='roas_glass_effect';
+export function readGlassEffectPreference(){
+ const value=localStorage.getItem(glassEffectPreferenceKey);
+ return value==='on'?true:value==='off'?false:null;
+}
+export function resolveGlassEffect(theme:ThemePreference,preference:boolean|null){
+ return preference??(theme==='apple-glass');
+}
+
+export function applyThemePreference(value:ThemePreference,prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches,agencyGradientColors:3|4=4,glassEffect=readGlassEffectPreference()){
  const resolved=resolveThemePreference(value,prefersDark);
  document.documentElement.dataset.theme=resolved.theme;
+ document.documentElement.dataset.glassEffect=resolveGlassEffect(value,glassEffect)?'on':'off';
  document.documentElement.dataset.agencyGradientColors=String(agencyGradientColors);
  if(resolved.variant)document.documentElement.dataset.themeVariant=resolved.variant;
  else delete document.documentElement.dataset.themeVariant;

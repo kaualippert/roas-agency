@@ -14,6 +14,7 @@ import './appearance-themes.css';
 import './agency-branding.css';
 import './sidebar-preference.css';
 import './app-shell.css';
+import './glass-effect.css';
 
 applyThemePreference(normalizeThemePreference(localStorage.getItem('roas_theme')),undefined,localStorage.getItem('roas_agency_gradient_colors')==='3'?3:4);
 
