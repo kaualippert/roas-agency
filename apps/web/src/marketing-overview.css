@@ -1,0 +1,206 @@
+/* Route-local styles: integrations and reports keep their own layouts. */
+.marketingClientDashboard {
+  --overview-panel-radius: 16px;
+  --overview-tint: color-mix(in srgb, var(--purple) 8%, var(--card));
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.marketingClientDashboard .marketingOverviewHero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  overflow: hidden;
+  padding: clamp(20px, 3vw, 32px);
+  border-radius: var(--overview-panel-radius);
+  background: radial-gradient(ellipse at 100% 0%, var(--overview-tint), transparent 70%), var(--card);
+}
+.marketingOverviewHero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 45%;
+  pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--purple) 25%, transparent) 1px, transparent 1.5px) 0 0 / 18px 18px;
+  mask-image: linear-gradient(135deg, transparent 24%, #0007);
+}
+.marketingOverviewIdentity { min-width: 0; }
+.marketingOverviewEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+}
+.marketingOverviewEyebrow svg { width: 15px; height: 15px; color: var(--purple); }
+.marketingOverviewIdentity h2 {
+  margin: 9px 0 5px;
+  color: var(--text);
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.12;
+  letter-spacing: -.04em;
+  overflow-wrap: anywhere;
+}
+.marketingOverviewIdentity p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.marketingOverviewActions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.marketingOverviewActions .btn { min-height: 38px; justify-content: center; font-size: 11px; }
+
+.marketingClientDashboard .marketingOverviewFilters {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) max-content minmax(140px, .8fr) max-content;
+  align-items: end;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--overview-panel-radius);
+}
+.marketingOverviewField, .marketingOverviewPlatform { display: grid; min-width: 0; gap: 6px; }
+.marketingOverviewField > span, .marketingOverviewPlatform > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.marketingOverviewField select, .marketingOverviewDate {
+  width: 100%;
+  min-width: 0;
+  height: 39px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.marketingOverviewField select { padding: 0 9px; text-overflow: ellipsis; }
+.marketingOverviewDate { display: flex; align-items: center; gap: 4px; padding: 0 8px; }
+.marketingOverviewDate svg { width: 15px; height: 15px; flex: none; color: var(--muted); }
+.marketingOverviewDate select { height: 100%; border: 0; background: transparent; padding-inline: 4px; }
+.marketingOverviewFilters .marketingProviderTabs { min-height: 39px; align-items: stretch; gap: 3px; padding: 3px; }
+.marketingOverviewFilters .marketingProviderTabs button { padding: 5px 10px; font-size: 11px; white-space: nowrap; }
+.marketingOverviewFilters .marketingProviderTabs button.active { color: var(--text); }
+.marketingOverviewRefresh, .marketingOverviewCustomize {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+}
+.marketingOverviewRefresh { min-height: 39px; }
+.marketingOverviewRefresh:disabled { opacity: .65; cursor: wait; }
+.marketingOverviewRefresh svg, .marketingOverviewCustomize svg { width: 14px; height: 14px; flex: none; }
+.marketingOverviewRefresh .spin { animation: marketingSpin .8s linear infinite; }
+.marketingOverviewRefresh:not(:disabled):hover, .marketingOverviewCustomize:hover { background: var(--overview-tint); }
+.marketingClientDashboard :is(button,select,a):focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+.marketingClientDashboard .marketingPeriodNotice { margin: -6px 0 0; padding: 10px 14px; border-radius: 10px; }
+
+.marketingOverviewMetrics { display: grid; gap: 12px; min-width: 0; }
+.marketingOverviewSectionHead { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+.marketingOverviewSectionHead h3 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+.marketingOverviewSectionHead p { display: flex; align-items: center; gap: 6px; margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.marketingOverviewSectionHead p svg { width: 13px; height: 13px; flex: none; }
+.marketingOverviewMetricActions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.marketingOverviewMetricActions .marketingCompareToggle,
+.marketingOverviewMetricActions .marketingCompareRetry { min-height: 36px; font-size: 11px; padding: 0 10px; }
+.marketingClientDashboard .marketingSelectableMetrics {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 152px), 1fr));
+  gap: 12px;
+}
+.marketingClientDashboard .marketingOverviewMetric {
+  --metric-tone: var(--purple);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 130px;
+  padding: 14px;
+  overflow: visible;
+  border-radius: 14px;
+}
+.marketingClientDashboard .marketingOverviewMetric::before { content: none; }
+.marketingOverviewMetric[data-tone="blue"] { --metric-tone: var(--ds-info, #377fce); }
+.marketingOverviewMetric[data-tone="green"] { --metric-tone: var(--ds-success, #188366); }
+.marketingOverviewMetricTop { display: flex; width: 100%; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+.marketingOverviewMetricIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--metric-tone) 16%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--metric-tone) 9%, var(--card));
+  color: var(--metric-tone);
+}
+.marketingOverviewMetricIcon svg { width: 17px; height: 17px; }
+.marketingClientDashboard .marketingOverviewMetric > small { color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.35; }
+.marketingClientDashboard .marketingOverviewMetric > strong {
+  margin: auto 0 0;
+  font-size: clamp(19px, 2vw, 26px);
+  line-height: 1.16;
+  letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+}
+.marketingClientDashboard .marketingOverviewMetric .marketingMetricDelta {
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  font-size: 11px;
+}
+
+.marketingClientDashboard .marketingPerformanceGrid { grid-template-columns: minmax(0, 1.3fr) minmax(265px, 1fr); gap: 16px; margin: 0; }
+.marketingClientDashboard :is(.marketingFunnelPanel,.marketingEfficiencyPanel,.marketingChannelPanel,.marketingTopAdsPanel) { min-width: 0; margin: 0; border-radius: var(--overview-panel-radius); }
+.marketingClientDashboard .marketingPanelHead { gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.marketingClientDashboard .marketingPanelHead h3 { font-size: 16px; letter-spacing: -.02em; }
+.marketingClientDashboard .marketingPanelHead p { font-size: 11px; line-height: 1.5; }
+.marketingClientDashboard .marketingPanelHead > svg { width: 34px; height: 34px; padding: 8px; border-radius: 10px; background: var(--overview-tint); color: var(--purple); }
+.marketingClientDashboard .marketingEfficiencyGrid { grid-template-columns: 1fr; gap: 0; }
+.marketingClientDashboard .marketingEfficiencyGrid article { background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 10px 0; }
+.marketingClientDashboard .marketingEfficiencyGrid article:last-child { border-bottom: 0; }
+.marketingClientDashboard .marketingEfficiencyGrid article > span { background: var(--overview-tint); }
+.marketingClientDashboard .marketingEfficiencyGrid article > div { display: flex; flex: 1; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; min-width: 0; }
+.marketingClientDashboard .marketingEfficiencyGrid small { font-size: 11px; }
+.marketingClientDashboard .marketingEfficiencyGrid strong { margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.marketingClientDashboard :is(.marketingChannelTable,.marketingTopAdsTable) { border: 1px solid var(--border); border-radius: 11px; }
+.marketingClientDashboard :is(.marketingChannelHead,.marketingTopAdsHead) { background: var(--soft); color: var(--muted); font-size: 10px; font-weight: 650; }
+.marketingClientDashboard :is(.marketingChannelHead,.marketingChannelTable article,.marketingTopAdsHead,.marketingTopAdsTable article) { padding: 12px; font-variant-numeric: tabular-nums; }
+.marketingClientDashboard :is(.marketingChannelTable,.marketingTopAdsTable) article { font-size: 12px; }
+.marketingClientDashboard .marketingChannelTable article > div > .providerLogo { display: grid; place-items: center; }
+.marketingClientDashboard :is(.marketingChannelTable,.marketingTopAdsTable) article:last-child { border-bottom: 0; }
+.marketingClientDashboard :is(.marketingChannelTable,.marketingTopAdsTable) article:hover { background: var(--overview-tint); }
+.marketingClientDashboard .marketingCustomVisuals { margin-top: 0; }
+.marketingClientDashboard .marketingWidgetEmpty { border-radius: var(--overview-panel-radius); }
+
+@media (max-width: 1100px) {
+  .marketingClientDashboard .marketingOverviewFilters { grid-template-columns: minmax(140px, 1fr) minmax(270px, 1fr); }
+  .marketingOverviewRefresh { justify-self: start; }
+}
+@media (max-width: 760px) {
+  .marketingClientDashboard .marketingPerformanceGrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 580px) {
+  .marketingClientDashboard { gap: 16px; }
+  .marketingClientDashboard .marketingOverviewFilters { grid-template-columns: minmax(0, 1fr) auto; }
+  .marketingOverviewFilters > :is(.marketingOverviewField:first-child,.marketingOverviewPlatform) { grid-column: 1 / -1; }
+  .marketingOverviewFilters .marketingProviderTabs button { flex: 1; padding-inline: 7px; }
+  .marketingOverviewActions .btn { min-height: 40px; }
+  .marketingClientDashboard .marketingSelectableMetrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+  .marketingClientDashboard .marketingOverviewMetric { min-height: 114px; padding: 11px; }
+  .marketingClientDashboard .marketingOverviewMetric > strong { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketingOverviewRefresh .spin { animation: none; }
+}
