@@ -66,6 +66,16 @@ html[data-theme][data-glass-effect="on"] :is(.compactFiltersToggle,.marketingOve
  border-color:var(--glass-border);
  box-shadow:var(--glass-depth);
 }
+/* The shared finish needs a capsule on the profile trigger, not a square plate. */
+html[data-theme][data-glass-effect="on"] .shell>header .profile{
+ border-radius:var(--ds-radius-pill);
+}
+html[data-theme][data-glass-effect="on"] .shell>header .profile:is(:hover,[aria-expanded="true"]){
+ background:var(--glass-sheen),var(--glass-control-hover);
+}
+@media(min-width:801px){
+ html[data-theme][data-glass-effect="on"] .shell>header .profile{padding:3px 9px 3px 3px}
+}
 html[data-theme][data-glass-effect="on"] .btn:not(.secondary,.danger,.ghost){
  background:var(--glass-accent);
  border-color:rgba(61,43,149,.5);

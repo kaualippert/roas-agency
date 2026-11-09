@@ -3,6 +3,27 @@ import {captureBrowserErrors,mockRoasApi} from './fixtures';
 
 const style=(element:Locator,name:string)=>element.evaluate((node,property)=>getComputedStyle(node).getPropertyValue(property),name);
 
+test('o reflexo do botão de perfil segue o contorno arredondado no All Black',async({page},testInfo)=>{
+ await mockRoasApi(page);
+ await page.addInitScript(()=>{localStorage.setItem('roas_theme','all-black');localStorage.setItem('roas_glass_effect','on')});
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/dashboard');
+ const profile=page.getByTitle('Abrir menu do perfil');
+ await expect(profile).toBeVisible();
+ expect(await style(profile,'border-radius')).toBe('999px');
+ expect(await style(profile,'padding-left')).toBe('3px');
+ expect(await style(profile,'background-image')).toContain('linear-gradient');
+ await profile.screenshot({path:testInfo.outputPath('glass-profile.png')});
+ await profile.click();
+ await expect(page.getByRole('menuitem',{name:/Configurações/})).toBeVisible();
+ await page.keyboard.press('Escape');await expect(profile).toHaveAttribute('aria-expanded','false');
+ await page.setViewportSize({width:390,height:844});
+ await expect(profile).toBeVisible();
+ expect(await style(profile,'border-radius')).toBe('999px');
+ expect(await style(profile,'padding-right')).toBe('3px');
+ await profile.click();await expect(page.getByRole('menuitem',{name:/Configurações/})).toBeVisible();
+});
+
 test('Apple Glass aplica reflexo e desfoque nas barras, com botões funcionais e foco visível',async({page},testInfo)=>{
  await mockRoasApi(page);
  const errors=captureBrowserErrors(page);
