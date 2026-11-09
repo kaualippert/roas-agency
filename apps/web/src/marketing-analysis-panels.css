@@ -1,4 +1,7 @@
 .marketingAnalysisEditor{max-width:540px;margin:auto;inset:0}
+.marketingAnalysisPercentageOption{display:flex;align-items:flex-start;gap:8px;margin-top:14px;color:var(--text);font-size:12px}
+.marketingAnalysisPercentageOption input{margin:1px 0 0;accent-color:var(--purple)}
+.marketingAnalysisPercentageOption small{display:block;margin-top:4px;color:var(--muted);line-height:1.35}
 .marketingAnalysisChoices{list-style:none;padding:0;margin:16px 0;display:grid;gap:8px}
 .marketingAnalysisChoices li{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,36px);align-items:center;gap:4px}
 .marketingAnalysisChoices select,.marketingAnalysisPicker select{min-width:0;min-height:38px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);text-overflow:ellipsis}

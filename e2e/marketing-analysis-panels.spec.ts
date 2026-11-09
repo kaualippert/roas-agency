@@ -17,6 +17,12 @@ test('personaliza os painéis separadamente, mantém ordem e restaura o padrão'
  await page.setViewportSize({width:390,height:844});
  await page.goto('/marketing/dashboard');
  const journey=page.locator('.marketingFunnelPanel'),efficiency=page.locator('.marketingEfficiencyPanel');
+ const percentages=journey.locator('.marketingJourneyFunnelPercent');
+ await expect(percentages).toHaveCount(0);
+ await journey.getByRole('button',{name:'Personalizar Jornada de resultados'}).click();
+ await page.getByRole('checkbox',{name:/Mostrar porcentagens/}).check();
+ await save();
+ await expect(percentages.first()).toHaveText(/100\s*%/);
  await journey.getByRole('button',{name:'Personalizar Jornada de resultados'}).click();
  let editor=page.getByRole('dialog',{name:'Jornada de resultados',exact:true});
  await editor.getByLabel('Métrica 2',{exact:true}).selectOption('leads');
@@ -46,6 +52,7 @@ test('personaliza os painéis separadamente, mantém ordem e restaura o padrão'
  await save();
  await page.reload();
  await expect(journey.locator('li').first()).toContainText('Leads');
+ await expect(percentages).toHaveCount(5);
  await expect(efficiency).toContainText('Custo por resultado');
  await expect(efficiency).toContainText('ROAS');
  await efficiency.getByRole('button',{name:'Personalizar Eficiência da mídia'}).click();
@@ -54,4 +61,9 @@ test('personaliza os painéis separadamente, mantém ordem e restaura o padrão'
  await expect(efficiency).toContainText('Custo por conversão');
  await expect(efficiency).not.toContainText('ROAS');
  await expect(journey.locator('li').first()).toContainText('Leads');
+ await journey.getByRole('button',{name:'Personalizar Jornada de resultados'}).click();
+ await expect(page.getByRole('checkbox',{name:/Mostrar porcentagens/})).toBeChecked();
+ await page.getByRole('checkbox',{name:/Mostrar porcentagens/}).uncheck();
+ await save();
+ await expect(percentages).toHaveCount(0);
 });

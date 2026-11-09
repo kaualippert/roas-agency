@@ -1,9 +1,21 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {defaultMarketingMetricIds,formatMarketingMetric,metricValue,normalizeMarketingDashboardPreferences,normalizeMarketingDashboardWidgets,normalizeMarketingMetricIds,normalizeMarketingPerformanceTable} from '../apps/web/src/marketing-dashboard-config';
+import {defaultMarketingMetricIds,formatMarketingMetric,marketingFunnelShare,metricValue,normalizeMarketingAnalysisPanels,normalizeMarketingDashboardPreferences,normalizeMarketingDashboardWidgets,normalizeMarketingMetricIds,normalizeMarketingPerformanceTable} from '../apps/web/src/marketing-dashboard-config';
 import {emptyMarketingMetrics,type MarketingMetrics} from '../apps/web/src/marketing-metrics';
 
 const metrics:MarketingMetrics={...emptyMarketingMetrics,impressions:10000,reach:5000,clicks:200,uniqueClicks:150,outboundClicks:100,conversions:10,results:10,leads:8,purchases:2,messagingConversations:5,linkClicks:170,landingPageViews:120,postEngagements:350,videoViews:600,thruPlays:300,spend:1000,conversionValue:4000,roas:4};
+
+test('calcula porcentagens do funil sem comparar moedas, taxas ou uma base zerada',()=>{
+ assert.equal(marketingFunnelShare(metrics,'impressions','impressions'),1);
+ assert.equal(marketingFunnelShare(metrics,'clicks','impressions'),.02);
+ assert.equal(marketingFunnelShare(metrics,'impressions','clicks'),50);
+ assert.equal(marketingFunnelShare(metrics,'impressions','spend'),null);
+ assert.equal(marketingFunnelShare(metrics,'ctr','impressions'),null);
+ assert.equal(marketingFunnelShare({...metrics,clicks:0},'clicks','impressions'),0);
+ assert.equal(marketingFunnelShare(emptyMarketingMetrics,'clicks','impressions'),null);
+ assert.equal(normalizeMarketingAnalysisPanels(undefined).journeyShowPercentages,false);
+ assert.equal(normalizeMarketingAnalysisPanels({journeyShowPercentages:true}).journeyShowPercentages,true);
+});
 
 test('calcula métricas derivadas usando os dados sincronizados',()=>{
  assert.equal(metricValue(metrics,'ctr'),2);

@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {ArrowDown,ArrowUp,BarChart3,Plus,Settings2,WalletCards,X} from 'lucide-react';
 import {MetricHelp} from './DashboardReading';
 import MarketingFunnel from './MarketingFunnel';
-import {defaultMarketingAnalysisPanels,formatMarketingMetric,marketingAnalysisMetricLimit,marketingMetricCatalog,metricValue,type MarketingAnalysisPanel,type MarketingAnalysisPanels as PanelPreferences,type MarketingMetricKey} from './marketing-dashboard-config';
+import {defaultMarketingAnalysisPanels,formatMarketingMetric,marketingAnalysisMetricLimit,marketingFunnelShare,marketingMetricCatalog,metricValue,type MarketingAnalysisPanel,type MarketingAnalysisPanels as PanelPreferences,type MarketingMetricKey} from './marketing-dashboard-config';
 import type {MarketingMetrics} from './marketing-metrics';
 import './marketing-analysis-panels.css';
 
@@ -15,7 +15,7 @@ export default function MarketingAnalysisPanels({metrics,panels,onChange}:{metri
  const [editing,setEditing]=useState<MarketingAnalysisPanel|null>(null);
  const stages=panels.journey.map(id=>{
   const definition=definitions.get(id)!;
-  return {id,label:definition.label,formatted:formatMarketingMetric(id,metricValue(metrics,id)),help:<MetricHelp label={definition.label} description={definition.description}/>};
+  return {id,label:definition.label,formatted:formatMarketingMetric(id,metricValue(metrics,id)),percentage:panels.journeyShowPercentages?marketingFunnelShare(metrics,id,panels.journey[0]):undefined,help:<MetricHelp label={definition.label} description={definition.description}/>};
  });
  return <div className="marketingDashboardGrid marketingPerformanceGrid">
   <section className="card marketingFunnelPanel">
@@ -29,7 +29,7 @@ export default function MarketingAnalysisPanels({metrics,panels,onChange}:{metri
     return <article key={id}><span><Icon aria-hidden="true"/></span><div><small>{definition.label}<MetricHelp label={definition.label} description={definition.description}/></small><strong>{formatMarketingMetric(id,metricValue(metrics,id))}</strong></div></article>;
    })}</div>
   </section>
-  {editing&&<PanelEditor key={editing} panel={editing} initial={panels[editing]} onClose={()=>setEditing(null)} onSave={selection=>onChange({...panels,[editing]:selection})}/>}
+  {editing&&<PanelEditor key={editing} panel={editing} initial={panels[editing]} initialShowPercentages={panels.journeyShowPercentages===true} onClose={()=>setEditing(null)} onSave={(selection,showPercentages)=>onChange({...panels,[editing]:selection,...(editing==='journey'?{journeyShowPercentages:showPercentages}:{})})}/>}
  </div>;
 }
 
@@ -37,10 +37,11 @@ function PanelHeading({panel,detail,onEdit}:{panel:MarketingAnalysisPanel;detail
  return <div className="marketingPanelHead"><div><h3>{titles[panel]}</h3><p>{detail}</p></div><button type="button" className="marketingOverviewCustomize" aria-label={`Personalizar ${titles[panel]}`} onClick={()=>onEdit(panel)}><Settings2 aria-hidden="true"/> Personalizar</button></div>;
 }
 
-function PanelEditor({panel,initial,onClose,onSave}:{panel:MarketingAnalysisPanel;initial:MarketingMetricKey[];onClose:()=>void;onSave:(selection:MarketingMetricKey[])=>void}){
+function PanelEditor({panel,initial,initialShowPercentages,onClose,onSave}:{panel:MarketingAnalysisPanel;initial:MarketingMetricKey[];initialShowPercentages:boolean;onClose:()=>void;onSave:(selection:MarketingMetricKey[],showPercentages:boolean)=>void}){
  const dialog=useRef<HTMLDialogElement>(null);
  const addTrigger=useRef<HTMLButtonElement>(null);
  const [selection,setSelection]=useState(initial);
+ const [showPercentages,setShowPercentages]=useState(initialShowPercentages);
  const [adding,setAdding]=useState(false);
  const [candidate,setCandidate]=useState<MarketingMetricKey|''>('');
  const canAdd=selection.length<marketingAnalysisMetricLimit;
@@ -60,7 +61,8 @@ function PanelEditor({panel,initial,onClose,onSave}:{panel:MarketingAnalysisPane
  };
  return <dialog ref={dialog} className="metaBreakdownDialog marketingAnalysisEditor" aria-labelledby="marketing-analysis-title" onCancel={event=>{event.preventDefault();close()}}>
   <div className="metaBreakdownHeading"><div><span>MARKETING · INDICADORES</span><h2 id="marketing-analysis-title">{titles[panel]}</h2><p>Escolha até {marketingAnalysisMetricLimit} métricas e organize a ordem em que aparecem.</p></div><button className="iconBtn" type="button" aria-label="Fechar" onClick={close}><X aria-hidden="true"/></button></div>
-  <form onSubmit={event=>{event.preventDefault();if(selection.length&&!adding){onSave(selection);close()}}}>
+  <form onSubmit={event=>{event.preventDefault();if(selection.length&&!adding){onSave(selection,showPercentages);close()}}}>
+   {panel==='journey'&&<label className="marketingAnalysisPercentageOption"><input type="checkbox" checked={showPercentages} onChange={event=>setShowPercentages(event.target.checked)}/><span><b>Mostrar porcentagens</b><small>Usa a primeira etapa como referência para as métricas de contagem.</small></span></label>}
    <ol className="marketingAnalysisChoices">{selection.map((id,index)=><li key={id}>
     <select aria-label={`Métrica ${index+1}`} value={id} onChange={event=>{const next=event.target.value as MarketingMetricKey;setSelection(current=>current.map((item,i)=>i===index?next:item))}}>
      {groupedMetrics.map(({category,items})=><optgroup key={category} label={category}>{items.map(item=><option key={item.id} value={item.id} disabled={item.id!==id&&selection.includes(item.id)}>{item.label}</option>)}</optgroup>)}
@@ -81,7 +83,7 @@ function PanelEditor({panel,initial,onClose,onSave}:{panel:MarketingAnalysisPane
     <button type="button" className="btn secondary" disabled={!canInclude} onClick={include}>Incluir métrica</button>
    </div>}
    {!canAdd&&<p className="marketingAnalysisLimit">Limite de {marketingAnalysisMetricLimit} métricas. Remova uma para incluir outra.</p>}
-   <div className="formActions"><button className="btn secondary" type="button" onClick={()=>{setSelection(defaultMarketingAnalysisPanels[panel]);closePicker()}}>Restaurar padrão</button><button className="btn" type="submit" disabled={adding}>Salvar métricas</button></div>
+   <div className="formActions"><button className="btn secondary" type="button" onClick={()=>{setSelection(defaultMarketingAnalysisPanels[panel]);setShowPercentages(false);closePicker()}}>Restaurar padrão</button><button className="btn" type="submit" disabled={adding}>Salvar métricas</button></div>
   </form>
  </dialog>;
 }

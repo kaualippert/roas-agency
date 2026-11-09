@@ -1,8 +1,9 @@
 import {useId,type ReactNode} from 'react';
 import './marketing-funnel.css';
 
-type FunnelStage={id:string;label:string;formatted:string;help?:ReactNode};
+type FunnelStage={id:string;label:string;formatted:string;percentage?:number|null;help?:ReactNode};
 const colors=['#7755ee','#6373e7','#468dd8','#30a6b2','#29aa91','#259b77'];
+const percent=new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:2});
 
 /** Width indicates stage order, not a ratio between potentially unrelated metrics. */
 export default function MarketingFunnel({stages}:{stages:FunnelStage[]}){
@@ -18,8 +19,8 @@ export default function MarketingFunnel({stages}:{stages:FunnelStage[]}){
   </div>
   <ol className="marketingJourneyFunnelLegend">{stages.map((stage,index)=><li key={stage.id}>
    <span className="marketingJourneyFunnelLabel"><i style={{background:colors[index%colors.length]}}/><span>{stage.label}</span>{stage.help}</span>
-   <strong>{stage.formatted}</strong>
+   <div className="marketingJourneyFunnelValue"><strong>{stage.formatted}</strong>{stage.percentage!==undefined&&<span className="marketingJourneyFunnelPercent">{stage.percentage===null?'—':percent.format(stage.percentage)}</span>}</div>
   </li>)}</ol>
-  <small className="marketingJourneyFunnelNote">Etapas na ordem apresentada. A largura é ilustrativa, não uma taxa de conversão.</small>
+  <small className="marketingJourneyFunnelNote">Etapas na ordem apresentada. A largura é ilustrativa, não uma taxa de conversão.{stages[0].percentage!==undefined?' Porcentagens em relação à primeira etapa. “—” indica base zerada ou métrica não comparável.':''}</small>
  </div>;
 }

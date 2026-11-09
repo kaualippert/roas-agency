@@ -7,7 +7,7 @@ export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table'|'funnel'|'a
 export interface MarketingDashboardWidget{id:string;title:string;type:MarketingWidgetType;metricIds:MarketingMetricKey[]}
 export interface MarketingPerformanceTablePreference{level:MarketingPerformanceLevel;metricIds:MarketingMetricKey[]}
 export type MarketingAnalysisPanel='journey'|'efficiency';
-export type MarketingAnalysisPanels=Record<MarketingAnalysisPanel,MarketingMetricKey[]>;
+export type MarketingAnalysisPanels=Record<MarketingAnalysisPanel,MarketingMetricKey[]>&{journeyShowPercentages?:boolean};
 export const marketingAnalysisMetricLimit=6;
 export const defaultMarketingAnalysisPanels:MarketingAnalysisPanels={journey:['impressions','reach','clicks','conversions'],efficiency:['ctr','cpc','cpm','costPerConversion']};
 
@@ -83,7 +83,16 @@ export function normalizeMarketingAnalysisPanels(value:unknown):MarketingAnalysi
   const valid=Array.isArray(raw)?[...new Set(raw.filter(id=>metricIds.has(id)))].slice(0,marketingAnalysisMetricLimit):[];
   return valid.length?valid:[...defaultMarketingAnalysisPanels[panel]];
  };
- return {journey:normalize('journey'),efficiency:normalize('efficiency')};
+ return {journey:normalize('journey'),efficiency:normalize('efficiency'),journeyShowPercentages:input.journeyShowPercentages===true};
+}
+
+const funnelCountMetrics=new Set(marketingMetricCatalog.filter(item=>item.format==='integer'||item.id==='results'||item.id==='conversions').map(item=>item.id));
+export function marketingFunnelShare(metrics:MarketingMetrics,id:MarketingMetricKey,first:MarketingMetricKey):number|null{
+ if(!funnelCountMetrics.has(id)||!funnelCountMetrics.has(first))return null;
+ const base=metricValue(metrics,first),value=metricValue(metrics,id);
+ if(!Number.isFinite(base)||base<=0||!Number.isFinite(value)||value<0)return null;
+ const share=value/base;
+ return Number.isFinite(share)?share:null;
 }
 export const defaultMarketingMetricIds:MarketingMetricKey[]=['spend','impressions','reach','clicks','conversions','roas'];
 export const defaultMarketingPerformanceTable:MarketingPerformanceTablePreference={level:'ad',metricIds:['results','costPerResult','spend','ctr']};
