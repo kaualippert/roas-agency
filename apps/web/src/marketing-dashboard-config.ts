@@ -1,4 +1,5 @@
 import type {MarketingMetrics,MarketingPerformanceLevel} from './marketing-metrics';
+import {normalizePinnedBreakdowns,type PinnedBreakdownMetric} from './meta-breakdown-metrics';
 
 export type MarketingMetricKey=keyof MarketingMetrics|'ctr'|'uniqueCtr'|'cpc'|'cpm'|'cpp'|'costPerConversion'|'costPerResult'|'costPerLead'|'costPerPurchase'|'costPerLinkClick'|'costPerOutboundClick'|'costPerLandingPageView'|'costPerMessagingConversation'|'costPerThruPlay'|'frequency';
 export type MarketingMetricCategory='Desempenho'|'Entrega'|'Cliques e tráfego'|'Engajamento'|'Vídeo'|'Leads e conversões';
@@ -11,6 +12,7 @@ export interface MarketingDashboardPreference{
  metricIds:MarketingMetricKey[];
  widgets:MarketingDashboardWidget[];
  performanceTable:MarketingPerformanceTablePreference;
+ pinnedBreakdowns?:PinnedBreakdownMetric[];
  updatedAt:string;
 }
 
@@ -84,7 +86,7 @@ export function normalizeMarketingDashboardPreferences(value:unknown):MarketingD
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardPreference>;
   if(!item.clientId)return [];
-  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),updatedAt:String(item.updatedAt||'')}];
+  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),updatedAt:String(item.updatedAt||'')}];
  });
 }
 

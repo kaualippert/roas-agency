@@ -4,20 +4,21 @@ import {Link} from 'react-router-dom';
 import type {MarketingRange} from './marketing-comparison';
 import type {ClientMarketingIntegration} from './marketing-integrations';
 import {loadMetaBreakdown,type MetaBreakdownDimension} from './meta-breakdown-client';
+import {breakdownDimensions as dimensions,breakdownMetricLabels,pinnedBreakdownKey,type BreakdownMetric,type PinnedBreakdownMetric} from './meta-breakdown-metrics';
 import './meta-breakdown.css';
 
-const dimensions=[{id:'age',label:'Idade'},{id:'gender',label:'Gênero'},{id:'region',label:'Região'},{id:'placement',label:'Posicionamento'}] as const;
 const actions=[{id:'leads',label:'Leads'},{id:'purchases',label:'Compras'},{id:'conversations',label:'Conversas iniciadas'}] as const;
 type Dimension=MetaBreakdownDimension;
 type Action=typeof actions[number]['id'];
 type BreakdownResult=Awaited<ReturnType<typeof loadMetaBreakdown>>;
 const labels:Record<string,string>={unknown:'Não informado',male:'Masculino',female:'Feminino',facebook:'Facebook',instagram:'Instagram',messenger:'Messenger',audience_network:'Audience Network',threads:'Threads',feed:'Feed',story:'Stories',reels:'Reels',facebook_reels:'Reels',instagram_reels:'Reels',right_hand_column:'Coluna direita',marketplace:'Marketplace',explore:'Explorar',search:'Pesquisa'};
+const groupLabel=(values:string[])=>values.map(value=>Object.hasOwn(labels,value)?labels[value]:value.replaceAll('_',' ')).join(' · ');
 const number=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:2});
 const format=(value:number|null)=>value===null?'—':number.format(value);
 const date=(value:string)=>value.split('-').reverse().join('/');
 const money=(value:number|null,currency:string|null)=>value===null?'—':currency?value.toLocaleString('pt-BR',{style:'currency',currency}):number.format(value);
 
-export default function MetaBreakdownDialog({account,clientName,range,onClose}:{account?:ClientMarketingIntegration;clientName?:string;range:MarketingRange;onClose:()=>void}){
+export default function MetaBreakdownDialog({account,clientName,range,onClose,pinned,onPin}:{account?:ClientMarketingIntegration;clientName?:string;range:MarketingRange;onClose:()=>void;pinned:PinnedBreakdownMetric[];onPin:(entry:PinnedBreakdownMetric)=>void}){
  const dialog=useRef<HTMLDialogElement>(null);
  const [dimension,setDimension]=useState<Dimension>('age'),[action,setAction]=useState<Action>('leads'),[attempt,setAttempt]=useState(0);
  const [request,setRequest]=useState<{key:string;result?:BreakdownResult;error?:string}>();
@@ -57,19 +58,31 @@ export default function MetaBreakdownDialog({account,clientName,range,onClose}:{
     <div className="metaBreakdownTabs" role="group" aria-label="Recorte do Meta Ads">{dimensions.map(option=><button key={option.id} type="button" aria-pressed={dimension===option.id} onClick={()=>setDimension(option.id)}>{option.label}</button>)}</div>
     <label>Ação de resultado <select value={action} onChange={event=>setAction(event.target.value as Action)}>{actions.map(option=><option key={option.id} value={option.id}>{option.label}</option>)}</select></label>
    </div>
-   {!state?<div className="metaBreakdownState" role="status">Consultando {dimensionLabel.toLocaleLowerCase('pt-BR')} no Meta Ads…</div>:state.error?<div className="metaBreakdownState"><p role="alert">{state.error}</p><button type="button" className="btn secondary" onClick={()=>setAttempt(value=>value+1)}><RefreshCw aria-hidden="true"/> Tentar novamente</button></div>:state.result?.rows.length?<div className="metaBreakdownScroll" role="region" tabIndex={0} aria-label={`Métricas por ${dimensionLabel.toLocaleLowerCase('pt-BR')}`}>
+   {!state?<div className="metaBreakdownState" role="status">Consultando {dimensionLabel.toLocaleLowerCase('pt-BR')} no Meta Ads…</div>:state.error?<div className="metaBreakdownState"><p role="alert">{state.error}</p><button type="button" className="btn secondary" onClick={()=>setAttempt(value=>value+1)}><RefreshCw aria-hidden="true"/> Tentar novamente</button></div>:state.result?.rows.length?<><PinMetricForm key={key} dimension={dimension} rows={state.result.rows} pinned={pinned} onPin={onPin}/><div className="metaBreakdownScroll" role="region" tabIndex={0} aria-label={`Métricas por ${dimensionLabel.toLocaleLowerCase('pt-BR')}`}>
     <table><thead><tr><th scope="col">{dimensionLabel}</th><th scope="col">Investimento</th><th scope="col">Impressões</th><th scope="col">Alcance</th><th scope="col">Cliques</th><th scope="col">{actionLabel}</th><th scope="col">Custo por ação</th></tr></thead>
      <tbody>{state.result.rows.map(row=>{
       const count=row[action],cost=row.spend!==null&&count!==null&&count>0?row.spend/count:null;
       return <tr key={row.id}>
-       <th scope="row">{row.values.map(value=>Object.hasOwn(labels,value)?labels[value]:value.replaceAll('_',' ')).join(' · ')}</th>
+       <th scope="row">{groupLabel(row.values)}</th>
        <td>{money(row.spend,row.currency)}</td><td>{format(row.impressions)}</td><td>{format(row.reach)}</td><td>{format(row.clicks)}</td><td>{format(count)}</td><td>{money(cost,row.currency)}</td>
       </tr>;
      })}</tbody>
     </table>
-   </div>:<div className="metaBreakdownState" role="status">A Meta não retornou dados para esse recorte no período.</div>}
+   </div></>:<div className="metaBreakdownState" role="status">A Meta não retornou dados para esse recorte no período.</div>}
    {state?.result?.truncated&&<p className="metaBreakdownNote" role="status">A consulta atingiu o limite de linhas. Use um período menor para refinar o recorte.</p>}
    <p className="metaBreakdownNote">“—” indica dado indisponível. O alcance pode se repetir entre linhas, por isso não é somado.</p>
   </>}
  </dialog>;
+}
+
+function PinMetricForm({dimension,rows,pinned,onPin}:{dimension:Dimension;rows:BreakdownResult['rows'];pinned:PinnedBreakdownMetric[];onPin:(entry:PinnedBreakdownMetric)=>void}){
+ const [rowId,setRowId]=useState(rows[0].id),[metric,setMetric]=useState<BreakdownMetric>('impressions');
+ const row=rows.find(item=>item.id===rowId);
+ const entry=row?{dimension,rowId,metric,label:groupLabel(row.values)}:null;
+ const alreadyPinned=entry&&pinned.some(item=>pinnedBreakdownKey(item)===pinnedBreakdownKey(entry));
+ return <form className="metaBreakdownControls metaBreakdownPin" onSubmit={event=>{event.preventDefault();if(entry&&!alreadyPinned)onPin(entry)}}>
+  <label>Grupo do cartão <select aria-label="Grupo do cartão" value={rowId} onChange={event=>setRowId(event.target.value)}>{rows.map(item=><option key={item.id} value={item.id}>{groupLabel(item.values)}</option>)}</select></label>
+  <label>Métrica do cartão <select aria-label="Métrica do cartão" value={metric} onChange={event=>setMetric(event.target.value as BreakdownMetric)}>{Object.entries(breakdownMetricLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
+  <button type="submit" className="btn secondary" disabled={!entry||!!alreadyPinned}>{alreadyPinned?'Adicionado ao dashboard':'Adicionar ao dashboard'}</button>
+ </form>;
 }

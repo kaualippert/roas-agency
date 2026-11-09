@@ -21,3 +21,10 @@
 .metaBreakdownState p{margin:0 0 10px}
 .metaBreakdownDialog :is(button,select,a,div[tabindex]):focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 @media(max-width:500px){.metaBreakdownDialog{padding:14px}.metaBreakdownControls{align-items:flex-start;flex-direction:column}}
+.metaBreakdownPin{justify-content:flex-start;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--soft)}
+.metaBreakdownPin label{min-width:0}
+.metaBreakdownPin select{max-width:min(240px,48vw);text-overflow:ellipsis}
+.metaBreakdownPin .btn{min-height:34px}
+.marketingOverviewMetricTop .metaBreakdownRemove{min-width:26px;min-height:26px;padding:4px}
+.metaBreakdownRemove svg{width:14px;height:14px}
+.metaBreakdownRetry{border:0;background:none;padding:0;text-align:left;color:var(--purple);font-size:11px}

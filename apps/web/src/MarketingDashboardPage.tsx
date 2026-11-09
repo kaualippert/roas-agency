@@ -16,6 +16,8 @@ import './marketing-metrics.css';
 import './marketing-overview.css';
 import MarketingMetricCard from './MarketingMetricCard';
 import MetaBreakdownDialog from './MetaBreakdownDialog';
+import MarketingBreakdownCards from './MarketingBreakdownCards';
+import {pinnedBreakdownKey,type PinnedBreakdownMetric} from './meta-breakdown-metrics';
 import {MetricHelp} from './DashboardReading';
 
 type ProviderFilter='all'|'meta_ads'|'google_ads';
@@ -49,6 +51,7 @@ export default function MarketingDashboardPage(){
  const metrics=visibleSnapshots.length?aggregateMarketingMetrics(visibleSnapshots):emptyMarketingMetrics;
  const preferences=normalizeMarketingDashboardPreferences(storedPreferences);
  const clientPreference=preferences.find(item=>item.clientId===clientId),metricIds=clientPreference?.metricIds||defaultMarketingMetricIds,widgets=clientPreference?.widgets||[],performanceTable=clientPreference?.performanceTable||defaultMarketingPerformanceTable;
+ const pinnedBreakdowns=clientPreference?.pinnedBreakdowns||[];
  const performanceRows=visibleSnapshots.flatMap(snapshot=>snapshot.performanceRows.map(row=>({...row,key:`${snapshot.integrationId}:${row.level}:${row.id}`}))).filter(row=>row.level===performanceTable.level).sort((a,b)=>metricValue(b,performanceTable.metricIds[0])-metricValue(a,performanceTable.metricIds[0])).slice(0,10);
  const metricQuery=metricSearch.trim().toLocaleLowerCase('pt-BR');
  const filteredMetricCatalog=marketingMetricCatalog.filter(metric=>!metricQuery||`${metric.label} ${metric.description} ${metric.category}`.toLocaleLowerCase('pt-BR').includes(metricQuery));
@@ -58,7 +61,12 @@ export default function MarketingDashboardPage(){
  const openCustomization=()=>{setDraftMetrics([...metricIds]);setMetricSearch('');setCustomizing(true)};
  const toggleMetric=(id:MarketingMetricKey)=>setDraftMetrics(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]);
  const moveDraftMetric=(index:number,direction:-1|1)=>setDraftMetrics(current=>{const target=index+direction;if(target<0||target>=current.length)return current;const next=[...current];[next[index],next[target]]=[next[target],next[index]];return next});
- const savePreference=(nextMetricIds:MarketingMetricKey[],nextWidgets:MarketingDashboardWidget[],nextTable=performanceTable)=>{if(!clientId)return;const next:MarketingDashboardPreference={clientId,metricIds:nextMetricIds,widgets:nextWidgets,performanceTable:nextTable,updatedAt:new Date().toISOString()};setPreferences([next,...preferences.filter(item=>item.clientId!==clientId)])};
+ const savePreference=(nextMetricIds:MarketingMetricKey[],nextWidgets:MarketingDashboardWidget[],nextTable=performanceTable,nextPinned=pinnedBreakdowns)=>{if(!clientId)return;const next:MarketingDashboardPreference={clientId,metricIds:nextMetricIds,widgets:nextWidgets,performanceTable:nextTable,pinnedBreakdowns:nextPinned,updatedAt:new Date().toISOString()};setPreferences([next,...preferences.filter(item=>item.clientId!==clientId)])};
+ const pinBreakdown=(card:PinnedBreakdownMetric)=>{
+  if(!pinnedBreakdowns.some(item=>pinnedBreakdownKey(item)===pinnedBreakdownKey(card)))savePreference(metricIds,widgets,performanceTable,[...pinnedBreakdowns,card]);
+  if(providerFilter==='google_ads')setProviderFilter('meta_ads');
+ };
+ const removeBreakdown=(card:PinnedBreakdownMetric)=>savePreference(metricIds,widgets,performanceTable,pinnedBreakdowns.filter(item=>pinnedBreakdownKey(item)!==pinnedBreakdownKey(card)));
  const saveCustomization=()=>{if(!draftMetrics.length)return;savePreference(draftMetrics,widgets);setCustomizing(false)};
  const saveWidgets=(nextWidgets:MarketingDashboardWidget[])=>savePreference(metricIds,nextWidgets);
  const savePerformanceTable=(nextTable:MarketingPerformanceTablePreference)=>{savePreference(metricIds,widgets,nextTable);setConfiguringTable(false)};
@@ -114,6 +122,7 @@ export default function MarketingDashboardPage(){
      const definition=marketingMetricCatalog.find(item=>item.id===id)!;
      return <MarketingMetricCard key={id} definition={definition} period={period} value={visibleSnapshots.length?formatMarketingMetric(id,metricValue(metrics,id)):'—'} comparison={comparison}/>;
     })}
+    {providerFilter!=='google_ads'&&<MarketingBreakdownCards cards={pinnedBreakdowns} account={metaAccount} range={selectedRange} onRemove={removeBreakdown}/>}
    </section>
   </section>
   {!visibleSnapshots.length?<section className="card marketingNoData"><BarChart3/><h3>{syncing?'Buscando dados do período…':'Sem dados neste período'}</h3><p>{syncing?'As métricas serão exibidas assim que a consulta terminar.':'Confira a conexão da conta ou tente atualizar novamente. Não exibimos dados de outras datas como se fossem deste período.'}</p>{!syncing&&<Link className="btn" to="/marketing/integrations">Ver integrações</Link>}</section>:<>
@@ -124,7 +133,7 @@ export default function MarketingDashboardPage(){
   <MarketingDashboardWidgets metrics={metrics} widgets={widgets} onChange={saveWidgets} metaAccount={providerFilter==='google_ads'?undefined:metaAccount} range={selectedRange} hasMetrics={visibleSnapshots.length>0}/>
   {customizing&&<div className="overlay"><div className="modal marketingMetricsModal" role="dialog" aria-label="Personalizar métricas"><div className="modalHead"><div><small>DASHBOARD DE {selectedClient?.companyName.toUpperCase()}</small><h2>Escolher e ordenar métricas</h2><p>Selecione os indicadores e defina a ordem em que os cartões aparecem.</p></div><button type="button" className="iconBtn" aria-label="Fechar personalização" onClick={()=>setCustomizing(false)}><X/></button></div><div className="marketingMetricTools"><label><Search/><input aria-label="Buscar métrica" value={metricSearch} onChange={event=>setMetricSearch(event.target.value)} placeholder="Buscar por nome ou categoria..."/></label><span><b>{draftMetrics.length}</b> selecionadas</span><button type="button" onClick={()=>setDraftMetrics(marketingMetricCatalog.map(metric=>metric.id))}>Selecionar todas</button></div><section className="marketingMetricOrder"><header><div><b>Ordem dos cartões</b><small>Use as setas para reorganizar o dashboard</small></div></header><div>{draftMetrics.map((id,index)=>{const metric=marketingMetricCatalog.find(item=>item.id===id);return <article key={id}><GripVertical/><span><b>{index+1}. {metric?.label}</b><small>{metric?.category}</small></span><button type="button" aria-label={`Mover ${metric?.label} para cima`} onClick={()=>moveDraftMetric(index,-1)} disabled={!index}><ArrowUp/></button><button type="button" aria-label={`Mover ${metric?.label} para baixo`} onClick={()=>moveDraftMetric(index,1)} disabled={index===draftMetrics.length-1}><ArrowDown/></button></article>})}</div></section><div className="marketingMetricChoices">{metricCategories.map(category=>{const items=filteredMetricCatalog.filter(metric=>metric.category===category);return items.length?<section key={category}><header><b>{category}</b><small>{items.length} métricas</small></header><div>{items.map(metric=><label className={draftMetrics.includes(metric.id)?'selected':''} key={metric.id}><input type="checkbox" checked={draftMetrics.includes(metric.id)} onChange={()=>toggleMetric(metric.id)}/><span><b>{metric.label}</b><small>{metric.description}</small></span></label>)}</div></section>:null})}{!filteredMetricCatalog.length&&<div className="marketingMetricEmpty">Nenhuma métrica encontrada para “{metricSearch}”.</div>}</div><div className="formActions"><button className="btn secondary" onClick={()=>setDraftMetrics([...defaultMarketingMetricIds])}>Restaurar padrão</button><button className="btn" disabled={!draftMetrics.length} onClick={saveCustomization}>Salvar dashboard</button></div></div></div>}
   {configuringTable&&<PerformanceTableModal initial={performanceTable} onClose={()=>setConfiguringTable(false)} onSave={savePerformanceTable}/>}
-  {showMetaBreakdown&&<MetaBreakdownDialog account={metaAccount} clientName={selectedClient?.companyName} range={selectedRange} onClose={()=>setShowMetaBreakdown(false)}/>}
+  {showMetaBreakdown&&<MetaBreakdownDialog account={metaAccount} clientName={selectedClient?.companyName} range={selectedRange} onClose={()=>setShowMetaBreakdown(false)} pinned={pinnedBreakdowns} onPin={pinBreakdown}/>}
  </main>;
 }
 
