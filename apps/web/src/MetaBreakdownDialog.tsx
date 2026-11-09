@@ -3,15 +3,14 @@ import {Layers3,RefreshCw,X} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import type {MarketingRange} from './marketing-comparison';
 import type {ClientMarketingIntegration} from './marketing-integrations';
-import {apiRequest} from './storage';
+import {loadMetaBreakdown,type MetaBreakdownDimension} from './meta-breakdown-client';
 import './meta-breakdown.css';
 
 const dimensions=[{id:'age',label:'Idade'},{id:'gender',label:'Gênero'},{id:'region',label:'Região'},{id:'placement',label:'Posicionamento'}] as const;
 const actions=[{id:'leads',label:'Leads'},{id:'purchases',label:'Compras'},{id:'conversations',label:'Conversas iniciadas'}] as const;
-type Dimension=typeof dimensions[number]['id'];
+type Dimension=MetaBreakdownDimension;
 type Action=typeof actions[number]['id'];
-type Row={id:string;values:string[];currency:string|null;impressions:number|null;reach:number|null;clicks:number|null;spend:number|null}&Record<Action,number|null>;
-type BreakdownResult={integrationId:string;dimension:Dimension;period:MarketingRange;rows:Row[];truncated:boolean};
+type BreakdownResult=Awaited<ReturnType<typeof loadMetaBreakdown>>;
 const labels:Record<string,string>={unknown:'Não informado',male:'Masculino',female:'Feminino',facebook:'Facebook',instagram:'Instagram',messenger:'Messenger',audience_network:'Audience Network',threads:'Threads',feed:'Feed',story:'Stories',reels:'Reels',facebook_reels:'Reels',instagram_reels:'Reels',right_hand_column:'Coluna direita',marketplace:'Marketplace',explore:'Explorar',search:'Pesquisa'};
 const number=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:2});
 const format=(value:number|null)=>value===null?'—':number.format(value);
@@ -32,10 +31,10 @@ export default function MetaBreakdownDialog({account,clientName,range,onClose}:{
  useEffect(()=>{
   if(!integrationId||!clientId)return;
   const controller=new AbortController();
+  const query={integrationId,clientId,dimension,from,to};
   async function load(){
    try{
-    const result=await apiRequest('/marketing/breakdowns/meta_ads',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({integrationId,clientId,dimension,from,to}),signal:controller.signal}) as BreakdownResult;
-    if(result.integrationId!==integrationId||result.dimension!==dimension||result.period?.from!==from||result.period?.to!==to||!Array.isArray(result.rows))throw new Error('A resposta não corresponde ao recorte selecionado.');
+    const result=await loadMetaBreakdown(query,controller.signal);
     if(!controller.signal.aborted)setRequest({key,result});
    }catch(error){
     if(!controller.signal.aborted)setRequest({key,error:error instanceof Error?error.message:'Não foi possível consultar o Meta Ads.'});

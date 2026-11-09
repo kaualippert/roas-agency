@@ -24,6 +24,7 @@ test('normaliza seleção e preferências do dashboard por cliente',()=>{
  assert.deepEqual(normalizeMarketingDashboardPreferences([{clientId:'client-1',metricIds:['cpc']}])[0]?.metricIds,['cpc']);
  assert.deepEqual(normalizeMarketingDashboardWidgets([{id:'w1',title:'Meu gráfico',type:'pie',metricIds:['spend','results','inválida']}]),[{id:'w1',title:'Meu gráfico',type:'pie',metricIds:['spend','results']}]);
  assert.equal(normalizeMarketingDashboardWidgets([{id:'w2',title:'Meu funil',type:'funnel',metricIds:['impressions','clicks']}])[0]?.type,'funnel');
+ assert.deepEqual(normalizeMarketingDashboardWidgets([{id:'w3',title:'Público',type:'audience_pie',metricIds:[]}]),[{id:'w3',title:'Público',type:'audience_pie',metricIds:[]}]);
  assert.deepEqual(normalizeMarketingPerformanceTable({level:'adset',metricIds:['spend','ctr','inválida']}),{level:'adset',metricIds:['spend','ctr']});
  assert.deepEqual(normalizeMarketingDashboardPreferences([{clientId:'client-1',metricIds:['cpc']}])[0]?.widgets,[]);
 });

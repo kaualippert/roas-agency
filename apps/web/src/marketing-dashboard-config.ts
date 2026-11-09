@@ -2,7 +2,7 @@ import type {MarketingMetrics,MarketingPerformanceLevel} from './marketing-metri
 
 export type MarketingMetricKey=keyof MarketingMetrics|'ctr'|'uniqueCtr'|'cpc'|'cpm'|'cpp'|'costPerConversion'|'costPerResult'|'costPerLead'|'costPerPurchase'|'costPerLinkClick'|'costPerOutboundClick'|'costPerLandingPageView'|'costPerMessagingConversation'|'costPerThruPlay'|'frequency';
 export type MarketingMetricCategory='Desempenho'|'Entrega'|'Cliques e tráfego'|'Engajamento'|'Vídeo'|'Leads e conversões';
-export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table'|'funnel';
+export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table'|'funnel'|'audience_pie';
 export interface MarketingDashboardWidget{id:string;title:string;type:MarketingWidgetType;metricIds:MarketingMetricKey[]}
 export interface MarketingPerformanceTablePreference{level:MarketingPerformanceLevel;metricIds:MarketingMetricKey[]}
 
@@ -97,13 +97,13 @@ export function normalizeMarketingPerformanceTable(value:unknown):MarketingPerfo
 
 export function normalizeMarketingDashboardWidgets(value:unknown):MarketingDashboardWidget[]{
  if(!Array.isArray(value))return [];
- const types=new Set<MarketingWidgetType>(['bar','horizontal_bar','pie','table','funnel']);
+ const types=new Set<MarketingWidgetType>(['bar','horizontal_bar','pie','table','funnel','audience_pie']);
  return value.flatMap((raw,index)=>{
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardWidget>,type=types.has(item.type as MarketingWidgetType)?item.type as MarketingWidgetType:'bar';
   const selected=Array.isArray(item.metricIds)?[...new Set(item.metricIds.filter((id):id is MarketingMetricKey=>metricIds.has(id as MarketingMetricKey)))].slice(0,6):[];
-  if(!selected.length)return [];
-  return [{id:String(item.id||`widget-${index}`),title:String(item.title||'Visualização personalizada').trim().slice(0,80)||'Visualização personalizada',type,metricIds:selected}];
+  if(type!=='audience_pie'&&!selected.length)return [];
+  return [{id:String(item.id||`widget-${index}`),title:String(item.title||'Visualização personalizada').trim().slice(0,80)||'Visualização personalizada',type,metricIds:type==='audience_pie'?[]:selected}];
  });
 }
 
