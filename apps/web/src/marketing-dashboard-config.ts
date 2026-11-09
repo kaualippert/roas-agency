@@ -6,6 +6,10 @@ export type MarketingMetricCategory='Desempenho'|'Entrega'|'Cliques e tráfego'|
 export type MarketingWidgetType='bar'|'horizontal_bar'|'pie'|'table'|'funnel'|'audience_pie';
 export interface MarketingDashboardWidget{id:string;title:string;type:MarketingWidgetType;metricIds:MarketingMetricKey[]}
 export interface MarketingPerformanceTablePreference{level:MarketingPerformanceLevel;metricIds:MarketingMetricKey[]}
+export type MarketingAnalysisPanel='journey'|'efficiency';
+export type MarketingAnalysisPanels=Record<MarketingAnalysisPanel,MarketingMetricKey[]>;
+export const marketingAnalysisMetricLimit=6;
+export const defaultMarketingAnalysisPanels:MarketingAnalysisPanels={journey:['impressions','reach','clicks','conversions'],efficiency:['ctr','cpc','cpm','costPerConversion']};
 
 export interface MarketingDashboardPreference{
  clientId:string;
@@ -13,6 +17,7 @@ export interface MarketingDashboardPreference{
  widgets:MarketingDashboardWidget[];
  performanceTable:MarketingPerformanceTablePreference;
  pinnedBreakdowns?:PinnedBreakdownMetric[];
+ analysisPanels?:MarketingAnalysisPanels;
  updatedAt:string;
 }
 
@@ -71,6 +76,15 @@ export const marketingMetricCatalog:Array<{id:MarketingMetricKey;label:string;de
 ];
 
 const metricIds=new Set(marketingMetricCatalog.map(metric=>metric.id));
+export function normalizeMarketingAnalysisPanels(value:unknown):MarketingAnalysisPanels{
+ const input=value&&typeof value==='object'?value as Partial<MarketingAnalysisPanels>:{};
+ const normalize=(panel:MarketingAnalysisPanel)=>{
+  const raw=input[panel];
+  const valid=Array.isArray(raw)?[...new Set(raw.filter(id=>metricIds.has(id)))].slice(0,marketingAnalysisMetricLimit):[];
+  return valid.length?valid:[...defaultMarketingAnalysisPanels[panel]];
+ };
+ return {journey:normalize('journey'),efficiency:normalize('efficiency')};
+}
 export const defaultMarketingMetricIds:MarketingMetricKey[]=['spend','impressions','reach','clicks','conversions','roas'];
 export const defaultMarketingPerformanceTable:MarketingPerformanceTablePreference={level:'ad',metricIds:['results','costPerResult','spend','ctr']};
 
@@ -86,7 +100,7 @@ export function normalizeMarketingDashboardPreferences(value:unknown):MarketingD
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardPreference>;
   if(!item.clientId)return [];
-  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),updatedAt:String(item.updatedAt||'')}];
+  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),analysisPanels:normalizeMarketingAnalysisPanels(item.analysisPanels),updatedAt:String(item.updatedAt||'')}];
  });
 }
 
