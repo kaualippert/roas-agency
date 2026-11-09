@@ -1,7 +1,12 @@
 .marketingAnalysisEditor{max-width:540px;margin:auto;inset:0}
 .marketingAnalysisChoices{list-style:none;padding:0;margin:16px 0;display:grid;gap:8px}
 .marketingAnalysisChoices li{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,36px);align-items:center;gap:4px}
-.marketingAnalysisChoices select{min-width:0;min-height:38px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);text-overflow:ellipsis}
+.marketingAnalysisChoices select,.marketingAnalysisPicker select{min-width:0;min-height:38px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);text-overflow:ellipsis}
+.marketingAnalysisPicker{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px}
+.marketingAnalysisPicker label{display:grid;gap:5px;min-width:0;color:var(--muted);font-size:11px;font-weight:650}
+.marketingAnalysisPicker select{width:100%}
+.marketingAnalysisLimit{margin:8px 0 0;color:var(--muted);font-size:11px}
+@media(max-width:440px){.marketingAnalysisPicker{grid-template-columns:1fr}}
 .marketingAnalysisChoices .iconBtn{min-width:0}
 .marketingAnalysisChoices .iconBtn:disabled{opacity:.35;cursor:default}
 .marketingAnalysisEditor .formActions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;padding:12px 0 0}
