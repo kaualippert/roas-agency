@@ -1,0 +1,52 @@
+import {expect,test} from '@playwright/test';
+import {mockRoasApi,testState} from './fixtures';
+
+test('edita métricas sem trocar o recorte e exporta um relatório longo',async({page},testInfo)=>{
+ await mockRoasApi(page);
+ const integration={id:'meta-1',clientId:'client-1',provider:'meta_ads',status:'connected',resourceId:'act_123'};
+ const data={spend:320,impressions:8000,clicks:170,results:24,conversions:24};
+ const snapshot={...data,integrationId:integration.id,clientId:integration.clientId,provider:'meta_ads',periodFrom:'2026-09-01',periodTo:'2026-09-30',
+  performanceRows:[{...data,id:'campaign-1',level:'campaign',name:'Campanha de aquisição'}]};
+ let reports:unknown=[];
+ await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,client_marketing_integrations:[integration],marketing_metrics:[snapshot],reports}}}));
+ await page.route('**/api/state/reports',route=>{
+  reports=route.request().postDataJSON().value;
+  return route.fulfill({json:{value:reports}});
+ });
+ await page.goto('/marketing/reports');
+ await page.getByRole('button',{name:'Criar relatório'}).click();
+ const editor=page.locator('.marketingReportModal');
+ await editor.getByLabel('Nome do relatório').fill('Desempenho de setembro');
+ await editor.getByLabel('Resumo executivo').fill(Array.from({length:36},(_,i)=>`Parágrafo ${i+1}: A campanha manteve a entrega ao longo do período e os resultados orientam o planejamento do próximo mês.`).join('\n\n'));
+ await editor.getByLabel('Próximos passos').fill('Revisar os criativos antes da próxima campanha.');
+ await editor.getByRole('checkbox',{name:/Detalhamento por campanha/}).check();
+ await editor.getByRole('button',{name:'Criar relatório'}).click();
+ await page.getByTitle('Visualizar').click();
+ const preview=page.getByRole('dialog',{name:'Pré-visualização do cliente'});
+ await preview.getByRole('button',{name:'Editar',exact:true}).click();
+ await editor.getByLabel('Buscar métricas do relatório').fill('impressoes');
+ await editor.getByRole('checkbox',{name:/Impressões/}).uncheck();
+ await editor.getByLabel('Buscar métricas do relatório').fill('custo por resultado');
+ await editor.getByRole('checkbox',{name:/Custo por resultado/}).check();
+ await editor.getByRole('button',{name:'Mover Alcance para cima'}).click();
+ await editor.getByRole('checkbox',{name:/Jornada de resultados/}).uncheck();
+ const saved=page.waitForResponse(response=>response.url().endsWith('/api/state/reports')&&response.request().method()==='PUT');
+ await editor.getByRole('button',{name:'Salvar alterações'}).click();
+ expect((await saved).ok()).toBe(true);
+ await page.reload();
+ await page.getByTitle('Visualizar').click();
+ await expect(preview.locator('.reportMetricList').first().locator('dt').first()).toHaveText('Alcance');
+ await expect(preview).not.toContainText('Impressões');
+ await expect(preview).not.toContainText('Jornada de resultados');
+ await expect(preview).toContainText('Campanha de aquisição');
+ await expect(preview).toContainText('01/09/2026 até 30/09/2026');
+ await expect(preview.getByText(/R\$\s*13,33/)).toHaveCount(2);
+ await page.evaluate(()=>{window.print=()=>document.body.setAttribute('data-print-requested','true')});
+ await preview.getByRole('button',{name:'Salvar em PDF'}).click();
+ await expect(page.locator('body')).toHaveAttribute('data-print-requested','true');
+ await page.emulateMedia({media:'print'});
+ await expect(preview.locator('.reportDocumentHeader')).toHaveCSS('position','static');
+ await expect(preview.getByRole('button',{name:'Salvar em PDF'})).toBeHidden();
+ await expect(preview.getByText('Revisar os criativos antes da próxima campanha.')).toBeVisible();
+ await page.pdf({path:testInfo.outputPath('marketing-report.pdf'),preferCSSPageSize:true});
+});
