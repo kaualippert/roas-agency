@@ -25,11 +25,23 @@ interface MarketingReport extends GenericItem{
  recommendations?:string;
  overviewValues?:Partial<Record<MarketingMetricKey,number>>;
  campaigns?:MarketingPerformanceRow[];
+ charts?:ReportChart[];
  showJourney?:boolean;
  showCampaigns?:boolean;
  sentAt?:string;
  deliveryChannel?:'email'|'whatsapp'|'device'|'other';
 }
+
+type ReportChartType='bar'|'donut';
+interface ReportChart{type:ReportChartType;metricId:MarketingMetricKey}
+const chartTypes={bar:'Barras',donut:'Rosca'} as const;
+const chartLimit=4;
+const chartColors=['#4d32ab','#086a76','#ad481f','#22549e','#a22f73','#596579'];
+const shareMetrics=new Set<MarketingMetricKey>(marketingMetricCatalog.filter(metric=>
+ (metric.format==='integer'&&metric.id!=='reach'&&metric.id!=='uniqueClicks')||
+ ['spend','conversionValue','conversions','results'].includes(metric.id)
+).map(metric=>metric.id));
+const shareFormat=new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:1});
 
 interface GeneralSettings{agencyName?:string;logoDataUrl?:string;email?:string;phone?:string;website?:string}
 
@@ -50,6 +62,9 @@ export default function ReportsPage(){
  const [modal,setModal]=useState(false);
  const [editing,setEditing]=useState<MarketingReport|null>(null);
  const [metricSearch,setMetricSearch]=useState('');
+ const [draftCharts,setDraftCharts]=useState<ReportChart[]>([]);
+ const [chartType,setChartType]=useState<ReportChartType>('bar');
+ const [chartMetric,setChartMetric]=useState<MarketingMetricKey|''>('');
  const [viewing,setViewing]=useState<MarketingReport|null>(null);
  const [sharing,setSharing]=useState<MarketingReport|null>(null),[shareNotice,setShareNotice]=useState(''),[shareChannel,setShareChannel]=useState<MarketingReport['deliveryChannel']>('other');
  const integrations=useMemo(()=>normalizeClientMarketingIntegrations(storedIntegrations).filter(item=>item.status==='connected'&&(item.provider==='meta_ads'||item.provider==='google_ads')),[storedIntegrations]);
@@ -62,7 +77,7 @@ export default function ReportsPage(){
   const params=new URLSearchParams(route.search),requestedClient=params.get('client'),requestedReport=params.get('report');
   if(requestedClient&&clients.some(client=>client.id===requestedClient))setClientFilter(requestedClient);
   if(requestedClient&&params.get('create')==='1'&&reportClients.some(client=>client.id===requestedClient)){
-   setEditing(null);setMetricSearch('');setDraftMetricIds([...defaultMarketingMetricIds]);setReportClientId(requestedClient);setModal(true)
+   setEditing(null);setMetricSearch('');setDraftMetricIds([...defaultMarketingMetricIds]);setDraftCharts([]);setChartType('bar');setChartMetric('');setReportClientId(requestedClient);setModal(true)
   }
   if(requestedReport){const report=reports.find(item=>item.id===requestedReport&&(!requestedClient||item.clientId===requestedClient));if(report)setViewing(report)}
   navigate(route.pathname,{replace:true});
@@ -74,6 +89,8 @@ export default function ReportsPage(){
  const reportPeriod=periodLabel(reportSnapshots.map(item=>item.periodFrom).sort()[0],reportSnapshots.map(item=>item.periodTo).sort().at(-1));
  const availableValues=editing?{...editing.overviewValues,...editing.metricValues}:undefined;
  const campaigns=editing?editing.campaigns??[]:reportSnapshots.flatMap(snapshot=>snapshot.performanceRows.filter(row=>row.level==='campaign'));
+ const chartOptions=marketingMetricCatalog.filter(metric=>chartType==='bar'||shareMetrics.has(metric.id));
+ const chartAlreadyAdded=draftCharts.some(chart=>chart.type===chartType&&chart.metricId===chartMetric);
  const availableMetrics=marketingMetricCatalog.filter(metric=>(!availableValues||Number.isFinite(availableValues[metric.id]))&&metricSearchText(metric.label+' '+metric.category).includes(metricSearchText(metricSearch)));
  const scopedReports=useMemo(()=>reports.filter(report=>clientFilter==='all'||report.clientId===clientFilter),[reports,clientFilter]);
  const filtered=useMemo(()=>filterReports(scopedReports,query,statusFilter,periodFilter),[periodFilter,query,scopedReports,statusFilter]);
@@ -88,8 +105,12 @@ export default function ReportsPage(){
   setPeriodFilter('all');
   setClientFilter('all');
  };
- const openCreate=()=>{setEditing(null);setMetricSearch('');setReportClientId(reportClients.find(client=>client.id===clientFilter)?.id||reportClients[0]?.id||'');setDraftMetricIds([...defaultMarketingMetricIds]);setModal(true)};
- const openEdit=(report:MarketingReport)=>{setViewing(null);setEditing(report);setMetricSearch('');setDraftMetricIds(reportMetricIds(report));setModal(true)};
+ const openCreate=()=>{setEditing(null);setMetricSearch('');setReportClientId(reportClients.find(client=>client.id===clientFilter)?.id||reportClients[0]?.id||'');setDraftMetricIds([...defaultMarketingMetricIds]);setDraftCharts([]);setChartType('bar');setChartMetric('');setModal(true)};
+ const openEdit=(report:MarketingReport)=>{setViewing(null);setEditing(report);setMetricSearch('');setDraftMetricIds(reportMetricIds(report));setDraftCharts(report.charts??[]);setChartType('bar');setChartMetric('');setModal(true)};
+ const addChart=()=>{
+  if(!campaigns.length||!chartMetric||chartAlreadyAdded||draftCharts.length>=chartLimit)return;
+  setDraftCharts([...draftCharts,{type:chartType,metricId:chartMetric}]);setChartMetric('');
+ };
  const toggleMetric=(id:MarketingMetricKey)=>setDraftMetricIds(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]);
  const moveMetric=(index:number,offset:number)=>setDraftMetricIds(current=>{
   const target=index+offset;
@@ -121,6 +142,7 @@ export default function ReportsPage(){
    overviewValues:values,
    showJourney:form.has('showJourney'),
    showCampaigns:form.has('showCampaigns')&&campaigns.length>0,
+   charts:campaigns.length?draftCharts:[],
   };
   save(editing?reports.map(item=>item.id===report.id?report:item):[report,...reports]);
   setModal(false);
@@ -226,6 +248,21 @@ export default function ReportsPage(){
      <label><input type="checkbox" name="showJourney" defaultChecked={editing?.showJourney!==false}/>Jornada de resultados <small>Usa as métricas de volume selecionadas (mínimo de duas).</small></label>
      <label><input type="checkbox" name="showCampaigns" disabled={!campaigns.length} defaultChecked={editing?.showCampaigns??false}/>Detalhamento por campanha <small>{campaigns.length?'Aplica a mesma seleção e ordem de métricas a cada campanha.':'Não há dados por campanha salvos neste recorte.'}</small></label>
     </fieldset>
+    <fieldset className="full reportSectionOptions reportChartOptions"><legend>Gráficos por campanha</legend>
+     <p>Adicione até {chartLimit} gráficos. As barras comparam os valores; a rosca mostra a participação de cada campanha no total exibido.</p>
+     {!campaigns.length?<p>Não há dados por campanha salvos neste recorte.</p>:<>
+      {!!draftCharts.length&&<ul className="reportChartSelection">{draftCharts.map(chart=><li key={`${chart.type}-${chart.metricId}`}><span>{metricLabel(chart.metricId)} · {chartTypes[chart.type]}</span><button className="iconBtn" type="button" aria-label={`Remover gráfico: ${metricLabel(chart.metricId)}, ${chartTypes[chart.type]}`} onClick={()=>setDraftCharts(current=>current.filter(item=>item!==chart))}><X/></button></li>)}</ul>}
+      {draftCharts.length<chartLimit&&<div className="reportChartControls">
+       <label>Tipo de gráfico<select value={chartType} onChange={event=>{
+        const type=event.target.value as ReportChartType;
+        setChartType(type);
+        if(type==='donut'&&chartMetric&&!shareMetrics.has(chartMetric))setChartMetric('');
+       }}>{Object.entries(chartTypes).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
+       <label>Métrica do gráfico<select value={chartMetric} onChange={event=>setChartMetric(event.target.value as MarketingMetricKey|'')}><option value="">Escolha uma métrica</option>{chartOptions.map(metric=><option key={metric.id} value={metric.id} disabled={draftCharts.some(chart=>chart.type===chartType&&chart.metricId===metric.id)}>{metric.label}</option>)}</select></label>
+       <button type="button" className="btn secondary" onClick={addChart} disabled={!chartMetric||chartAlreadyAdded}><Plus/> Adicionar gráfico</button>
+      </div>}
+     </>}
+    </fieldset>
     <label className="full">Resumo executivo<textarea name="description" defaultValue={editing?.description} placeholder="Explique os principais resultados de forma simples para o cliente."/></label>
     <label className="full">Próximos passos<textarea name="recommendations" defaultValue={editing?.recommendations} placeholder="Ex.: escalar os melhores anúncios, testar novos criativos e revisar públicos."/></label>
     <div className="formActions full"><button type="button" className="btn secondary" onClick={()=>setModal(false)}>Cancelar</button><button className="btn" disabled={editing?!draftMetricIds.length&&Object.keys(availableValues??{}).length>0:!draftMetricIds.length||!reportMetrics}>{editing?'Salvar alterações':'Criar relatório'}</button></div>
@@ -238,6 +275,7 @@ export default function ReportsPage(){
    <section className="reportDocumentSection"><h2>Principais indicadores</h2><ReportMetricList items={reportPreviewMetrics(viewing)}/></section>
    {viewing.description?.trim()&&<section className="reportDocumentSection reportNarrative"><h2>Resumo executivo</h2><p>{viewing.description}</p></section>}
    <ReportFunnel report={viewing}/>
+   {!!viewing.charts?.length&&!!viewing.campaigns?.length&&<section className="reportDocumentSection reportCharts"><h2>Gráficos por campanha</h2>{viewing.charts.map(chart=><ReportCampaignChart key={`${chart.type}-${chart.metricId}`} chart={chart} campaigns={viewing.campaigns!}/>)}</section>}
    {viewing.showCampaigns&&!!viewing.campaigns?.length&&<section className="reportDocumentSection reportCampaigns"><h2>Desempenho por campanha</h2>{viewing.campaigns.map((campaign,index)=><section key={`${campaign.id}-${index}`}><h3>{campaign.name}</h3><ReportMetricList items={reportMetricIds(viewing).map(id=>[metricLabel(id),formatMarketingMetric(id,metricValue(campaign,id))])}/></section>)}</section>}
    {viewing.recommendations?.trim()&&<section className="reportDocumentSection reportNarrative"><h2>Próximos passos</h2><p>{viewing.recommendations}</p></section>}
    <footer className="reportDocumentFooter"><div><b>{agencySettings.agencyName||'Agência ROAS'}</b><span>{[agencySettings.email,agencySettings.phone,agencySettings.website].filter(Boolean).join(' · ')}</span></div><small>Dados consolidados automaticamente pelo Flow ROAS</small></footer>
@@ -261,6 +299,41 @@ function reportPreviewMetrics(report:MarketingReport):Array<[string,string]>{
 
 function ReportMetricList({items}:{items:Array<[string,string]>}){
  return <dl className="reportMetricList">{items.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
+}
+function ReportCampaignChart({chart,campaigns}:{chart:ReportChart;campaigns:MarketingPerformanceRow[]}){
+ const {metricId,type}=chart;
+ const ranked=campaigns.map((campaign,index)=>({key:index,name:campaign.name,value:metricValue(campaign,metricId)})).sort((a,b)=>b.value-a.value);
+ const title=`${metricLabel(metricId)} por campanha`;
+ const format=(value:number)=>formatMarketingMetric(metricId,value);
+ const total=ranked.reduce((sum,row)=>sum+row.value,0);
+ if(type==='donut'){
+  const positive=ranked.filter(row=>row.value>0);
+  const rows=positive.slice(0,5);
+  if(positive.length>5)rows.push({key:-1,name:'Demais campanhas',value:positive.slice(5).reduce((sum,row)=>sum+row.value,0)});
+  const circumference=2*Math.PI*42;
+  let offset=0;
+  return <figure className="reportChart">
+   <figcaption><h3>{title}</h3><p>Participação na soma das campanhas do relatório.</p></figcaption>
+   {!total?<p className="reportChartEmpty">Nenhum valor registrado para esta métrica.</p>:<div className="reportDonut">
+    <svg viewBox="0 0 104 104" aria-hidden="true">
+     {rows.map((row,index)=>{
+      const length=row.value/total*circumference;
+      const start=offset;offset+=length;
+      return <circle key={row.key} cx="52" cy="52" r="42" fill="none" stroke={chartColors[index]} strokeWidth="16" strokeDasharray={`${length} ${circumference-length}`} strokeDashoffset={-start} transform="rotate(-90 52 52)"/>;
+     })}
+    </svg>
+    <ul>{rows.map((row,index)=><li key={row.key}><i style={{background:chartColors[index]}} aria-hidden="true"/><span>{row.name}</span><strong>{format(row.value)} <small>({shareFormat.format(row.value/total)})</small></strong></li>)}</ul>
+   </div>}
+  </figure>;
+ }
+ const max=ranked[0]?.value??0;
+ const rows=ranked.slice(0,8);
+ return <figure className="reportChart">
+  <figcaption><h3>{title}</h3><p>{ranked.length>8?`As 8 campanhas com maior valor, de ${ranked.length} no relatório.`:'Comparação dos valores no período do relatório.'}</p></figcaption>
+  <ul className="reportChartBars">{rows.map(row=><li key={row.key}>
+   <span>{row.name}</span><strong>{format(row.value)}</strong><i aria-hidden="true"><em style={{width:`${max?row.value/max*100:0}%`}}/></i>
+  </li>)}</ul>
+ </figure>;
 }
 function ReportFunnel({report}:{report:MarketingReport}){
  const ids=reportMetricIds(report).filter(id=>id==='results'||id==='conversions'||marketingMetricCatalog.some(metric=>metric.id===id&&metric.format==='integer'));

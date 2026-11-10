@@ -56,6 +56,28 @@
 .reportSectionOptions label{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px}
 .reportSectionOptions small{color:var(--muted)}
 .reportSectionOptions input[type="checkbox"]{width:16px;height:16px;min-height:0;margin:0;accent-color:var(--primary,#6541ee)}
+.reportChartOptions p{margin:0;color:var(--muted);font-size:13px}
+.reportChartControls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto;align-items:end;gap:10px}
+.reportChartControls label{display:grid;min-width:0}
+.reportChartControls select{width:100%;min-width:0}
+.reportChartSelection,.reportChart ul{margin:0;padding:0;list-style:none}
+.reportChartSelection li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0}
+.reportChartSelection svg{width:15px;height:15px}
+.reportChart{margin:0 0 12px;padding:14px;border:1px solid var(--report-line);border-radius:10px}
+.reportChart:last-child{margin-bottom:0}
+.reportChart h3{margin:0;font-size:1.04em;font-weight:700}
+.reportChart figcaption p,.reportChartEmpty{margin:3px 0 10px;color:var(--report-muted);font-size:.88em}
+.reportChartBars{display:grid;gap:7px}
+.reportChartBars li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:baseline}
+.reportChartBars i{grid-column:1/-1;background:#e5e1f6}
+.reportChartBars i,.reportChartBars em{display:block;height:6px;border-radius:4px}
+.reportChartBars em{background:var(--report-accent)}
+.reportChart strong{font-variant-numeric:tabular-nums;text-align:right}
+.reportDonut{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;gap:16px}
+.reportDonut svg{width:100%;height:auto}
+.reportDonut li{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:7px;align-items:baseline;padding:4px 0}
+.reportDonut li i{width:9px;height:9px;border-radius:2px}
+.reportDonut small{color:var(--report-muted);white-space:nowrap}
 .reportActions{flex-wrap:wrap}
 .reportShareModal{width:min(620px,calc(100vw - 28px))}.reportShareModal .modalHead p{margin:5px 0 0;color:var(--muted);font-size:12px}.reportShareClient{display:flex;align-items:center;gap:12px;padding:14px;margin:16px 0;border-radius:12px;border:1px solid var(--border);background:var(--soft,#f8f9fc)}.reportShareClient>span{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;color:#fff;font-weight:800;background:linear-gradient(135deg,#7550ff,#4824d8)}.reportShareClient div{min-width:0}.reportShareClient b,.reportShareClient small{display:block}.reportShareClient small{margin-top:4px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.reportShareOptions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.reportShareOptions>button{display:flex;align-items:center;gap:11px;min-height:76px;padding:12px;text-align:left;border:1px solid var(--border);border-radius:12px;background:transparent;color:inherit;cursor:pointer;transition:.18s ease}.reportShareOptions>button:hover{border-color:#8b72f4;transform:translateY(-1px);box-shadow:0 8px 22px rgba(75,40,218,.08)}.reportShareOptions>button>span{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;border-radius:10px}.reportShareOptions svg{width:18px}.reportShareOptions .whatsapp{color:#138b59;background:#e7f8ef}.reportShareOptions .email{color:#2678e8;background:#e9f2ff}.reportShareOptions .share{color:#5b35f2;background:#eeeaff}.reportShareOptions .copy{color:#92620a;background:#fff3d7}.reportShareOptions .print{color:#546174;background:#edf0f5}.reportShareOptions b,.reportShareOptions small{display:block}.reportShareOptions b{font-size:12px}.reportShareOptions small{margin-top:4px;color:var(--muted);font-size:10px;line-height:1.35}.reportShareNotice{margin-top:12px;padding:10px 12px;border-radius:9px;color:#08764a;background:#e7f8ef;font-size:11px}.reportShareHint{display:flex;align-items:flex-start;gap:8px;margin-top:14px;color:var(--muted);font-size:10px;line-height:1.45}.reportShareHint svg{flex:0 0 15px;width:15px;color:#1ba66b}
 @media screen and (max-width:700px){
@@ -66,6 +88,8 @@
  .reportDocumentHeader,.reportDocumentFooter,.reportDocumentCover,.reportDocumentSection{padding:14px 16px}
  .reportDocumentFooter{align-items:flex-start;flex-direction:column}
  .reportShareModal{max-height:calc(100vh - 20px);overflow:auto}
+ .reportChartControls,.reportDonut{grid-template-columns:1fr}
+ .reportDonut svg{max-width:100px;justify-self:center}
 }
 @media print{
  @page{size:A4;margin:14mm}
@@ -79,6 +103,7 @@
  .reportDocumentCover h1{font-size:23pt}
  .reportDocumentHeader,.reportDocumentCover,.reportDocumentFooter,.reportMetricList>div,.reportFunnel>div{break-inside:avoid}
  .reportDocumentSection :is(h2,h3){break-after:avoid}
+ .reportChart{break-inside:avoid}
  .reportMetricList{display:block}
  .reportNarrative p{orphans:3;widows:3}
 }

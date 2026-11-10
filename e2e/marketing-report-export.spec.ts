@@ -6,7 +6,7 @@ test('edita métricas sem trocar o recorte e exporta um relatório longo',async(
  const integration={id:'meta-1',clientId:'client-1',provider:'meta_ads',status:'connected',resourceId:'act_123'};
  const data={spend:320,impressions:8000,clicks:170,results:24,conversions:24};
  const snapshot={...data,integrationId:integration.id,clientId:integration.clientId,provider:'meta_ads',periodFrom:'2026-09-01',periodTo:'2026-09-30',
-  performanceRows:[{...data,id:'campaign-1',level:'campaign',name:'Campanha de aquisição'}]};
+  performanceRows:[{...data,spend:240,id:'campaign-1',level:'campaign',name:'Campanha de aquisição'},{spend:80,id:'campaign-2',level:'campaign',name:'Remarketing'}]};
  let reports:unknown=[];
  await page.route('**/api/state',route=>route.fulfill({json:{state:{...testState,client_marketing_integrations:[integration],marketing_metrics:[snapshot],reports}}}));
  await page.route('**/api/state/reports',route=>{
@@ -20,10 +20,21 @@ test('edita métricas sem trocar o recorte e exporta um relatório longo',async(
  await editor.getByLabel('Resumo executivo').fill(Array.from({length:36},(_,i)=>`Parágrafo ${i+1}: A campanha manteve a entrega ao longo do período e os resultados orientam o planejamento do próximo mês.`).join('\n\n'));
  await editor.getByLabel('Próximos passos').fill('Revisar os criativos antes da próxima campanha.');
  await editor.getByRole('checkbox',{name:/Detalhamento por campanha/}).check();
+ const addChart=editor.getByRole('button',{name:'Adicionar gráfico',exact:true});
+ await expect(addChart).toBeDisabled();
+ await editor.getByLabel('Métrica do gráfico').selectOption('clicks');
+ await addChart.click();
+ await editor.getByLabel('Métrica do gráfico').selectOption('costPerResult');
+ await addChart.click();
+ await editor.getByLabel('Tipo de gráfico').selectOption('donut');
+ await expect(editor.getByLabel('Métrica do gráfico').locator('option[value="costPerResult"]')).toHaveCount(0);
+ await editor.getByLabel('Métrica do gráfico').selectOption('spend');
+ await addChart.click();
  await editor.getByRole('button',{name:'Criar relatório'}).click();
  await page.getByTitle('Visualizar').click();
  const preview=page.getByRole('dialog',{name:'Pré-visualização do cliente'});
  await preview.getByRole('button',{name:'Editar',exact:true}).click();
+ await editor.getByRole('button',{name:'Remover gráfico: Custo por resultado, Barras',exact:true}).click();
  await editor.getByLabel('Buscar métricas do relatório').fill('impressoes');
  await editor.getByRole('checkbox',{name:/Impressões/}).uncheck();
  await editor.getByLabel('Buscar métricas do relatório').fill('custo por resultado');
@@ -40,7 +51,13 @@ test('edita métricas sem trocar o recorte e exporta um relatório longo',async(
  await expect(preview).not.toContainText('Jornada de resultados');
  await expect(preview).toContainText('Campanha de aquisição');
  await expect(preview).toContainText('01/09/2026 até 30/09/2026');
- await expect(preview.getByText(/R\$\s*13,33/)).toHaveCount(2);
+ await expect(preview.getByText(/R\$\s*13,33/)).toHaveCount(1);
+ const charts=preview.locator('.reportCharts');
+ await expect(charts.locator('figure')).toHaveCount(2);
+ await expect(charts).toContainText('Cliques (todos) por campanha');
+ await expect(charts).toContainText(/75\s*%/);
+ await expect(charts).toContainText(/25\s*%/);
+ await expect(charts).not.toContainText('Custo por resultado');
  await page.evaluate(()=>{window.print=()=>document.body.setAttribute('data-print-requested','true')});
  await preview.getByRole('button',{name:'Salvar em PDF'}).click();
  await expect(page.locator('body')).toHaveAttribute('data-print-requested','true');
