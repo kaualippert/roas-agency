@@ -204,3 +204,40 @@
 @media (prefers-reduced-motion: reduce) {
   .marketingOverviewRefresh .spin { animation: none; }
 }
+
+/* Secondary dashboard actions: quiet by default, clear on hover/focus. */
+.marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry) {
+  min-height: 30px;
+  gap: 6px;
+  padding: 0 8px;
+  border-color: transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry) svg {
+  width: 13px;
+  height: 13px;
+}
+.marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry):hover:not(:disabled) {
+  border-color: var(--border);
+  background: var(--soft);
+  color: var(--text);
+}
+.marketingClientDashboard .marketingCompareToggle[aria-pressed="true"] {
+  border-color: color-mix(in srgb,var(--purple) 22%,var(--border));
+  background: color-mix(in srgb,var(--purple) 7%,var(--card));
+  color: var(--purple);
+}
+.marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry):focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+@media (max-width: 650px) {
+  .marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry) {
+    min-height: 34px;
+  }
+}
