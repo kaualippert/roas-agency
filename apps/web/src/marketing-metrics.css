@@ -29,6 +29,7 @@
 .marketingMetricTools>span b{color:var(--text)}
 .marketingMetricTools>button{height:35px;padding:0 11px;border:1px solid var(--border);border-radius:8px;background:var(--soft);color:var(--purple);font-size:9px;font-weight:750}
 .marketingMetricChoices{display:block;margin:0;max-height:58vh;padding-right:4px}
+.marketingWinningAdsPreference{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--soft);cursor:pointer}.marketingWinningAdsPreference input{width:15px;height:15px;flex:none;margin:1px 0 0;accent-color:var(--purple)}.marketingWinningAdsPreference b,.marketingWinningAdsPreference small{display:block}.marketingWinningAdsPreference b{font-size:10px}.marketingWinningAdsPreference small{margin-top:4px;color:var(--muted);font-size:8px;line-height:1.45}
 .marketingMetricChoices>section{margin-bottom:15px}
 .marketingMetricChoices>section>header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding:0 2px}
 .marketingMetricChoices>section>header>b{font-size:10px}

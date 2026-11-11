@@ -19,6 +19,7 @@ export interface MarketingDashboardPreference{
  pinnedBreakdowns?:PinnedBreakdownMetric[];
  breakdownVisualizations?:Partial<Record<'age'|'gender'|'region'|'placement',BreakdownVisualization>>;
  analysisPanels?:MarketingAnalysisPanels;
+ winningAdsWithResultsOnly?:boolean;
  updatedAt:string;
 }
 
@@ -112,7 +113,7 @@ export function normalizeMarketingDashboardPreferences(value:unknown):MarketingD
   if(!item.clientId)return [];
   const rawViews=item.breakdownVisualizations&&typeof item.breakdownVisualizations==='object'?item.breakdownVisualizations as Record<string,unknown>:{};
   const breakdownVisualizations=Object.fromEntries(['age','gender','region','placement'].flatMap(id=>rawViews[id]==='table'||rawViews[id]==='bar'?[[id,rawViews[id]]]:[])) as MarketingDashboardPreference['breakdownVisualizations'];
-  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),breakdownVisualizations,analysisPanels:normalizeMarketingAnalysisPanels(item.analysisPanels),updatedAt:String(item.updatedAt||'')}];
+  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),breakdownVisualizations,analysisPanels:normalizeMarketingAnalysisPanels(item.analysisPanels),winningAdsWithResultsOnly:item.winningAdsWithResultsOnly!==false,updatedAt:String(item.updatedAt||'')}];
  });
 }
 

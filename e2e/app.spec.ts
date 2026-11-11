@@ -473,6 +473,7 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('4x');
  await expect(page.getByRole('heading',{name:'Desempenho detalhado'})).toBeVisible();
  await expect(page.getByText('Criativo campeão')).toBeVisible();
+ await expect(page.locator('.marketingWinningAds header small')).toHaveText('1 anúncios');
  const campaignViewSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_dashboard_preferences'));
  await page.getByRole('button',{name:'Campanhas'}).click();
  await campaignViewSaved;
@@ -512,6 +513,9 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  const metricsDialog=page.getByRole('dialog',{name:'Personalizar métricas'});
  await expect(metricsDialog).toHaveAttribute('aria-modal','true');
  await expect(metricsDialog.locator('input[aria-label="Buscar métrica"]')).toBeFocused();
+ const winningAdsFilter=metricsDialog.getByLabel('Mostrar apenas anúncios com resultados');
+ await expect(winningAdsFilter).toBeChecked();
+ await winningAdsFilter.uncheck();
  await metricsDialog.getByLabel('Mover Investimento para baixo').click();
  await expect(metricsDialog.getByText('Resultados',{exact:true})).toBeVisible();
  await expect(metricsDialog.getByText('Custo por resultado',{exact:true})).toBeVisible();
@@ -525,6 +529,8 @@ test('configura uma integração por marca e apresenta a cobertura no dashboard 
  const preferenceSaved=page.waitForResponse(response=>response.request().method()==='PUT'&&response.url().includes('/api/state/marketing_dashboard_preferences'));
  await metricsDialog.getByRole('button',{name:'Salvar dashboard'}).click();
  await preferenceSaved;
+ await expect(page.locator('.marketingWinningAds header small')).toHaveText('2 anúncios');
+ await expect(page.locator('.marketingWinningAds')).toContainText('Anúncio sem resultados');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('Resultados');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('R$ 51,44');
  await expect(page.getByRole('region',{name:'Métricas selecionadas do cliente'})).toContainText('CPC (todos)');
