@@ -18,6 +18,7 @@ type OAuthState={provider:OAuthProvider;uid:string;returnTo:string;nonce:string;
 type Resource={id:string;name:string;kind?:string;metadata?:Record<string,unknown>};
 export type MarketingMetrics={impressions:number;reach:number;clicks:number;uniqueClicks:number;outboundClicks:number;conversions:number;results:number;leads:number;purchases:number;messagingConversations:number;linkClicks:number;landingPageViews:number;pageEngagements:number;postEngagements:number;postReactions:number;comments:number;shares:number;saves:number;photoViews:number;videoViews:number;thruPlays:number;video25:number;video50:number;video75:number;video95:number;video100:number;addsToCart:number;checkoutsInitiated:number;registrationsCompleted:number;contacts:number;appointmentsScheduled:number;applicationsSubmitted:number;subscriptions:number;spend:number;conversionValue:number;roas:number};
 export type MarketingTopAd={id:string;name:string;campaignName:string;impressions:number;clicks:number;results:number;spend:number;costPerResult:number;ctr:number};
+export type MarketingAdCreativeMedia={adId:string;mediaType:'image'|'video'|'unknown';imageUrl:string|null;videoUrl:string|null};
 export type MarketingPerformanceLevel='campaign'|'adset'|'ad';
 export type MarketingPerformanceRow=MarketingMetrics&{id:string;name:string;level:MarketingPerformanceLevel;campaignName:string;adSetName:string};
 type MetaAction={action_type?:string;value?:string};
@@ -223,6 +224,31 @@ export function resolveMetaBreakdownLink(access:AccessContext,links:unknown,clie
  return {connectionId:link.agencyConnectionId as string,resourceId:link.resourceId as string};
 }
 
+export function parseMetaAdCreativeRequest(body:Record<string,unknown>){
+ const {clientId,integrationId,adIds}=body;
+ if(typeof clientId!=='string'||!clientId||clientId.length>150||typeof integrationId!=='string'||!integrationId||integrationId.length>150)throw new HttpError(400,'Selecione um vínculo do Meta Ads.');
+ if(!Array.isArray(adIds)||!adIds.length||adIds.length>10||adIds.some(id=>typeof id!=='string'||!/^\d{1,32}$/.test(id)))throw new HttpError(400,'A lista de anúncios para pré-visualização é inválida.');
+ return {clientId,integrationId,adIds:[...new Set(adIds as string[])]};
+}
+
+const safeMetaMediaUrl=(value:unknown)=>{
+ if(typeof value!=='string'||!value)return null;
+ try{const url=new URL(value);return url.protocol==='https:'&&(url.hostname==='facebook.com'||url.hostname.endsWith('.facebook.com')||url.hostname.endsWith('.fbcdn.net')||url.hostname.endsWith('.fbsbx.com'))?url.toString():null}catch{return null}
+};
+
+export async function fetchMetaAdCreatives(token:string,adIds:string[],signal=AbortSignal.timeout(12_000)){
+ const headers={authorization:`Bearer ${token}`};
+ return Promise.all([...new Set(adIds)].map(async adId=>{
+  try{
+   const fields=new URLSearchParams({fields:'creative{image_url,thumbnail_url,video_id}'});
+   const ad=await requestJson<{creative?:{image_url?:string;thumbnail_url?:string;video_id?:string}}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(adId)}?${fields}`,{headers,signal,redirect:'error'});
+   const creative=ad.creative||{};let video:{source?:string;picture?:string}|undefined;
+   if(creative.video_id)video=await requestJson<{source?:string;picture?:string}>(`https://graph.facebook.com/${config.metaGraphApiVersion}/${encodeURIComponent(creative.video_id)}?fields=source,picture`,{headers,signal,redirect:'error'}).catch(()=>undefined);
+   return {adId,mediaType:creative.video_id?'video':creative.image_url||creative.thumbnail_url?'image':'unknown',imageUrl:safeMetaMediaUrl(video?.picture)||safeMetaMediaUrl(creative.image_url)||safeMetaMediaUrl(creative.thumbnail_url),videoUrl:safeMetaMediaUrl(video?.source)} satisfies MarketingAdCreativeMedia;
+  }catch{return {adId,mediaType:'unknown',imageUrl:null,videoUrl:null} satisfies MarketingAdCreativeMedia}
+ }));
+}
+
 export async function fetchMetaBreakdown(token:string,resourceId:string,dimension:MetaBreakdown,period:{from:string;to:string},signal=AbortSignal.timeout(12_000)){
  const account=resourceId.startsWith('act_')?resourceId:`act_${resourceId}`;
  const params=new URLSearchParams({level:'account',fields:'account_currency,impressions,reach,clicks,spend,actions',breakdowns:metaBreakdownFields[dimension],time_range:JSON.stringify({since:period.from,until:period.to}),sort:'spend_descending',limit:'100'});
@@ -313,6 +339,15 @@ export function marketingOAuthRouter(){
    if(signal.aborted)throw new HttpError(504,'A Meta demorou para responder. Tente um período mais curto.');
    throw error;
   }
+ }));
+ router.post('/creatives/meta_ads',asyncRoute(async(request,response)=>{
+  const {clientId,integrationId,adIds}=parseMetaAdCreativeRequest(request.body||{}),access=response.locals.access as AccessContext;
+  if(!canAccessClient(access,clientId))throw new HttpError(403,'Você não possui acesso a este cliente.');
+  const link=resolveMetaBreakdownLink(access,await getState('client_marketing_integrations'),clientId,integrationId),connection=await connectionById(link.connectionId);
+  if(connection.provider!=='meta')throw new HttpError(400,'O vínculo não pertence a uma conexão Meta Ads.');
+  const signal=AbortSignal.timeout(12_000);
+  const media=await fetchMetaAdCreatives(await accessToken(connection),adIds,signal);
+  response.set('Cache-Control','no-store').json({integrationId,media});
  }));
  router.post('/sync/:provider',asyncRoute(async(request,response)=>{
   const provider=request.params.provider as MarketingProvider;

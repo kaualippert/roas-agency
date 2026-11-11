@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {config} from './config.js';
-import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,normalizeMetaPerformanceRow,normalizeMetaTopAd,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
+import {decryptSecret,encryptSecret,googleAdsHeaders,normalizeGoogleMetrics,normalizeMetaMetrics,normalizeMetaPerformanceRow,normalizeMetaTopAd,parseMetaAdCreativeRequest,signOAuthState,verifyOAuthState} from './marketing-oauth.js';
 
 test('assina e valida o estado OAuth sem expor os dados',()=>{
  const previous=config.oauthStateSecret;config.oauthStateSecret='estado-oauth-de-teste-com-entropia';
@@ -38,6 +38,12 @@ test('usa conversas como resultado principal quando a campanha não possui compr
 test('normaliza o desempenho dos melhores anúncios da Meta',()=>{
  const ad=normalizeMetaTopAd({ad_id:'ad-1',ad_name:'Criativo campeão',campaign_name:'Captação',impressions:'10000',clicks:'250',spend:'600',actions:[{action_type:'lead',value:'20'}]});
  assert.deepEqual(ad,{id:'ad-1',name:'Criativo campeão',campaignName:'Captação',impressions:10000,clicks:250,results:20,spend:600,costPerResult:30,ctr:2.5});
+});
+
+test('valida e limita os anúncios pedidos para pré-visualização de criativos',()=>{
+ assert.deepEqual(parseMetaAdCreativeRequest({clientId:'client-1',integrationId:'integration-1',adIds:['123','456','123']}),{clientId:'client-1',integrationId:'integration-1',adIds:['123','456']});
+ assert.throws(()=>parseMetaAdCreativeRequest({clientId:'client-1',integrationId:'integration-1',adIds:['https://example.com']}),/inválida/);
+ assert.throws(()=>parseMetaAdCreativeRequest({clientId:'client-1',integrationId:'integration-1',adIds:Array.from({length:11},(_,index)=>String(index+1))}),/inválida/);
 });
 
 test('normaliza campanhas, conjuntos e anúncios para a tabela detalhada',()=>{

@@ -6,6 +6,7 @@ export type AgencyOAuthProvider='meta'|'google';
 export interface AgencyOAuthConnection{id:string;provider:AgencyOAuthProvider;externalUserId:string;accountName:string;accountEmail:string;expiresAt?:string;scopes:string[];createdAt:string;updatedAt:string}
 export interface OAuthProviderConfiguration{configured:boolean;missing:string[]}
 export interface MarketingResource{id:string;name:string;kind?:string;metadata?:Record<string,unknown>}
+export interface MarketingAdCreativeMedia{adId:string;mediaType:'image'|'video'|'unknown';imageUrl:string|null;videoUrl:string|null}
 
 export const oauthProviderFor=(provider:MarketingProvider):AgencyOAuthProvider=>provider==='meta_ads'?'meta':'google';
 
@@ -29,4 +30,8 @@ export async function loadMarketingResources(provider:MarketingProvider,connecti
 
 export async function syncMarketingMetrics(provider:Extract<MarketingProvider,'meta_ads'|'google_ads'>,input:{connectionId:string;primaryId:string;resourceId:string;from:string;to:string},signal?:AbortSignal){
  return apiRequest(`/marketing/sync/${provider}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(input),signal}) as Promise<{provider:typeof provider;period:{from:string;to:string};metrics:MarketingMetrics;topAds:MarketingTopAd[];performanceRows:MarketingPerformanceRow[];syncedAt:string}>;
+}
+
+export async function loadMetaAdCreatives(input:{integrationId:string;clientId:string;adIds:string[]},signal?:AbortSignal){
+ return apiRequest('/marketing/creatives/meta_ads',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(input),signal}) as Promise<{integrationId:string;media:MarketingAdCreativeMedia[]}>;
 }

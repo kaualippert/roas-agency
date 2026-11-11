@@ -257,6 +257,35 @@
 .marketingBreakdownTableWrap th,.marketingBreakdownTableWrap td{padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
 .marketingBreakdownTableWrap th{color:var(--muted);font-weight:650}
 .marketingBreakdownTableWrap td{text-align:right;font-variant-numeric:tabular-nums}
+.marketingWinningAds{min-width:0;padding:clamp(16px,2vw,22px);border-radius:var(--overview-panel-radius,16px)}
+.marketingWinningAds>header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.marketingWinningAds>header>div>span{display:inline-flex;align-items:center;gap:6px;color:var(--purple);font-size:9px;font-weight:800;letter-spacing:.12em}
+.marketingWinningAds>header>div>span svg{width:14px;height:14px}
+.marketingWinningAds>header h3{margin:5px 0 3px;color:var(--text);font-size:17px}
+.marketingWinningAds>header p{margin:0;color:var(--muted);font-size:11px}
+.marketingWinningAds>header>small{padding:6px 9px;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:10px}
+.marketingWinningAdsGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px}
+.marketingWinningAdsGrid>article{min-width:0;overflow:hidden;border:1px solid var(--border);border-radius:13px;background:var(--card);box-shadow:var(--ds-shadow-xs,0 3px 12px #00000010)}
+.marketingWinningAdMedia{position:relative;display:grid;place-items:center;aspect-ratio:4/3;overflow:hidden;background:linear-gradient(145deg,var(--soft),var(--ds-surface-subtle,var(--card)))}
+.marketingWinningAdMedia>img,.marketingWinningAdMedia>video{width:100%;height:100%;object-fit:cover}
+.marketingWinningAdPlaceholder{display:grid;justify-items:center;gap:8px;color:var(--muted);font-size:10px}
+.marketingWinningAdPlaceholder svg{width:24px;height:24px;opacity:.65}
+.marketingWinningAdType{position:absolute;left:9px;top:9px;display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border:1px solid #ffffff26;border-radius:999px;background:#111827c9;color:#fff;font-size:9px;font-weight:700;backdrop-filter:blur(8px)}
+.marketingWinningAdType svg{width:11px;height:11px;fill:currentColor}
+.marketingWinningAdInfo{display:grid;gap:12px;padding:11px}
+.marketingWinningAdInfo>div>b,.marketingWinningAdInfo>div>small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.marketingWinningAdInfo>div>b{color:var(--text);font-size:11px}
+.marketingWinningAdInfo>div>small{margin-top:3px;color:var(--muted);font-size:9px}
+.marketingWinningAdInfo dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0}
+.marketingWinningAdInfo dl>div{min-width:0}
+.marketingWinningAdInfo dt{overflow:hidden;color:var(--muted);font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.marketingWinningAdInfo dd{margin:3px 0 0;color:var(--text);font-size:10px;font-weight:750;font-variant-numeric:tabular-nums}
+.marketingWinningAdsEmpty,.marketingWinningAdsError{display:flex;align-items:center;gap:9px;padding:12px;border:1px dashed var(--border);border-radius:10px;color:var(--muted);font-size:11px}
+.marketingWinningAdsEmpty svg{width:16px;height:16px;color:var(--purple)}
+.marketingWinningAdsError{justify-content:space-between;border-color:#e5537055;color:var(--text)}
+.marketingWinningAdsError button{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--purple);font:inherit;font-size:10px;font-weight:700;cursor:pointer}
+.marketingWinningAdsError button svg{width:13px;height:13px}
+.marketingWinningAdsLoading{margin:10px 0 0;color:var(--muted);font-size:10px}
 @media (max-width: 650px) {
   .marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry) {
     min-height: 34px;
