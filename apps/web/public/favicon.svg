@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="roas" x1="12" y1="54" x2="50" y2="8" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#ff3b24"/>
-      <stop offset=".38" stop-color="#ff2ca8"/>
-      <stop offset=".72" stop-color="#9828ff"/>
-      <stop offset="1" stop-color="#ffae00"/>
+    <linearGradient id="roas-arrow" x1="12" y1="52" x2="52" y2="12" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff2414"/>
+      <stop offset=".36" stop-color="#ff0088"/>
+      <stop offset=".68" stop-color="#ff7900"/>
+      <stop offset="1" stop-color="#6500a5"/>
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="#111018"/>
-  <path fill="url(#roas)" d="M31.4 9.5c1.1-1.8 3.8-1.8 4.8.1l18.2 35.8c1.1 2.1-.5 4.6-2.9 4.6H42l-3.5-7.3h7.2L33.8 20.2 20.5 47.8c-1.4 2.8-5.4 3.2-7.4.8-1.1-1.3-1.3-3.2-.5-4.7L31.4 9.5Z"/>
-  <path fill="#fff" d="M23.4 42.7h19.1l3.6 7.3H19.8l3.6-7.3Z"/>
+  <path d="M14 45 29 30l8 8 14-16" fill="none" stroke="url(#roas-arrow)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M39 22h12v12" fill="none" stroke="url(#roas-arrow)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

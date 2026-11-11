@@ -64,14 +64,15 @@ html[data-theme-variant="all-black"] .themeChoices button.active{background:#121
 /* Paleta institucional: coral, rosa, laranja e violeta sobre a interface escura. */
 html[data-theme-variant="agency-gradient"]{
  color-scheme:dark;
- --agency-gradient:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%);
- --ds-brand-50:#321723;--ds-brand-100:#492034;--ds-brand-200:#6f2b50;--ds-brand-300:#a64072;--ds-brand-400:#d8448a;--ds-brand-500:#ed4a79;--ds-brand-600:#f04d70;--ds-brand-700:#d83a68;--ds-brand-800:#af2b63;--ds-brand-900:#7c2055;
+ --agency-coral:#ff2414;--agency-pink:#ff0088;--agency-orange:#ff7900;--agency-purple:#6500a5;
+ --agency-gradient:linear-gradient(105deg,var(--agency-coral) 0%,var(--agency-pink) 36%,var(--agency-orange) 68%,var(--agency-purple) 100%);
+ --ds-brand-50:#321323;--ds-brand-100:#4c1837;--ds-brand-200:#70204f;--ds-brand-300:#a62b6a;--ds-brand-400:#d33383;--ds-brand-500:#f03b91;--ds-brand-600:#ff4b9c;--ds-brand-700:#e83b87;--ds-brand-800:#bd286c;--ds-brand-900:#841c51;
  --ds-canvas:#100f12;--ds-surface:#19171b;--ds-surface-subtle:#141216;--ds-surface-raised:#201d22;--ds-surface-hover:#29242c;
  --ds-text:#f7f3f6;--ds-text-secondary:#d7cfd7;--ds-text-muted:#aa9eaa;--ds-border:#352f38;--ds-border-strong:#514552;
  --ds-focus:0 0 0 3px rgba(245,47,148,.25);--purple:var(--ds-brand-600);--card:var(--ds-surface);--text:var(--ds-text);--border:var(--ds-border);--muted:var(--ds-text-muted);
  background:var(--ds-canvas)
 }
-html[data-theme-variant="agency-gradient"][data-agency-gradient-colors="3"]{--agency-gradient:linear-gradient(105deg,#ff4028 0%,#f52f94 52%,#6516a0 100%)}
+html[data-theme-variant="agency-gradient"][data-agency-gradient-colors="3"]{--agency-gradient:linear-gradient(105deg,var(--agency-coral) 0%,var(--agency-pink) 52%,var(--agency-purple) 100%)}
 html[data-theme-variant="agency-gradient"] body{background:var(--ds-canvas);color:var(--ds-text)}
 html[data-theme-variant="agency-gradient"] .app{background:radial-gradient(ellipse at 12% 0%,#25151f 0%,transparent 37%),var(--ds-canvas)}
 html[data-theme-variant="agency-gradient"] .sidebar{background:#100d12;border-right:1px solid #352733;box-shadow:none}
@@ -87,16 +88,18 @@ html[data-theme-variant="agency-gradient"] .btn:not(.secondary):not(.danger):hov
 html[data-theme-variant="agency-gradient"] .logo .rmark{background:var(--agency-gradient);background-clip:text;color:transparent}
 html[data-theme-variant="agency-gradient"] .tabs button.active,
 html[data-theme-variant="agency-gradient"] .viewTabs button.active,
-html[data-theme-variant="agency-gradient"] .taskViewTabs button.active{color:#ff6aa9;border-color:#f04d86}
+html[data-theme-variant="agency-gradient"] .taskViewTabs button.active{color:#ff72b4;border-color:var(--agency-pink)}
 html[data-theme-variant="agency-gradient"] .tabs button:hover,
 html[data-theme-variant="agency-gradient"] .viewTabs button:hover,
-html[data-theme-variant="agency-gradient"] .taskViewTabs button:hover{color:#ff78ad}
-html[data-theme-variant="agency-gradient"] ::selection{background:#d83280}
-html[data-theme-variant="agency-gradient"] .themeChoices button.active{border-color:#ed4a8a;box-shadow:0 0 0 2px #ed4a8a30}
+html[data-theme-variant="agency-gradient"] .taskViewTabs button:hover{color:#ff91c2}
+html[data-theme-variant="agency-gradient"] :is(input,select,textarea,button,a,[tabindex]):focus-visible{outline-color:var(--agency-pink);box-shadow:var(--ds-focus)}
+html[data-theme-variant="agency-gradient"] :is(.badge,.tag,.pill,.statusBadge){border-color:#ff008844}
+html[data-theme-variant="agency-gradient"] ::selection{background:#b51b68;color:#fff}
+html[data-theme-variant="agency-gradient"] .themeChoices button.active{border-color:var(--agency-pink);box-shadow:0 0 0 2px #ff008830}
 html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]{border-color:#6c3657}
-html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]:hover{border-color:#ed4a8a}
-.themeChoices button[data-theme-choice="agency-gradient"]::after{content:"";height:5px;margin-top:6px;border-radius:99px;background:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%)}
-html[data-agency-gradient-colors="3"] .themeChoices button[data-theme-choice="agency-gradient"]::after{background:linear-gradient(105deg,#ff4028 0%,#f52f94 52%,#6516a0 100%)}
+html[data-theme-variant="agency-gradient"] .themeChoices button[data-theme-choice="agency-gradient"]:hover{border-color:var(--agency-pink)}
+.themeChoices button[data-theme-choice="agency-gradient"]::after{content:"";height:5px;margin-top:6px;border-radius:99px;background:linear-gradient(105deg,#ff2414 0%,#ff0088 36%,#ff7900 68%,#6500a5 100%)}
+html[data-agency-gradient-colors="3"] .themeChoices button[data-theme-choice="agency-gradient"]::after{background:linear-gradient(105deg,#ff2414 0%,#ff0088 52%,#6500a5 100%)}
 .agencyGradientSettings{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px;padding:15px 17px;border:1px solid var(--ds-border);border-radius:12px;background:var(--ds-surface-subtle)}
 .agencyGradientSettings>div:first-child b,.agencyGradientSettings>div:first-child small{display:block}
 .agencyGradientSettings>div:first-child b{color:var(--ds-text);font-size:12px}
@@ -104,8 +107,8 @@ html[data-agency-gradient-colors="3"] .themeChoices button[data-theme-choice="ag
 .agencyGradientOptions{display:flex;gap:8px;flex:none}
 .agencyGradientOptions button{display:grid;gap:7px;min-width:100px;padding:9px 11px;border:1px solid var(--ds-border);border-radius:9px;background:var(--ds-surface);color:var(--ds-text-secondary);text-align:left;font-size:11px;font-weight:700}
 .agencyGradientOptions button.active{border-color:var(--ds-brand-500);box-shadow:0 0 0 2px color-mix(in srgb,var(--ds-brand-500) 18%,transparent)}
-.gradientSample{display:block;height:6px;border-radius:99px;background:linear-gradient(105deg,#ff4028 0%,#f52f94 36%,#ff8424 68%,#6516a0 100%)}
-.gradientSample.colors3{background:linear-gradient(105deg,#ff4028 0%,#f52f94 52%,#6516a0 100%)}
+.gradientSample{display:block;height:6px;border-radius:99px;background:linear-gradient(105deg,#ff2414 0%,#ff0088 36%,#ff7900 68%,#6500a5 100%)}
+.gradientSample.colors3{background:linear-gradient(105deg,#ff2414 0%,#ff0088 52%,#6500a5 100%)}
 @media(max-width:520px){.agencyGradientSettings{align-items:stretch;flex-direction:column}.agencyGradientOptions button{flex:1}}
 
 .themeChoices{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px}
