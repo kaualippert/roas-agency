@@ -3,6 +3,7 @@ import type {MetaBreakdownDimension,loadMetaBreakdown} from './meta-breakdown-cl
 export const breakdownDimensions=[{id:'age',label:'Idade'},{id:'gender',label:'Gênero'},{id:'region',label:'Região'},{id:'placement',label:'Posicionamento'}] as const;
 export const breakdownMetricLabels={spend:'Investimento',impressions:'Impressões',reach:'Alcance',clicks:'Cliques',leads:'Leads',purchases:'Compras',conversations:'Conversas iniciadas',costPerLead:'Custo por lead',costPerPurchase:'Custo por compra',costPerConversation:'Custo por conversa'} as const;
 export type BreakdownMetric=keyof typeof breakdownMetricLabels;
+export type BreakdownVisualization='bar'|'table';
 export type PinnedBreakdownMetric={dimension:MetaBreakdownDimension;rowId:string;label:string;metric:BreakdownMetric};
 export const pinnedBreakdownKey=({dimension,rowId,metric}:PinnedBreakdownMetric)=>JSON.stringify([dimension,rowId,metric]);
 export function normalizePinnedBreakdowns(input:unknown):PinnedBreakdownMetric[]{

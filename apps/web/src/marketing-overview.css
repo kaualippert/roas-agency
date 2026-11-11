@@ -236,6 +236,27 @@
   outline: 2px solid var(--purple);
   outline-offset: 2px;
 }
+.marketingBreakdownGroup{display:contents}
+.marketingBreakdownVisualization{grid-column:1/-1;min-width:0;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.marketingBreakdownVisualization>header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.marketingBreakdownVisualization>header>div:first-child{display:grid;gap:3px}
+.marketingBreakdownVisualization>header small{color:var(--muted);font-size:11px}
+.marketingBreakdownVisualization [role="group"]{display:flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:8px}
+.marketingBreakdownVisualization [role="group"] button{display:grid;place-items:center;width:30px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer}
+.marketingBreakdownVisualization [role="group"] button.active{background:var(--soft);color:var(--text)}
+.marketingBreakdownVisualization [role="group"] svg{width:15px;height:15px}
+.marketingBreakdownBars{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px}
+.marketingBreakdownBars>div> b{display:block;margin-bottom:8px;font-size:12px}
+.marketingBreakdownBarRow{display:grid;grid-template-columns:minmax(70px,1fr) auto;align-items:baseline;gap:4px 10px;margin:8px 0}
+.marketingBreakdownBarRow>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px}
+.marketingBreakdownBarRow>strong{font-size:11px;font-variant-numeric:tabular-nums}
+.marketingBreakdownBarRow>i{grid-column:1/-1;height:6px;overflow:hidden;border-radius:8px;background:var(--soft)}
+.marketingBreakdownBarRow em{display:block;height:100%;border-radius:inherit;background:var(--purple)}
+.marketingBreakdownTableWrap{max-width:100%;overflow:auto}
+.marketingBreakdownTableWrap table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}
+.marketingBreakdownTableWrap th,.marketingBreakdownTableWrap td{padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.marketingBreakdownTableWrap th{color:var(--muted);font-weight:650}
+.marketingBreakdownTableWrap td{text-align:right;font-variant-numeric:tabular-nums}
 @media (max-width: 650px) {
   .marketingClientDashboard :is(.marketingOverviewRefresh,.marketingOverviewCustomize,.marketingCompareToggle,.marketingCompareRetry) {
     min-height: 34px;

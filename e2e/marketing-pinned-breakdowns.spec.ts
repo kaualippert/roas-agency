@@ -27,6 +27,12 @@ test('fixa dois indicadores do mesmo recorte, atualiza o período e remove um ca
  await dialog.getByRole('button',{name:'Fechar detalhamento'}).click();
  const impressions=page.getByRole('article',{name:'Impressões · 25-34'}),cost=page.getByRole('article',{name:'Custo por lead · 25-34'});
  await expect(impressions.locator('strong')).toHaveText('3.400');await expect(cost.locator('strong')).toContainText('10,00');
+ const ageChart=page.getByRole('region',{name:'Gráfico de Idade'});
+ await expect(ageChart.getByText('Impressões · 25-34')).toBeVisible();
+ const viewSaved=page.waitForResponse(response=>response.url().endsWith('/state/marketing_dashboard_preferences')&&response.request().method()==='PUT'&&response.request().postDataJSON().value[0].breakdownVisualizations.age==='table');
+ await ageChart.getByRole('button',{name:'Tabela de detalhamento'}).click();
+ await viewSaved;
+ await expect(ageChart.getByRole('table')).toContainText('3.400');
  await page.getByLabel('Período do dashboard de marketing').selectOption('last_7');
  await expect(impressions.locator('strong')).toHaveText('1.240');expect(last7Requests).toBe(1);
  await page.reload();await expect(impressions.locator('strong')).toHaveText('1.240');

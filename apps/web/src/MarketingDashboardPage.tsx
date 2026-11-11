@@ -62,7 +62,7 @@ export default function MarketingDashboardPage(){
  const openCustomization=()=>{setDraftMetrics([...metricIds]);setMetricSearch('');setCustomizing(true)};
  const toggleMetric=(id:MarketingMetricKey)=>setDraftMetrics(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]);
  const moveDraftMetric=(index:number,direction:-1|1)=>setDraftMetrics(current=>{const target=index+direction;if(target<0||target>=current.length)return current;const next=[...current];[next[index],next[target]]=[next[target],next[index]];return next});
- const savePreference=(nextMetricIds:MarketingMetricKey[],nextWidgets:MarketingDashboardWidget[],nextTable=performanceTable,nextPinned=pinnedBreakdowns,nextPanels=analysisPanels)=>{if(!clientId)return;const next:MarketingDashboardPreference={clientId,metricIds:nextMetricIds,widgets:nextWidgets,performanceTable:nextTable,pinnedBreakdowns:nextPinned,analysisPanels:nextPanels,updatedAt:new Date().toISOString()};setPreferences([next,...preferences.filter(item=>item.clientId!==clientId)])};
+ const savePreference=(nextMetricIds:MarketingMetricKey[],nextWidgets:MarketingDashboardWidget[],nextTable=performanceTable,nextPinned=pinnedBreakdowns,nextPanels=analysisPanels,nextBreakdownViews=clientPreference?.breakdownVisualizations)=>{if(!clientId)return;const next:MarketingDashboardPreference={clientId,metricIds:nextMetricIds,widgets:nextWidgets,performanceTable:nextTable,pinnedBreakdowns:nextPinned,analysisPanels:nextPanels,breakdownVisualizations:nextBreakdownViews,updatedAt:new Date().toISOString()};setPreferences([next,...preferences.filter(item=>item.clientId!==clientId)])};
  const pinBreakdown=(card:PinnedBreakdownMetric)=>{
   if(!pinnedBreakdowns.some(item=>pinnedBreakdownKey(item)===pinnedBreakdownKey(card)))savePreference(metricIds,widgets,performanceTable,[...pinnedBreakdowns,card]);
   if(providerFilter==='google_ads')setProviderFilter('meta_ads');
@@ -123,7 +123,7 @@ export default function MarketingDashboardPage(){
      const definition=marketingMetricCatalog.find(item=>item.id===id)!;
      return <MarketingMetricCard key={id} definition={definition} period={period} value={visibleSnapshots.length?formatMarketingMetric(id,metricValue(metrics,id)):'—'} comparison={comparison}/>;
     })}
-    {providerFilter!=='google_ads'&&<MarketingBreakdownCards cards={pinnedBreakdowns} account={metaAccount} range={selectedRange} onRemove={removeBreakdown}/>}
+    {providerFilter!=='google_ads'&&<MarketingBreakdownCards cards={pinnedBreakdowns} account={metaAccount} range={selectedRange} views={clientPreference?.breakdownVisualizations||{}} onRemove={removeBreakdown} onViewChange={(dimension,view)=>savePreference(metricIds,widgets,performanceTable,pinnedBreakdowns,analysisPanels,{...clientPreference?.breakdownVisualizations,[dimension]:view})}/>}
    </section>
   </section>
   {!visibleSnapshots.length?<section className="card marketingNoData"><BarChart3/><h3>{syncing?'Buscando dados do período…':'Sem dados neste período'}</h3><p>{syncing?'As métricas serão exibidas assim que a consulta terminar.':'Confira a conexão da conta ou tente atualizar novamente. Não exibimos dados de outras datas como se fossem deste período.'}</p>{!syncing&&<Link className="btn" to="/marketing/integrations">Ver integrações</Link>}</section>:<>

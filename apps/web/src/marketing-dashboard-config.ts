@@ -1,5 +1,5 @@
 import type {MarketingMetrics,MarketingPerformanceLevel} from './marketing-metrics';
-import {normalizePinnedBreakdowns,type PinnedBreakdownMetric} from './meta-breakdown-metrics';
+import {normalizePinnedBreakdowns,type PinnedBreakdownMetric,type BreakdownVisualization} from './meta-breakdown-metrics';
 
 export type MarketingMetricKey=keyof MarketingMetrics|'ctr'|'uniqueCtr'|'cpc'|'cpm'|'cpp'|'costPerConversion'|'costPerResult'|'costPerLead'|'costPerPurchase'|'costPerLinkClick'|'costPerOutboundClick'|'costPerLandingPageView'|'costPerMessagingConversation'|'costPerThruPlay'|'frequency';
 export type MarketingMetricCategory='Desempenho'|'Entrega'|'Cliques e tráfego'|'Engajamento'|'Vídeo'|'Leads e conversões';
@@ -17,6 +17,7 @@ export interface MarketingDashboardPreference{
  widgets:MarketingDashboardWidget[];
  performanceTable:MarketingPerformanceTablePreference;
  pinnedBreakdowns?:PinnedBreakdownMetric[];
+ breakdownVisualizations?:Partial<Record<'age'|'gender'|'region'|'placement',BreakdownVisualization>>;
  analysisPanels?:MarketingAnalysisPanels;
  updatedAt:string;
 }
@@ -109,7 +110,9 @@ export function normalizeMarketingDashboardPreferences(value:unknown):MarketingD
   if(!raw||typeof raw!=='object')return [];
   const item=raw as Partial<MarketingDashboardPreference>;
   if(!item.clientId)return [];
-  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),analysisPanels:normalizeMarketingAnalysisPanels(item.analysisPanels),updatedAt:String(item.updatedAt||'')}];
+  const rawViews=item.breakdownVisualizations&&typeof item.breakdownVisualizations==='object'?item.breakdownVisualizations as Record<string,unknown>:{};
+  const breakdownVisualizations=Object.fromEntries(['age','gender','region','placement'].flatMap(id=>rawViews[id]==='table'||rawViews[id]==='bar'?[[id,rawViews[id]]]:[])) as MarketingDashboardPreference['breakdownVisualizations'];
+  return [{clientId:String(item.clientId),metricIds:normalizeMarketingMetricIds(item.metricIds),widgets:normalizeMarketingDashboardWidgets(item.widgets),performanceTable:normalizeMarketingPerformanceTable(item.performanceTable),pinnedBreakdowns:normalizePinnedBreakdowns(item.pinnedBreakdowns),breakdownVisualizations,analysisPanels:normalizeMarketingAnalysisPanels(item.analysisPanels),updatedAt:String(item.updatedAt||'')}];
  });
 }
 
