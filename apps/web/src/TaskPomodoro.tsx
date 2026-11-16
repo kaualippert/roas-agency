@@ -1,54 +1,35 @@
 import {useEffect,useState} from 'react';
 import {Coffee,Pause,Play,RotateCcw,Timer} from 'lucide-react';
+import {activatePomodoroTask,clearActivePomodoroTask,createFreshPomodoroSession,focusSeconds,nextPomodoroPhase,readPomodoroSession,savePomodoroSession,breakSeconds} from './task-pomodoro-state';
 import './task-pomodoro.css';
 
-type Phase='focus'|'break';
-type TimerStatus='ready'|'running'|'paused';
-type PomodoroSession={phase:Phase;status:TimerStatus;remainingSeconds:number;endsAt?:number;completedFocus:number};
-const focusSeconds=25*60,breakSeconds=5*60;
-const freshSession=():PomodoroSession=>({phase:'focus',status:'ready',remainingSeconds:focusSeconds,completedFocus:0});
-const storageKey=(taskId:string)=>`roas_task_pomodoro_${taskId}`;
-const nextPhase=(session:PomodoroSession):PomodoroSession=>({phase:session.phase==='focus'?'break':'focus',status:'ready',remainingSeconds:session.phase==='focus'?breakSeconds:focusSeconds,completedFocus:session.completedFocus+(session.phase==='focus'?1:0)});
 const dialMarks=Array.from({length:60},(_,index)=>{const angle=(index/60)*Math.PI*2,radius=index%5===0?87:90;return {x1:120+Math.sin(angle)*radius,y1:120-Math.cos(angle)*radius,x2:120+Math.sin(angle)*95,y2:120-Math.cos(angle)*95,major:index%5===0}});
-
-function loadSession(taskId:string):PomodoroSession{
- try{
-  const parsed=JSON.parse(localStorage.getItem(storageKey(taskId))||'null') as PomodoroSession|null;
-  if(!parsed||!['focus','break'].includes(parsed.phase)||!['ready','running','paused'].includes(parsed.status)||!Number.isFinite(parsed.remainingSeconds)||!Number.isFinite(parsed.completedFocus))return freshSession();
-  if(parsed.status==='running'){
-   const remainingSeconds=Math.max(0,Math.ceil(((parsed.endsAt||0)-Date.now())/1000));
-   return remainingSeconds?{...parsed,remainingSeconds}:{...nextPhase(parsed),status:'ready'};
-  }
-  return {...parsed,endsAt:undefined};
- }catch{return freshSession()}
-}
-function persist(taskId:string,session:PomodoroSession){try{localStorage.setItem(storageKey(taskId),JSON.stringify(session))}catch{/* Timer keeps working for this page session when storage is unavailable. */}}
 const clock=(seconds:number)=>`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
 
 export default function TaskPomodoro({taskId}:{taskId:string}){
- const [session,setSession]=useState(()=>loadSession(taskId));
+ const [session,setSession]=useState(()=>readPomodoroSession(taskId));
  const [remainingSeconds,setRemainingSeconds]=useState(session.remainingSeconds);
  const visible=session.status!=='ready'||session.phase!=='focus'||session.completedFocus>0;
  const duration=session.phase==='focus'?focusSeconds:breakSeconds;
  const progress=Math.max(0,Math.min(100,((duration-remainingSeconds)/duration)*100));
  const handRotation=progress*3.6,cycleIndex=session.completedFocus%4,completedInCycle=session.completedFocus%4;
 
- useEffect(()=>{persist(taskId,session)},[taskId,session]);
+ useEffect(()=>{savePomodoroSession(taskId,session)},[taskId,session]);
  useEffect(()=>{
   if(session.status!=='running'||!session.endsAt)return;
   const update=()=>{
    const remaining=Math.max(0,Math.ceil((session.endsAt!-Date.now())/1000));
    setRemainingSeconds(remaining);
-   if(remaining===0){const finished=nextPhase(session);setSession(finished);setRemainingSeconds(finished.remainingSeconds)}
+   if(remaining===0){const finished=nextPomodoroPhase(session);setSession(finished);setRemainingSeconds(finished.remainingSeconds)}
   };
   update();
   const interval=window.setInterval(update,1000);
   return()=>window.clearInterval(interval);
  },[session,taskId]);
 
- const start=()=>{const next={...session,status:'running' as const,endsAt:Date.now()+remainingSeconds*1000};setSession(next);persist(taskId,next)};
- const pause=()=>{const remaining=Math.max(0,Math.ceil(((session.endsAt||Date.now())-Date.now())/1000)),next={...session,status:'paused' as const,remainingSeconds:remaining,endsAt:undefined};setSession(next);setRemainingSeconds(remaining);persist(taskId,next)};
- const reset=()=>{const next=freshSession();setSession(next);setRemainingSeconds(next.remainingSeconds);persist(taskId,next)};
+ const start=()=>{const next={...session,status:'running' as const,endsAt:Date.now()+remainingSeconds*1000};setSession(next);setRemainingSeconds(remainingSeconds);savePomodoroSession(taskId,next);activatePomodoroTask(taskId)};
+ const pause=()=>{const remaining=Math.max(0,Math.ceil(((session.endsAt||Date.now())-Date.now())/1000)),next={...session,status:'paused' as const,remainingSeconds:remaining,endsAt:undefined};setSession(next);setRemainingSeconds(remaining);savePomodoroSession(taskId,next)};
+ const reset=()=>{const next=createFreshPomodoroSession();setSession(next);setRemainingSeconds(next.remainingSeconds);savePomodoroSession(taskId,next);clearActivePomodoroTask(taskId)};
 
  if(!visible)return <section className="taskPomodoro taskPomodoroIntro"><div className="taskPomodoroCopy"><span className="taskPomodoroIcon"><Timer/></span><div><b>Modo Pomodoro</b><small>Faça uma sessão de foco nesta tarefa, com pausas curtas.</small></div></div><button type="button" className="taskPomodoroStart" onClick={start}><Play/> Ativar · 25 min</button></section>;
 
