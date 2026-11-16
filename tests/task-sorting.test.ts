@@ -22,3 +22,7 @@ test('ordena títulos numericamente e mantém prazo e prioridade disponíveis',(
  tasks[1].priority='urgent';
  assert.equal(sortTasks(tasks,'priority')[0].id,'2');
 });
+test('ordena tarefas do mesmo dia pelo horário e deixa sem horário por último',()=>{
+ const tasks=[{...task('late','Mais tarde','2026-01-01','2026-11-20'),dueTime:'15:00'},{...task('untimed','Sem horário','2026-01-01','2026-11-20')},{...task('early','Mais cedo','2026-01-01','2026-11-20'),dueTime:'09:30'}];
+ assert.deepEqual(sortTasks(tasks,'due').map(item=>item.id),['early','late','untimed']);
+});

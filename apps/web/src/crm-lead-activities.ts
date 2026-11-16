@@ -1,7 +1,7 @@
 import type {CRMLead} from './crm-leads';
 import type {Task} from './types';
 
-export type CRMFollowUpInput={title:string;description:string;dueDate:string;responsibleId:string};
+export type CRMFollowUpInput={title:string;description:string;dueDate:string;dueTime?:string;responsibleId:string};
 
 export function createCRMFollowUpTask(lead:CRMLead,input:CRMFollowUpInput,createdAt=new Date().toISOString(),id=crypto.randomUUID()):Task{
  const responsibleId=input.responsibleId.trim();
@@ -24,6 +24,7 @@ export function createCRMFollowUpTask(lead:CRMLead,input:CRMFollowUpInput,create
   status:'todo',
   priority:'medium',
   dueDate:input.dueDate,
+  dueTime:input.dueTime||undefined,
   tags:['CRM','Follow-up'],
   position:0,
   commentsCount:0,

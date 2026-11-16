@@ -15,12 +15,13 @@ test('adiciona observações ao lead sem apagar as anteriores',()=>{
 });
 
 test('cria tarefa de follow-up vinculada ao lead com responsável e contexto',()=>{
- const task=createCRMFollowUpTask(lead,{title:'Retornar contato',description:'Confirmar disponibilidade para reunião.',dueDate:'2026-10-08',responsibleId:'member-2'},'2026-10-05T12:00:00.000Z','task-1');
+ const task=createCRMFollowUpTask(lead,{title:'Retornar contato',description:'Confirmar disponibilidade para reunião.',dueDate:'2026-10-08',dueTime:'14:30',responsibleId:'member-2'},'2026-10-05T12:00:00.000Z','task-1');
  assert.equal(task.leadId,lead.id);
  assert.equal(task.clientId,'');
  assert.equal(task.responsibleId,'member-2');
  assert.deepEqual(task.responsibleIds,['member-2']);
  assert.equal(task.status,'todo');
+ assert.equal(task.dueTime,'14:30');
  assert.match(task.description,/Agência Horizonte/);
  assert.match(task.description,/Confirmar disponibilidade para reunião/);
 });

@@ -36,7 +36,7 @@ export default function CRMLeadActivityModal({lead,mode,team,onClose,onAddObserv
   const title=String(form.get('title')||'').trim();
   const dueDate=String(form.get('dueDate')||'');
   if(!title||!dueDate)return;
-  onCreateFollowUp({title,description:String(form.get('description')||''),dueDate,responsibleId:String(form.get('responsibleId')||'')});
+  onCreateFollowUp({title,description:String(form.get('description')||''),dueDate,dueTime:String(form.get('dueTime')||'')||undefined,responsibleId:String(form.get('responsibleId')||'')});
  };
 
  return <div className="overlay crmLeadActivityOverlay" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}>
@@ -50,7 +50,7 @@ export default function CRMLeadActivityModal({lead,mode,team,onClose,onAddObserv
    </>:<form className="crmLeadActivityForm crmLeadFollowUpForm" onSubmit={saveFollowUp}>
     <div className="crmLeadFollowUpContext"><CalendarPlus/><span>A tarefa ficará ligada a <b>{lead.name}</b> e aparecerá na página de Tarefas.</span></div>
     <label>Título da tarefa<input name="title" required autoFocus defaultValue={`Retornar contato — ${lead.name}`} maxLength={140}/></label>
-    <div className="crmLeadFollowUpFields"><label>Prazo<input name="dueDate" type="date" min={localDateOffset(0)} required defaultValue={localDateOffset(1)}/></label><label>Responsável<select name="responsibleId" defaultValue={lead.responsibleId||''}><option value="">Sem responsável</option>{activeTeam.map(member=><option key={member.id} value={member.id}>{member.name}</option>)}</select></label></div>
+    <div className="crmLeadFollowUpFields"><label>Prazo<input name="dueDate" type="date" min={localDateOffset(0)} required defaultValue={localDateOffset(1)}/></label><label>Horário <small>(opcional)</small><input name="dueTime" type="time"/></label><label>Responsável<select name="responsibleId" defaultValue={lead.responsibleId||''}><option value="">Sem responsável</option>{activeTeam.map(member=><option key={member.id} value={member.id}>{member.name}</option>)}</select></label></div>
     <label>Detalhes<textarea name="description" rows={3} maxLength={2000} placeholder="Descreva a próxima ação: fazer follow-up, enviar proposta, marcar reunião…"/></label>
     <div className="crmLeadActivityFormActions"><button type="button" className="btn secondary" onClick={onClose}>Cancelar</button><button type="submit" className="btn"><CalendarPlus/> Criar tarefa</button></div>
    </form>}

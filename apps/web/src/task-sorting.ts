@@ -14,7 +14,7 @@ const priorities={low:1,medium:2,high:3,urgent:4};
 export function sortTasks(tasks:Task[],value:unknown){
  const order=normalizeTaskSort(value);
  const title=(a:Task,b:Task)=>a.title.localeCompare(b.title,'pt-BR',{numeric:true,sensitivity:'base'})||a.id.localeCompare(b.id);
- const due=(a:Task,b:Task)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')||priorities[b.priority]-priorities[a.priority]||title(a,b);
+ const due=(a:Task,b:Task)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')||(a.dueTime||'99:99').localeCompare(b.dueTime||'99:99')||priorities[b.priority]-priorities[a.priority]||title(a,b);
  return [...tasks].sort((a,b)=>{
   if(order==='title_asc')return title(a,b);
   if(order==='title_desc')return -title(a,b);
