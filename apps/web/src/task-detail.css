@@ -36,6 +36,13 @@
 .taskStoredSummary b{color:var(--text)}
 .taskDescriptionSection{margin-top:24px;padding-top:24px;border-top:1px solid var(--border)}
 .taskDescriptionSection .taskSectionHeading{margin-bottom:13px}
+.taskDescriptionSection .taskSectionHeading{align-items:center}
+.taskDescriptionHeadingCopy{min-width:0;flex:1}
+.taskDescriptionCollapse{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:30px;flex:none;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--muted);font-size:9px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.taskDescriptionCollapse:hover{border-color:color-mix(in srgb,var(--purple) 38%,var(--border));background:color-mix(in srgb,var(--purple) 7%,var(--card));color:var(--purple)}
+.taskDescriptionCollapse svg{width:13px;height:13px}
+.taskDescriptionBody[hidden]{display:none!important}
+.taskDescriptionSection.collapsed .taskSectionHeading{margin-bottom:0}
 .taskDescriptionSection .taskDescriptionBox{border-radius:11px}
 .taskDescriptionSection .taskDescriptionBox textarea{min-height:280px;padding:18px!important;font-size:13px;line-height:1.7}
 .taskDescriptionSection .taskDescriptionPreview{padding:16px;font-size:12px}
@@ -49,3 +56,4 @@ html[data-theme="dark"] .taskInformationSection{background:#151d2c;border-color:
 html[data-theme="dark"] .taskStoredSummary span,html[data-theme="dark"] .taskListIndicators span,html[data-theme="dark"] .taskListIndicators i{background:#202a3d}
 @media(max-width:760px){.enhancedTaskModal{width:100%}.taskDetailForm{padding:0 18px 22px}.taskPropertiesGrid{grid-template-columns:1fr 1fr}.taskTitleSection input{font-size:21px}.taskDescriptionSection .taskDescriptionBox textarea{min-height:230px}}
 @media(max-width:520px){.taskDetailForm{padding-inline:15px}.taskTitleSection{grid-template-columns:38px minmax(0,1fr);gap:10px;padding:18px 0}.taskTitleSection>span{width:38px;height:38px}.taskTitleSection input{font-size:18px}.taskInformationSection{padding:15px}.taskPropertiesGrid{grid-template-columns:1fr}.taskDescriptionSection{margin-top:19px;padding-top:19px}.taskDescriptionSection .taskDescriptionBox textarea{min-height:260px}.taskStoredSummary{align-items:stretch;flex-direction:column}.taskStoredSummary span{width:100%}}
+@media(max-width:520px){.taskDescriptionCollapse{min-height:29px;padding:0 7px}.taskDescriptionCollapse span{font-size:0}.taskDescriptionCollapse svg{width:15px;height:15px}}
