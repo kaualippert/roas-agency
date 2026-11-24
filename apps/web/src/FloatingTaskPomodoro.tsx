@@ -3,7 +3,7 @@ import {ArrowUpRight,ChevronDown,ChevronUp,Pause,Play} from 'lucide-react';
 import {Link} from 'react-router-dom';
 import {store} from './storage';
 import type {Task} from './types';
-import {activatePomodoroTask,ACTIVE_POMODORO_KEY,breakSeconds,clearActivePomodoroTask,focusSeconds,getActivePomodoroTaskId,POMODORO_EVENT,readPomodoroSession,savePomodoroSession,type PomodoroSession} from './task-pomodoro-state';
+import {ACTIVE_POMODORO_KEY,breakSeconds,focusSeconds,getActivePomodoroTaskId,POMODORO_EVENT,readPomodoroSession,startPomodoro,pausePomodoro,resetPomodoro,type PomodoroSession} from './task-pomodoro-state';
 import './floating-task-pomodoro.css';
 
 type FloatingSession={taskId:string;title:string;session:PomodoroSession};
@@ -48,16 +48,9 @@ export default function FloatingTaskPomodoro(){
  const openTask=`/tasks?task=${encodeURIComponent(session.taskId)}`;
  const toggleTimer=()=>{
   const latest=readPomodoroSession(session.taskId);
-  if(latest.status==='running'){
-   const seconds=Math.max(0,Math.ceil(((latest.endsAt||Date.now())-Date.now())/1000));
-   savePomodoroSession(session.taskId,{...latest,status:'paused',remainingSeconds:seconds,endsAt:undefined});
-   return;
-  }
-  const next={...latest,status:'running' as const,endsAt:Date.now()+latest.remainingSeconds*1000};
-  savePomodoroSession(session.taskId,next);
-  activatePomodoroTask(session.taskId);
+  if(latest.status==='running')pausePomodoro(session.taskId);else startPomodoro(session.taskId);
  };
- const resetTimer=()=>{savePomodoroSession(session.taskId,{phase:'focus',status:'ready',remainingSeconds:focusSeconds,completedFocus:0});clearActivePomodoroTask(session.taskId)};
+ const resetTimer=()=>resetPomodoro(session.taskId);
  return <aside className={`floatingTaskPomodoro${minimized?' minimized':''}${timer.phase==='break'?' break':''}`} aria-label="Pomodoro flutuante">
   {minimized?<div className="floatingPomodoroCompact"><button type="button" className="floatingPomodoroExpand" onClick={()=>setMinimized(false)} aria-label={`Expandir Pomodoro, ${formatClock(remaining)} restantes`}><MiniDial phase={timer.phase} progress={progress} running={timer.status==='running'}/><time>{formatClock(remaining)}</time><ChevronUp/></button><button type="button" className="floatingPomodoroMiniControl" onClick={toggleTimer} aria-label={timer.status==='running'?'Pausar Pomodoro':'Retomar Pomodoro'}>{timer.status==='running'?<Pause/>:<Play/>}</button></div>:<>
    <div className="floatingPomodoroTop"><span><i className={timer.status==='running'?'active':''}/>{timer.status==='running'?'POMODORO ATIVO':'POMODORO'}</span><button type="button" onClick={()=>setMinimized(true)} title="Minimizar relógio Pomodoro" aria-label="Minimizar relógio Pomodoro"><ChevronDown/></button></div>

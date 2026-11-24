@@ -1,41 +1,39 @@
 import {useEffect,useState} from 'react';
 import {Coffee,Pause,Play,RotateCcw,Timer} from 'lucide-react';
-import {activatePomodoroTask,clearActivePomodoroTask,createFreshPomodoroSession,focusSeconds,nextPomodoroPhase,readPomodoroSession,savePomodoroSession,breakSeconds} from './task-pomodoro-state';
+import {createFreshPomodoroSession,focusSeconds,readPomodoroSession,breakSeconds,startPomodoro,pausePomodoro,resetPomodoro,POMODORO_EVENT} from './task-pomodoro-state';
+import PomodoroHistory from './PomodoroHistory';
 import './task-pomodoro.css';
 
 const dialMarks=Array.from({length:60},(_,index)=>{const angle=(index/60)*Math.PI*2,radius=index%5===0?87:90;return {x1:120+Math.sin(angle)*radius,y1:120-Math.cos(angle)*radius,x2:120+Math.sin(angle)*95,y2:120-Math.cos(angle)*95,major:index%5===0}});
 const clock=(seconds:number)=>`${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
 
 export default function TaskPomodoro({taskId}:{taskId:string}){
- const [session,setSession]=useState(()=>readPomodoroSession(taskId));
+ const [session,setSession]=useState(createFreshPomodoroSession);
  const [remainingSeconds,setRemainingSeconds]=useState(session.remainingSeconds);
  const visible=session.status!=='ready'||session.phase!=='focus'||session.completedFocus>0;
  const duration=session.phase==='focus'?focusSeconds:breakSeconds;
  const progress=Math.max(0,Math.min(100,((duration-remainingSeconds)/duration)*100));
  const handRotation=progress*3.6,cycleIndex=session.completedFocus%4,completedInCycle=session.completedFocus%4;
 
- useEffect(()=>{savePomodoroSession(taskId,session)},[taskId,session]);
  useEffect(()=>{
-  if(session.status!=='running'||!session.endsAt)return;
   const update=()=>{
-   const remaining=Math.max(0,Math.ceil((session.endsAt!-Date.now())/1000));
-   setRemainingSeconds(remaining);
-   if(remaining===0){const finished=nextPomodoroPhase(session);setSession(finished);setRemainingSeconds(finished.remainingSeconds)}
+   const current=readPomodoroSession(taskId);setSession(current);setRemainingSeconds(current.remainingSeconds);
   };
   update();
   const interval=window.setInterval(update,1000);
-  return()=>window.clearInterval(interval);
- },[session,taskId]);
+  window.addEventListener(POMODORO_EVENT,update);window.addEventListener('storage',update);
+  return()=>{window.clearInterval(interval);window.removeEventListener(POMODORO_EVENT,update);window.removeEventListener('storage',update)};
+ },[taskId]);
 
- const start=()=>{const next={...session,status:'running' as const,endsAt:Date.now()+remainingSeconds*1000};setSession(next);setRemainingSeconds(remainingSeconds);savePomodoroSession(taskId,next);activatePomodoroTask(taskId)};
- const pause=()=>{const remaining=Math.max(0,Math.ceil(((session.endsAt||Date.now())-Date.now())/1000)),next={...session,status:'paused' as const,remainingSeconds:remaining,endsAt:undefined};setSession(next);setRemainingSeconds(remaining);savePomodoroSession(taskId,next)};
- const reset=()=>{const next=createFreshPomodoroSession();setSession(next);setRemainingSeconds(next.remainingSeconds);savePomodoroSession(taskId,next);clearActivePomodoroTask(taskId)};
+ const start=()=>startPomodoro(taskId);
+ const pause=()=>pausePomodoro(taskId);
+ const reset=()=>resetPomodoro(taskId);
 
- if(!visible)return <section className="taskPomodoro taskPomodoroIntro"><div className="taskPomodoroCopy"><span className="taskPomodoroIcon"><Timer/></span><div><b>Modo Pomodoro</b><small>Faça uma sessão de foco nesta tarefa, com pausas curtas.</small></div></div><button type="button" className="taskPomodoroStart" onClick={start}><Play/> Ativar · 25 min</button></section>;
+ if(!visible)return <><section className="taskPomodoro taskPomodoroIntro"><div className="taskPomodoroCopy"><span className="taskPomodoroIcon"><Timer/></span><div><b>Modo Pomodoro</b><small>Faça uma sessão de foco nesta tarefa, com pausas curtas.</small></div></div><button type="button" className="taskPomodoroStart" onClick={start}><Play/> Ativar · 25 min</button></section><PomodoroHistory taskId={taskId}/></>;
 
  const phaseLabel=session.phase==='focus'?'Foco':'Pausa curta';
  const stateLabel=session.status==='running'?'Sessão em andamento':session.status==='paused'?'Sessão pausada':session.phase==='break'?'Foco concluído':'Pronto para focar';
- return <section className={`taskPomodoro ${session.phase==='break'?'break':''}`} aria-label="Modo Pomodoro">
+ return <><section className={`taskPomodoro ${session.phase==='break'?'break':''}`} aria-label="Modo Pomodoro">
   <div className="taskPomodoroHead"><div className="taskPomodoroCopy"><span className="taskPomodoroIcon">{session.phase==='break'?<Coffee/>:<Timer/>}</span><div><b>Modo Pomodoro <span>· {phaseLabel}</span></b><small>{stateLabel}{session.completedFocus>0?` · ${session.completedFocus} ${session.completedFocus===1?'sessão concluída':'sessões concluídas'}`:''}</small></div></div><button type="button" className="taskPomodoroReset" onClick={reset} title="Encerrar e reiniciar Pomodoro" aria-label="Encerrar e reiniciar Pomodoro"><RotateCcw/></button></div>
   <div className="taskPomodoroBody">
    <div className={`taskPomodoroDial${session.status==='running'?' isRunning':''}`} aria-label={`${phaseLabel}: ${clock(remainingSeconds)} restantes`}>
@@ -48,5 +46,5 @@ export default function TaskPomodoro({taskId}:{taskId:string}){
     <div className="taskPomodoroControls">{session.status==='running'?<button type="button" onClick={pause}><Pause/> Pausar sessão</button>:<button type="button" onClick={start}><Play/> {session.status==='paused'?'Retomar foco':session.phase==='break'?'Iniciar pausa':'Iniciar foco'}</button>}{session.status==='paused'&&<small>O cronômetro fica pausado até você retomar.</small>}</div>
    </div>
   </div>
- </section>;
+ </section><PomodoroHistory taskId={taskId}/></>;
 }
