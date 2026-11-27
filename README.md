@@ -82,6 +82,18 @@ Em produção, use `APP_ORIGIN=https://flowroas.space` e cadastre nas plataforma
 
 ## Validação
 
+### Páginas públicas e configuração OAuth
+
+Após o deploy, as páginas abaixo ficam disponíveis sem autenticação:
+
+- Apresentação do aplicativo: `https://flowroas.space/sobre`
+- Política de Privacidade: `https://flowroas.space/privacidade`
+- Termos de Serviço: `https://flowroas.space/termos`
+
+Use essas URLs na configuração de marca/consentimento OAuth do Google. Confirme o domínio autorizado e sua verificação de propriedade. A publicação das páginas não substitui a análise OAuth nem a aprovação de acesso à Google Ads API.
+
+Os documentos identificam Flow roas space, Kauã Matheus da Silva Lippert e o contato informado pelo responsável. Revise juridicamente os textos e confira se as práticas descritas continuam correspondendo à operação antes da publicação definitiva. Mudanças no tratamento de dados exigem revisão das declarações e, quando aplicável, comunicação aos usuários.
+
 ```bash
 npm run build
 npm run build:vercel
